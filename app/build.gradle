@@ -1,0 +1,111 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.mirage.vpn'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.mirage.vpn"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0-CYBER_EDITION"
+
+        // تفعيل النواة المنخفضة المستوى (JNI) وحماية التشفير
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17 -O3 -fvisibility=hidden -fvisibility-inlines-hidden"
+            }
+        }
+        
+        ndk {
+            // المعمارية المطلوبة لاستغلال أقصى طاقة من معالج Dimensity 7200-Ultra
+            abiFilters "arm64-v8a"
+        }
+
+        // سحب متغيرت البصمة من البيئة اثناء بناء Release
+        def signatureHash = System.getenv("APK_SIGNATURE") ?: "DUMMY_HASH"
+        buildConfigField "String", "EXPECTED_SIGNATURE", "\"${signatureHash}\""
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true // السلاح المضاد للهندسة العكسية
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+            applicationIdSuffix ".debug"
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file("CMakeLists.txt")
+            version "3.22.1"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    
+    // واجهات النيون السريالية (Jetpack Compose)
+    buildFeatures {
+        compose true
+        buildConfig true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.1'
+    }
+}
+
+dependencies {
+    // مكتبات نواة الأندرويد الأساسية
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+    implementation 'androidx.activity:activity-compose:1.8.0'
+    
+    // مكتبات واجهات الـ Compose
+    implementation platform('androidx.compose:compose-bom:2023.08.00')
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.material:material'
+    
+    // دعم الـ FragmentActivity للبصمة
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.fragment:fragment-ktx:1.6.1'
+    
+    // Firebase 
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-analytics'
+    
+    // ViewModel 
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2"
+
+    // ⚔️ ربط محرك Xray المترجم تلقائياً من مجلد المكتبات
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+    
+    // محرك العقل الباطن للمشروع (Gemini AI SDK)
+    implementation 'com.google.ai.client.generativeai:generativeai:0.8.0'
+    
+    // المدير التنفيذي (WorkManager)
+    implementation 'androidx.work:work-runtime-ktx:2.9.0'
+    
+    // API Networking & Firewall
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    
+    // بصمة الإصبع (Biometrics) لوحدة الإدارة السيبرانية
+    implementation 'androidx.biometric:biometric-ktx:1.2.0-alpha05'
+}

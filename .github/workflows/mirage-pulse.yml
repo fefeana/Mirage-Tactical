@@ -1,0 +1,27 @@
+name: Mirage Pulse - Hourly UI & Security Update
+on:
+  schedule:
+    - cron: '0 * * * *' # تنفيذ تلقائي رأس كل ساعة
+  workflow_dispatch: # إمكانية التشغيل اليدوي عند الحاجة
+
+jobs:
+  mirage-auto-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Apply Mirage Glass UI
+        run: |
+          # هنا يتم حقن تعديلات الواجهة الزجاجية برمجياً
+          echo "Applying Glassmorphism UI updates..."
+          
+      - name: Security & Auto-Fix
+        run: npm audit fix --force
+
+      - name: Deploy to Cloud (Firebase)
+        uses: FirebaseExtended/action-firebase-deployment@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
+          channelId: live

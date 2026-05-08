@@ -1,0 +1,54 @@
+{
+  "outbounds": [
+    {
+      "tag": "HYSTERIA2_PRIMARY",
+      "protocol": "hysteria2",
+      "settings": {
+        "server": "YOUR_GCP_ENDPOINT_IP",
+        "port": 443,
+        "up": "100 Mbps",
+        "down": "100 Mbps",
+        "secret": "mirage_alpha_secret"
+      },
+      "streamSettings": {
+        "network": "udp"
+      }
+    },
+    {
+      "tag": "VLESS_REALITY_FALLBACK",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [{
+          "address": "YOUR_GCP_ENDPOINT_IP",
+          "port": 443,
+          "users": [{
+            "id": "MIRAGE_SECURE_UUID",
+            "encryption": "none",
+            "flow": "xtls-rprx-vision"
+          }]
+        }]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "dest": "www.microsoft.com:443",
+          "serverNames": ["www.microsoft.com"],
+          "publicKey": "MIRAGE_PUBLIC_KEY",
+          "shortId": "MIRAGE_SHORT_ID"
+        }
+      }
+    }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "type": "field",
+        "outboundTag": "HYSTERIA2_PRIMARY",
+        "network": "udp,tcp"
+      }
+    ]
+  }
+}

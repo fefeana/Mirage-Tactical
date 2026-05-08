@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.mirage.vpn'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.mirage.vpn"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0-ALBARQ"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // الحل "الشامل" لجميع الأنواع
+    // يضمن إنشاء Universal APK أو 분 Android App Bundle ليتوافق مع جميع المعماريات
+    splits {
+        abi {
+            enable true
+            reset() // إلغاء أي قائمة افتراضية
+            include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+            universalApk true // هذا يضمن وجود مكتبة لكل معالج في ملف واحد للمتاجر الجانبية
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    // ... باقي مكاتب Jetpack Compose و Firebase
+}

@@ -1,0 +1,59 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services")
+}
+
+android {
+    namespace = "com.mirage.network"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "com.mirage.network"
+        minSdk = 26
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0.0-Mirage"
+        
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables { useSupportLibrary = true }
+    }
+
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.8"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    // نوات التطبيق والواجهة (Jetpack Compose)
+    implementation("androidx.compose.ui:ui:1.6.0")
+    implementation("androidx.compose.material3:material3:1.2.0")
+    
+    // محرك الـ VPN (Xray Core / V2Ray)
+    implementation("com.github.2dust:v2rayNG:1.8.5") // أو المكتبة التي تعتمدها للنواة
+
+    // نظام الإعلانات (للفيديوهات المكافئة)
+    implementation("com.google.android.gms:play-services-ads:22.6.0")
+
+    // نظام الفوترة (للاشتراكات اليومية والسنوية)
+    implementation("com.android.billingclient:billing:6.1.0")
+
+    // مكتبات التمويه والشبكات
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+}

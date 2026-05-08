@@ -1,0 +1,106 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "User ID" },
+        "email": { "type": "string", "description": "User Email" },
+        "displayName": { "type": "string", "description": "Display Name" },
+        "photoURL": { "type": "string", "description": "Avatar URL or Base64" },
+        "bio": { "type": "string", "description": "User Biography" },
+        "role": { "type": "string", "description": "User Role (e.g., admin, client)" },
+        "plan": { "type": "string", "enum": ["free", "premium"], "description": "User subscription plan" },
+        "premium_key": { "type": "string", "description": "Premium access key" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "createdAt", "plan"]
+    },
+    "VpnNode": {
+      "title": "VPN Node",
+      "description": "Stores VPN node configuration.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "server": { "type": "string" },
+        "port": { "type": "number" },
+        "protocol": { "type": "string", "enum": ["VLESS", "HYSTERIA2"] },
+        "connectionType": { "type": "string", "enum": ["TERRESTRIAL", "MARITIME", "SATELLITE"] },
+        "status": { "type": "string", "enum": ["ONLINE", "OFFLINE"] },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "uuid": { "type": "string" },
+            "sni": { "type": "string" },
+            "udp": { "type": "boolean" },
+            "flow": { "type": "string" },
+            "reality": {
+              "type": "object",
+              "properties": {
+                "publicKey": { "type": "string" },
+                "shortId": { "type": "string" }
+              }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "server", "port", "protocol", "connectionType", "status", "settings"]
+    },
+    "Language": {
+      "title": "Language",
+      "description": "Stores language information with flags.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Native language name" },
+        "code": { "type": "string", "description": "ISO language code" },
+        "flag": { "type": "string", "description": "Country flag emoji" }
+      },
+      "required": ["name", "code", "flag"]
+    },
+    "ChatMessage": {
+      "title": "Chat Message",
+      "description": "Secure Comm Link messages.",
+      "type": "object",
+      "properties": {
+        "sender": { "type": "string", "enum": ["admin", "ai"] },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sender", "text", "timestamp"]
+    },
+    "MirageTelemetry": {
+      "title": "Mirage Telemetry",
+      "description": "Stores telemetry logs for Mirage Cloud Control.",
+      "type": "object",
+      "properties": {
+        "timestamp": { "type": "number" },
+        "action_taken": { "type": "string" },
+        "status": { "type": "string" },
+        "node": { "type": "string" },
+        "device": { "type": "string" },
+        "user_id": { "type": "string" }
+      },
+      "required": ["timestamp", "action_taken", "status", "node", "device", "user_id"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profiles collection."
+    },
+    "/nodes/{nodeId}": {
+      "schema": { "$ref": "#/entities/VpnNode" },
+      "description": "VPN Nodes configuration collection."
+    },
+    "/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Comm Link messages."
+    },
+    "/mirage_telemetry/{telemetryId}": {
+      "schema": { "$ref": "#/entities/MirageTelemetry" },
+      "description": "Mirage Cloud Control telemetry logs."
+    }
+  }
+}
