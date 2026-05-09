@@ -1,60 +1,43 @@
 import base64
 import requests
 import os
+import google.generativeai as genai
 
-def syncToGitHub(event, context):
-    """
-    Cloud Function لرفع الملفات تلقائيًا من Google AI Studio (Gemini) إلى GitHub
+# الإعدادات المباشرة
+GEMINI_API_KEY = "ضـع_مفـتاح_جيمـيني_هـنا"
+GITHUB_TOKEN = "ضـع_تـوكن_جيـت_هـاب_هـنا"
+REPO_PATH = "Shighy/AlBarq_2026"
+BRANCH = "main"
 
-    🔧 طريقة التشغيل:
-    1. انسخ هذا الكود وضعه في مستودع مستقل وانشره إلى Cloud Functions
-    2. اربط المشروع بـ Google Cloud Functions.
-    3. أضف متغير بيئة GITHUB_REPO_TOKEN.
-    """
+def sync_albarq_to_github(event, context):
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        filename = event.get('attributes', {}).get('filename', 'AlBarq_Update.txt')
+        input_content = base64.b64decode(event.get('data', '')).decode('utf-8') if 'data' in event else "تحديث تلقائي"
 
-    # إعدادات المستودع
-    repo = "Shighy/AlBarq_2026"   # المستودع
-    branch = "main"               # الفرع
-    token = os.environ.get("GITHUB_REPO_TOKEN")
+        # معالجة Gemini
+        response = model.generate_content(f"نسق البيانات لمشروع البرق: {input_content}")
+        processed_data = response.text
 
-    if not token:
-        print("⚠️ Missing GITHUB_REPO_TOKEN")
-        return
+        # رفع لـ GitHub
+        headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+        url = f"https://api.github.com/repos/{REPO_PATH}/contents/{filename}"
+        
+        # جلب SHA للتحديث
+        res = requests.get(url, headers=headers)
+        sha = res.json().get("sha") if res.status_code == 200 else None
 
-    # استخراج البيانات من الحدث
-    filename = event.get('attributes', {}).get('filename', 'default.txt')
-    file_content = ""
-    
-    if 'data' in event:
-        file_content = base64.b64decode(event['data']).decode('utf-8')
+        payload = {
+            "message": "⚡ AlBarq Sync",
+            "content": base64.b64encode(processed_data.encode('utf-8')).decode('utf-8'),
+            "branch": BRANCH
+        }
+        if sha: payload["sha"] = sha
 
-    # إعداد الطلب إلى GitHub API
-    headers = {
-        "Authorization": f"token {token}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-
-    url = f"https://api.github.com/repos/{repo}/contents/{filename}"
-
-    # جلب SHA للملف الحالي إذا وجد
-    sha = None
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        sha = response.json().get("sha")
-
-    # تجهيز الرفع
-    data = {
-        "message": "Auto-sync from Google AI Studio (Gemini) - AlBarq",
-        "content": base64.b64encode(file_content.encode('utf-8')).decode('utf-8'),
-        "branch": branch
-    }
-    if sha:
-        data["sha"] = sha
-
-    # رفع المستند
-    put_response = requests.put(url, json=data, headers=headers)
-
-    if put_response.status_code in [200, 201]:
-        print(f"✅ File {filename} synced successfully to {repo}/{branch}")
-    else:
-        print(f"⚠️ Sync failed: {put_response.status_code} → {put_response.text}")
+        requests.put(url, json=payload, headers=headers)
+        return "Success"
+    except Exception as e:
+        print(f"Error: {e}")
+        return "Error"
