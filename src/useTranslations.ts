@@ -9,20 +9,46 @@ export interface LanguageData {
   reviews: { id: string; user: string; text: string; aiReply: string }[];
 }
 
+let globalTranslationsCache: Record<string, Record<string, string>> = {};
+let lastJsonUpdate = 0;
+
 export function useTranslations(appLanguage: string) {
   const [translationsCache, setTranslationsCache] = useState<Record<string, LanguageData>>({});
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isJsonLoaded, setIsJsonLoaded] = useState(false);
+
+  // Load translations.json globally
+  useEffect(() => {
+    const fetchGlobalTranslationsJson = async () => {
+      const now = Date.now();
+      if (Object.keys(globalTranslationsCache).length === 0 || (now - lastJsonUpdate) > 3600000) {
+        try {
+          const response = await fetch('/translations.json');
+          if (response.ok) {
+            const data = await response.json();
+            if (data) {
+              globalTranslationsCache = data;
+              lastJsonUpdate = now;
+              setIsJsonLoaded(true);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching translations.json", error);
+        }
+      } else {
+        setIsJsonLoaded(true); // Already loaded
+      }
+    };
+    fetchGlobalTranslationsJson();
+  }, [appLanguage]);
 
   // Check admin status to enable seeding
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Evaluate if user is admin per our firestore rules matching (or just let the backend decide)
-        // A simple way is to check the user email against our known admin email or try writing
         if (user.email === 'alfacc222@gmail.com' || user.email === 'fmsea19@gmail.com') {
           setIsAdmin(true);
         } else {
-           // Also check custom claims or db role if implemented, but email is enough for seeding
            try {
               const userDoc = await getDoc(doc(db, 'users', user.uid));
               if (userDoc.exists() && userDoc.data().role === 'admin') {
@@ -39,7 +65,6 @@ export function useTranslations(appLanguage: string) {
     return () => unsubscribe();
   }, []);
 
-  // Sync to Cloud function (triggered by admin)
   const syncToCloud = async () => {
     if (!isAdmin) return;
     try {
@@ -57,19 +82,13 @@ export function useTranslations(appLanguage: string) {
     }
   };
 
-  // Subscribe to Cloud Translations
   useEffect(() => {
     const langsRef = collection(db, 'languages');
-    
-    // Robust Snapshot Listener (Mirage Protocol)
     const unsubscribe = onSnapshot(langsRef, (snapshot) => {
-       // 1. Error handling is caught by the 2nd argument of onSnapshot automatically in JS/TS
-       // but we handle the "no data" condition explicitly.
        if (snapshot.empty) {
           console.log("No translations found in cloud, applying local fallback...");
           return;
        }
-
        const newCache: Record<string, LanguageData> = {};
        let updateCount = 0;
        snapshot.forEach((docSnap) => {
@@ -78,60 +97,78 @@ export function useTranslations(appLanguage: string) {
             updateCount++;
          }
        });
-
        if (updateCount > 0) {
           setTranslationsCache(prev => ({ ...prev, ...newCache }));
-          console.log(`Languages updated: ${updateCount} from cloud`);
-       } else {
-          console.log("No valid translation documents found, applying fallback...");
        }
     }, (error) => {
-       // Break Condition / Error Handling
        console.error(`Error syncing translations: ${error.message}`);
-       // Fallback is automatically applied because translationsCache remains unchanged
     });
-
     return () => unsubscribe();
   }, []);
 
-  // Helper to get text
+  const getLanguageCode = (langName: string) => {
+    const map: Record<string, string> = {
+      'Arabic (العربية)': 'ar', 'English': 'en', 'French (Français)': 'fr',
+      'Turkish (Türkçe)': 'tr', 'Spanish (Español)': 'es', 'German (Deutsch)': 'de',
+      'Russian (Русский)': 'ru', 'Chinese (中文)': 'zh', 'Japanese (日本語)': 'ja',
+      'Hindi (हिन्दी)': 'hi', 'Italian (Italiano)': 'it', 'Portuguese (Português)': 'pt',
+      'Dutch': 'nl', 'Swedish': 'sv', 'Norwegian': 'no', 'Finnish': 'fi',
+      'Polish': 'pl', 'Czech': 'cs', 'Greek': 'el', 'Korean (한국어)': 'ko',
+      'Indonesian': 'id', 'Malay': 'ms', 'Thai': 'th', 'Vietnamese (Tiếng Việt)': 'vi',
+      'Ukrainian': 'uk', 'Romanian': 'ro', 'Bulgarian': 'bg', 'Serbian': 'sr',
+      'Croatian': 'hr', 'Slovak': 'sk', 'Hungarian': 'hu', 'Persian': 'fa',
+      'Urdu': 'ur', 'Bengali': 'bn', 'Tamil': 'ta', 'Telugu': 'te',
+      'Malayalam': 'ml', 'Swahili': 'sw', 'Hebrew': 'he', 'Azerbaijani': 'az'
+    };
+    return map[langName] || 'en';
+  };
+
   const getTranslation = (lang: string) => {
-    // 1. Try Cloud
-    if (translationsCache[lang]?.ui) {
-       return { ...defaultTranslations['English'], ...translationsCache[lang].ui };
-    }
-    // 2. Try Local fallback
+    const langCode = getLanguageCode(lang);
+    
+    // Base translations
+    let combined = { ...defaultTranslations['English'] };
+    
+    // 1. Local fallback
     if (defaultTranslations[lang]) {
-       return { ...defaultTranslations['English'], ...defaultTranslations[lang] };
+       combined = { ...combined, ...defaultTranslations[lang] };
     }
-    // 3. Fallback to English
-    return defaultTranslations['English'];
+    
+    // 2. Cloud Firetore translations
+    if (translationsCache[lang]?.ui) {
+       combined = { ...combined, ...translationsCache[lang].ui };
+    }
+    
+    // 3. Global translations.json mapping
+    if (globalTranslationsCache) {
+       if (globalTranslationsCache['btn_connect']?.[langCode]) combined['connect'] = globalTranslationsCache['btn_connect'][langCode];
+       if (globalTranslationsCache['lbl_speed']?.[langCode]) {
+         combined['ping'] = globalTranslationsCache['lbl_speed'][langCode];
+       }
+       if (globalTranslationsCache['settings']?.[langCode]) combined['settings'] = globalTranslationsCache['settings'][langCode];
+       if (globalTranslationsCache['ghost_mode']?.[langCode]) combined['ghostMode'] = globalTranslationsCache['ghost_mode'][langCode];
+    }
+    
+    return combined;
   };
 
   const getLocalizedReviewsData = (lang: string) => {
-    // 1. Try Cloud exact match
     if (translationsCache[lang]?.reviews) {
       return translationsCache[lang].reviews;
     }
-    // 2. Try Cloud inexact match
     const cloudKey = Object.keys(translationsCache).find(k => lang.includes(k.split(' ')[0]));
     if (cloudKey && translationsCache[cloudKey]?.reviews) {
       return translationsCache[cloudKey].reviews;
     }
-    
-    // 3. Try Local exact match
     if (defaultReviews[lang]) {
       return defaultReviews[lang];
     }
-    // 4. Try Local inexact match
     const localKey = Object.keys(defaultReviews).find(k => lang.includes(k.split(' ')[0]));
     if (localKey && defaultReviews[localKey]) {
       return defaultReviews[localKey];
     }
-
-    // 5. Fallback English
     return defaultReviews['English'];
   };
 
-  return { getTranslation, getLocalizedReviewsData, syncToCloud, isAdmin, translationsCache };
+  return { getTranslation, getLocalizedReviewsData, syncToCloud, isAdmin, translationsCache, isJsonLoaded };
 }

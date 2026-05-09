@@ -15,7 +15,7 @@
     "@genkit-ai/ai": "^1.32.0",
     "@genkit-ai/core": "^1.32.0",
     "@genkit-ai/googleai": "^1.28.0",
-    "@google/genai": "^1.50.1",
+    "@google/genai": "^1.52.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "axios": "^1.14.0",

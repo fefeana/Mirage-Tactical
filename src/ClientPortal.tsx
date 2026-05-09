@@ -3,7 +3,7 @@ import { Shield, Globe, Lock, Zap, Settings, X, Activity, ArrowDown, ArrowUp, Us
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslations } from './useTranslations';
 import { mirageCloudEngine } from './services/MirageCloudEngine';
-import { collection, addDoc, query, orderBy, onSnapshot, doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { handleAppError, ErrorSeverity } from './lib/errorHandler';
@@ -284,80 +284,87 @@ function ClientPortalInner() {
     }
   };
 
-  const fallbackLanguages = [
-    { name: 'Arabic (العربية)', code: 'ar', flag: '🇸🇦' },
-    { name: 'English', code: 'en', flag: '🇬🇧' },
-    { name: 'French (Français)', code: 'fr', flag: '🇫🇷' }
-  ];
+  const langCodeToName: Record<string, string> = {
+    'ar': 'Arabic (العربية)', 'en': 'English', 'fr': 'French (Français)',
+    'tr': 'Turkish (Türkçe)', 'zh': 'Chinese (中文)', 'es': 'Spanish (Español)',
+    'de': 'German (Deutsch)', 'ru': 'Russian (Русский)', 'ja': 'Japanese (日本語)',
+    'hi': 'Hindi (हिन्दी)', 'it': 'Italian (Italiano)', 'pt': 'Portuguese (Português)',
+    'nl': 'Dutch', 'sv': 'Swedish', 'no': 'Norwegian', 'fi': 'Finnish',
+    'pl': 'Polish', 'cs': 'Czech', 'el': 'Greek', 'ko': 'Korean (한국어)',
+    'id': 'Indonesian', 'ms': 'Malay', 'th': 'Thai', 'vi': 'Vietnamese (Tiếng Việt)',
+    'uk': 'Ukrainian', 'ro': 'Romanian', 'bg': 'Bulgarian', 'sr': 'Serbian',
+    'hr': 'Croatian', 'sk': 'Slovak', 'hu': 'Hungarian', 'fa': 'Persian',
+    'ur': 'Urdu', 'bn': 'Bengali', 'ta': 'Tamil', 'te': 'Telugu',
+    'ml': 'Malayalam', 'sw': 'Swahili', 'he': 'Hebrew', 'az': 'Azerbaijani'
+  };
 
-  const [availableLanguages, setAvailableLanguages] = useState<any[]>(fallbackLanguages);
+  const getFlag = (code: string) => {
+      const flags: Record<string, string> = {
+        'ar': '🇸🇦', 'en': '🇬🇧', 'fr': '🇫🇷', 'tr': '🇹🇷', 'zh': '🇨🇳', 'es': '🇪🇸',
+        'de': '🇩🇪', 'ru': '🇷🇺', 'ja': '🇯🇵', 'hi': '🇮🇳', 'it': '🇮🇹', 'pt': '🇵🇹',
+        'nl': '🇳🇱', 'sv': '🇸🇪', 'no': '🇳🇴', 'fi': '🇫🇮', 'pl': '🇵🇱', 'cs': '🇨🇿',
+        'el': '🇬🇷', 'ko': '🇰🇷', 'id': '🇮🇩', 'ms': '🇲🇾', 'th': '🇹🇭', 'vi': '🇻🇳',
+        'uk': '🇺🇦', 'ro': '🇷🇴', 'bg': '🇧🇬', 'sr': '🇷🇸', 'hr': '🇭🇷', 'sk': '🇸🇰',
+        'hu': '🇭🇺', 'fa': '🇮🇷', 'ur': '🇵🇰', 'bn': '🇧🇩', 'ta': '🇮🇳', 'te': '🇮🇳',
+        'ml': '🇮🇳', 'sw': '🇰🇪', 'he': '🇮🇱', 'az': '🇦🇿'
+      };
+      return flags[code] || '🌐';
+  };
+
+  const [availableLanguages, setAvailableLanguages] = useState<any[]>([{ name: 'English', code: 'en', flag: '🇬🇧' }]);
   const [isLoadingLanguages, setIsLoadingLanguages] = useState(true);
+  const [appLanguage, setAppLanguage] = useState(detectSystemLanguage());
 
   useEffect(() => {
-    const docRef = collection(db, "languages");
+    const docRef = doc(db, "languages", "default");
     const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      // Break Condition handled by error callback below
-      if (!snapshot || snapshot.empty) {
-        console.log("No languages found, applying fallback...");
-        setAvailableLanguages(fallbackLanguages);
-        setIsLoadingLanguages(false);
-        return;
-      }
+      if (snapshot && snapshot.exists()) {
+        const data = snapshot.data();
+        
+        // Parse supported languages
+        const supported = data?.supported || ['en'];
+        const mappedLangs = supported.map((code: string) => ({
+           name: langCodeToName[code] || 'English',
+           code: code,
+           flag: getFlag(code)
+        }));
+        setAvailableLanguages(mappedLangs);
 
-      const fetched = snapshot.docs.map(docSnap => {
-         const data = docSnap.data();
-         // using doc id as name or field, fallback to generic
-         if (data.name && data.code && data.flag) {
-            return { name: data.name, code: data.code, flag: data.flag };
-         }
-         return null;
-      }).filter(Boolean);
-
-      if (fetched.length > 0) {
-         setAvailableLanguages(fetched);
-         console.log(`Languages updated from cloud: ${fetched.length}`);
+        // Parse fallback/current global language
+        const fallback = data?.fallback || 'en';
+        const nameFallback = langCodeToName[fallback] || 'English';
+        console.log(`Global language updated from cloud: ${fallback}`);
+        setAppLanguage(nameFallback);
       } else {
-         setAvailableLanguages(fallbackLanguages);
-         console.log("Invalid language documents, applying fallback...");
+        console.log("No global languages found, applying fallback...");
+        setAvailableLanguages(Object.keys(langCodeToName).map(code => ({
+            name: langCodeToName[code],
+            code: code,
+            flag: getFlag(code)
+        })));
       }
       setIsLoadingLanguages(false);
     }, (error) => {
-       console.error(`Error fetching languages: ${error.message}`);
-       setAvailableLanguages(fallbackLanguages);
+       console.error(`Error fetching global languages: ${error.message}`);
        setIsLoadingLanguages(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  const [appLanguage, setAppLanguage] = useState(detectSystemLanguage);
+  const handleChangeLanguage = async (code: string, name: string) => {
+    setAppLanguage(name);
+    try {
+        const docRef = doc(db, 'languages', 'default');
+        await updateDoc(docRef, {
+            fallback: code,
+            timestamp: serverTimestamp()
+        });
+    } catch (e) {
+        console.error('Error updating global language', e);
+    }
+  };
 
-  // --- Remote Global Settings Listener (Mirage Protocol) ---
-  useEffect(() => {
-    // Reference to the 'settings' collection, 'global' document
-    const docRef = doc(db, "settings", "global");
-
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      // 1. Check if data exists
-      if (snapshot && snapshot.exists()) {
-        const data = snapshot.data();
-        const lang = data?.language;
-        if (lang) {
-           console.log(`Language updated from cloud: ${lang}`);
-           setAppLanguage(lang);
-        }
-      } else {
-        // Fallback
-        console.log("No global settings found, applying fallback...");
-      }
-    }, (error) => {
-      // Error / Break Condition
-      console.error(`Error fetching global settings: ${error.message}`);
-    });
-
-    return () => unsubscribe();
-  }, []);
-  // ---------------------------------------------------------
 
   const isRTL = ['Arabic (العربية)', 'Hebrew', 'Persian', 'Urdu'].includes(appLanguage);
 
@@ -771,7 +778,7 @@ function ClientPortalInner() {
              </h1>
 
              <div className={`ghost-status-text ${isGhostPilotActive ? 'active' : ''} mb-2`}>
-               {isGhostPilotActive ? 'Ghost Mode: ON' : 'Ghost Mode: OFF'}
+               {isGhostPilotActive ? `${t.ghostMode || 'Ghost Mode'}: ON` : `${t.ghostMode || 'Ghost Mode'}: OFF`}
              </div>
 
              <label className="ghost-switch">
@@ -796,7 +803,7 @@ function ClientPortalInner() {
                  className={`server-status-box ${isGhostPilotActive ? 'type-satellite' : 'type-server'}`} 
                  onClick={handleConnect}
                >
-                 Mirage: {isRTL ? 'حماية %100' : '100% Protection'} – {isGhostPilotActive ? '🛰️' : '⚡'} {isGhostPilotActive ? 'Satellite' : 'Server'}: {nodeData.location || "Default"}
+                 Mirage: {isRTL ? 'حماية %100' : '100% Protection'} – {isGhostPilotActive ? '🛰️' : '⚡'} {isGhostPilotActive ? 'Satellite' : 'Server'}: {nodeData.name || "Default"}
                  <div className="ai-supervision">{isRTL ? 'تحت إشراف Google AI' : 'Under Google AI Supervision'}</div>
                </div>
              ) : (
@@ -847,7 +854,7 @@ function ClientPortalInner() {
                      : isConnected 
                        ? (isRTL ? 'متصل 100%' : 'Connected 100%') 
                        : isGhostPilotActive
-                         ? (isRTL ? '👻 وضع الشبح مفعّل – الهوية مخفية' : '👻 Ghost Mode Active - Identity Hidden')
+                         ? (isRTL ? `👻 ${t.ghostMode || 'وضع الشبح'} مفعّل – الهوية مخفية` : `👻 ${t.ghostMode || 'Ghost Mode'} Active - Identity Hidden`)
                          : (isRTL ? 'الاتصال مغلق 📴' : 'Disconnected 📴')}
                  </motion.div>
                </AnimatePresence>
@@ -1532,7 +1539,7 @@ function ClientPortalInner() {
                         <button 
                           key={lang.code} 
                           onClick={async () => {
-                            setAppLanguage(lang.name);
+                            await handleChangeLanguage(lang.code, lang.name);
                             try { localStorage.setItem('mirage_lang', lang.name); } catch {}
                             
                             // Simulate passing back to central cloud config

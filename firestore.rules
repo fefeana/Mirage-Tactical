@@ -98,6 +98,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    match /supportLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if true;
+    }
+    
     match /chats/{chatId} {
       allow read, write: if true;
     }

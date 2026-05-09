@@ -1,0 +1,58 @@
+steps:
+  # 1️⃣ تثبيت الحزم
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['install']
+
+  # 2️⃣ بناء المشروع
+  - name: 'gcr.io/cloud-builders/npm'
+    args: ['run', 'build']
+
+  # 3️⃣ نشر عالمي للواجهة الأمامية عبر Firebase Hosting
+  - name: 'gcr.io/mvm-inc/firebase'
+    args: ['deploy', '--only', 'hosting']
+    env:
+      - 'FIREBASE_TOKEN=${_FIREBASE_TOKEN}'
+
+  # 4️⃣ بناء صورة Docker للتطبيق الخلفي
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/app-image', '.']
+
+  # 5️⃣ رفع الصورة إلى Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/app-image']
+
+  # 6️⃣ نشر عالمي للخدمات الخلفية عبر Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      [
+        'run', 'deploy', 'albarq-service',
+        '--image', 'gcr.io/$PROJECT_ID/app-image',
+        '--platform', 'managed',
+        '--region', 'us-central1',
+        '--allow-unauthenticated'
+      ]
+
+  # 7️⃣ تحديث فهارس Firestore (Indexes)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      [
+        'firestore', 'indexes', 'create',
+        '--project=$PROJECT_ID',
+        '--database=(default)',
+        '--file=firestore.indexes.json'
+      ]
+
+  # 8️⃣ تطبيق قواعد Firestore (Rules)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'firebase'
+    args:
+      [
+        'deploy', '--only', 'firestore:rules'
+      ]
+
+images:
+  - 'gcr.io/$PROJECT_ID/app-image'
+
+timeout: 1800s
