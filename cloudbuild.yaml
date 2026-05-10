@@ -1,39 +1,41 @@
 steps:
-  # 1️⃣ تثبيت الحزم
+  # 1️⃣ تثبيت الحزم (npm install)
   - name: 'gcr.io/cloud-builders/npm'
     args: ['install']
 
-  # 2️⃣ بناء المشروع
+  # 2️⃣ بناء المشروع (Frontend Build)
   - name: 'gcr.io/cloud-builders/npm'
     args: ['run', 'build']
 
-  # 3️⃣ نشر عالمي للواجهة الأمامية عبر Firebase Hosting
+  # 3️⃣ نشر الواجهة الأمامية عبر Firebase Hosting
+  # هذا يضمن أن واجهة اختيار اللغات والداشبورد تعمل عالمياً
   - name: 'gcr.io/mvm-inc/firebase'
     args: ['deploy', '--only', 'hosting']
     env:
       - 'FIREBASE_TOKEN=${_FIREBASE_TOKEN}'
 
-  # 4️⃣ بناء صورة Docker للتطبيق الخلفي
+  # 4️⃣ بناء صورة Docker (نواة السنتينل والخلفية)
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/app-image', '.']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/mirage-app-image', '.']
 
-  # 5️⃣ رفع الصورة إلى Google Container Registry
+  # 5️⃣ رفع الصورة إلى المستودع (Push to GCR)
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/app-image']
+    args: ['push', 'gcr.io/$PROJECT_ID/mirage-app-image']
 
-  # 6️⃣ نشر عالمي للخدمات الخلفية عبر Cloud Run
+  # 6️⃣ النشر العالمي للخدمات عبر Cloud Run
+  # هنا يتم تشغيل الـ Sentinel AI وربطه ببروتوكولات VPN
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
       [
         'run', 'deploy', 'albarq-service',
-        '--image', 'gcr.io/$PROJECT_ID/app-image',
+        '--image', 'gcr.io/$PROJECT_ID/mirage-app-image',
         '--platform', 'managed',
         '--region', 'us-central1',
         '--allow-unauthenticated'
       ]
 
-  # 7️⃣ تحديث فهارس Firestore (Indexes)
+  # 7️⃣ تحديث فهارس Firestore (لضمان سرعة جلب اللغات عالمياً)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
@@ -44,7 +46,8 @@ steps:
         '--file=firestore.indexes.json'
       ]
 
-  # 8️⃣ تطبيق قواعد Firestore (Rules)
+  # 8️⃣ تطبيق قواعد Firestore (Security Rules)
+  # لحماية بيانات المستخدمين وإعدادات اللغات من العبث
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'firebase'
     args:
@@ -53,6 +56,7 @@ steps:
       ]
 
 images:
-  - 'gcr.io/$PROJECT_ID/app-image'
+  - 'gcr.io/$PROJECT_ID/mirage-app-image'
 
-timeout: 1800s
+# زيادة الوقت لضمان بناء صور Docker الضخمة وسرعة الـ VPN
+timeout: 2400s 
