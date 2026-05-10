@@ -1,6 +1,36 @@
+# الحزم والاعتماديات
 node_modules/
 coverage/
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# ملفات النظام
 .DS_Store
+Thumbs.db
+desktop.ini
 *.log
+
+# الإعدادات والبيئة (حساس جداً)
 .env*
 !.env.example
+.idea/
+.vscode/
+*.private
+
+# ملفات بناء التطبيق (Buildozer & Android)
+.buildozer/
+bin/
+*.apk
+*.aab
+.gradle/
+local.properties
+assets/pro_compiled/
+
+# ملفات قواعد البيانات والبيانات المؤقتة
+*.db
+*.sqlite3
+storage/
