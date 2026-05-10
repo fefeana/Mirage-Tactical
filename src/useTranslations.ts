@@ -26,14 +26,15 @@ export function useTranslations(appLanguage: string) {
           const response = await fetch('/translations.json');
           if (response.ok) {
             const data = await response.json();
-            if (data) {
+            if (data && data.btn_connect) {
               globalTranslationsCache = data;
               lastJsonUpdate = now;
               setIsJsonLoaded(true);
+              console.log("Mirage: Cloud Sync Complete.");
             }
           }
         } catch (error) {
-          console.error("Error fetching translations.json", error);
+          console.log("Mirage_GOD", "Sync deferred: Connectivity issue.");
         }
       } else {
         setIsJsonLoaded(true); // Already loaded

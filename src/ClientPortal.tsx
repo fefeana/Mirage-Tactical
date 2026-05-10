@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Globe, Lock, Zap, Settings, X, Activity, ArrowDown, ArrowUp, User, Terminal, ChevronRight, Server, Star, Crown, Gamepad2, Share2, MessageSquare, Bot, CloudUpload, Cpu, Signal, AlertTriangle, Trash2, Moon, Sun } from 'lucide-react';
+import { Shield, Globe, Lock, Zap, Settings, X, Activity, ArrowDown, ArrowUp, User, Terminal, ChevronRight, Server, Star, Crown, Gamepad2, Share2, MessageSquare, Bot, CloudUpload, Cpu, Signal, AlertTriangle, Trash2, Moon, Sun, Menu, PlaySquare, Image as ImageIcon } from 'lucide-react';
+import FloatingGold from './FloatingGold';
 import { motion, AnimatePresence } from 'motion/react';
 import { useTranslations } from './useTranslations';
 import { mirageCloudEngine } from './services/MirageCloudEngine';
@@ -102,88 +103,7 @@ function ClientPortalInner() {
   const [githubStatus, setGithubStatus] = useState<'IDLE'|'PUSHING'|'SUCCESS'|'ERROR'>('IDLE');
   const [githubMessage, setGithubMessage] = useState('');
 
-  // --- WebSocket Logic as requested ---
-  const socketRef = useRef<WebSocket | null>(null);
 
-  const initSocket = () => {
-    try {
-      if (socketRef.current && (socketRef.current.readyState === WebSocket.OPEN || socketRef.current.readyState === WebSocket.CONNECTING)) {
-        return;
-      }
-      
-      const wsUrl = window.location.protocol === 'https:' ? `wss://${window.location.host}/ws` : `ws://${window.location.host}/ws`;
-      const ws = new WebSocket(wsUrl);
-      socketRef.current = ws;
-
-      ws.onopen = () => console.log("Mirage Portal WS Connected ⚡");
-      ws.onerror = (e) => {
-        // Suppress generic network errors without spamming the console
-        if (ws.readyState !== WebSocket.OPEN) {
-          console.warn("Mirage Portal WS: Connection pending/unavailable.");
-        } else {
-          console.error("Mirage Portal WS Error", e);
-        }
-      };
-      ws.onclose = () => console.log("Mirage Portal WS Closed");
-    } catch (e) {
-      console.warn("WS initialization failed.");
-    }
-  };
-
-  const handleConnection = () => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-       socketRef.current.close();
-    }
-    initSocket();
-  };
-
-  useEffect(() => {
-    const handleStatusChange = () => {
-      if (navigator.onLine) {
-        console.log("Network online, restarting connection...");
-        handleConnection();
-      }
-    };
-
-    window.addEventListener('online', handleStatusChange);
-    // window.addEventListener('offline', handleStatusChange);
-
-    return () => {
-      window.removeEventListener('online', handleStatusChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    initSocket();
-    return () => {
-      const ws = socketRef.current;
-      if (ws) {
-        try {
-          ws.onopen = null;
-          ws.onerror = null;
-          ws.onclose = null;
-          if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-             ws.close();
-          }
-        } catch (err) {
-          // Ignore
-        }
-        socketRef.current = null;
-      }
-    };
-  }, []);
-
-  const safeSendMessage = (message: any) => {
-    // فحص الدرع: لا ترسل إذا كانت البوابة مغلقة
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify(message));
-    } else {
-      console.log("Waiting for Mirage Portal to stabilize...");
-      // محاولة إعادة الاتصال التلقائي
-      handleConnection(); 
-    }
-  };
-  // ------------------------------------
 
   // --- Integrated Features requested by User ---
   const [messages, setMessages] = useState<any[]>([]);
@@ -518,45 +438,106 @@ function ClientPortalInner() {
   // Heartbeat & Ghost Pilot
   const [commanderAlert, setCommanderAlert] = useState<string | null>(null);
 
+  // === SmartConnector (FlexibleConnection with HTTP Fallback) ===
   useEffect(() => {
-    let pingInterval: NodeJS.Timeout;
-    
-    if (isConnected && !isGhostPilotActive) {
-      pingInterval = setInterval(async () => {
+    let socket: WebSocket | null = null;
+    let fallbackInterval: NodeJS.Timeout | null = null;
+    let retryCount = 0;
+    const maxRetries = 5;
+
+    function startPollingFallback() {
+      console.warn("فشل WebSocket تماماً. الانتقال إلى وضع HTTP Polling لضمان الاستمرارية.");
+      if (fallbackInterval) return;
+      
+      fallbackInterval = setInterval(async () => {
         try {
-          // Talk to Cloud API Gateway for live telemetry
-          const cloudStatus = await mirageCloudEngine.checkServerStatus(nodeData.id);
-          
-          if (cloudStatus.status === 'CRITICAL_FAILURE') {
-            setIsConnected(false);
-            clearInterval(pingInterval);
-            setCommanderAlert(cloudStatus.alert || "CRITICAL FAILURE");
-          } else if (cloudStatus.status === 'DEGRADED') {
-            setIsGhostPilotActive(true);
-            setNodeData(prev => ({ ...prev, status: 'REROUTING', ping: 0, loadPercentage: 0, uploadSpeed: '0.0', downloadSpeed: '0.0' }));
-            requestCloudAction('AUTO_REROUTE');
-          } else {
-             // Normal healthy telemetry response mapped to visual elements
-             setNodeData(prev => ({
-              ...prev,
-              ping: cloudStatus.latency,
-              loadPercentage: Math.floor(Math.random() * (45 - 30 + 1)) + 30,
-              uploadSpeed: (cloudStatus.latency > 150 ? Math.random() * 5 + 1 : Math.random() * 15 + 5).toFixed(1),
-              downloadSpeed: (cloudStatus.latency > 150 ? Math.random() * 20 + 10 : Math.random() * 50 + 20).toFixed(1)
-            }));
+          const res = await fetch('/api/telemetry-fallback');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.type === 'TELEMETRY') {
+              updateTelemetry(data);
+            }
           }
         } catch (e) {
-          // Silently ignore ping fetch errors to keep loop alive
+            // Ignore fetch errors during fallback
         }
-      }, 2500);
-    } else if (!isConnected && !isGhostPilotActive) {
+      }, 3000);
+    }
+
+    function updateTelemetry(data: any) {
+        setNodeData(prev => ({
+          ...prev,
+          ping: data.ping,
+          uploadSpeed: data.ul,
+          downloadSpeed: data.dl,
+          status: 'ONLINE',
+          loadPercentage: Math.floor(Math.random() * (45 - 30 + 1)) + 30,
+        }));
+        
+        // تحديث الواجهة وتدقيق الـ Ping - تصحيح ذكي
+        if (data.ping > 80 && !isGhostPilotActive) {
+            console.log("تحسين المسار تلقائياً..."); // إجراء صامت للحفاظ على جودة الـ 54ms
+            setIsGhostPilotActive(true);
+            setCommanderAlert("HIGH LATENCY DETECTED. AI SENTINEL REROUTING SILENTLY (Mesh/Satellite)...");
+        }
+    }
+
+    function connect() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      socket = new WebSocket(`${protocol}//${window.location.host}/api/telemetry`);
+
+      socket.onopen = () => {
+        console.log("✅ [Mirage Bridge]: المزامنة مع Google Cloud & Firebase نشطة (WebSocket)");
+        retryCount = 0; // تصفير العداد عند النجاح
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'TELEMETRY') {
+            updateTelemetry(data);
+          }
+        } catch (e) {
+          // Silently handle parse errors
+        }
+      };
+
+      socket.onerror = (error) => {
+        console.error("⚠️ [Mirage Bridge]: خطأ في WebSocket، يتم الآن تفعيل وضع المرونة...");
+      };
+
+      socket.onclose = () => {
+        // إذا أغلق بدون سبب واضح، حاول مجدداً
+        if (retryCount < maxRetries) {
+            retryCount++;
+            let delay = Math.pow(2, retryCount) * 1000; 
+            console.log(`إعادة محاولة خلال ${delay/1000} ثانية...`);
+            setTimeout(() => connect(), delay);
+        } else {
+            startPollingFallback();
+        }
+      };
+    }
+
+    if (isConnected) {
+      connect();
+    } else {
       setNodeData(prev => ({ ...prev, status: 'OFFLINE', ping: 0, loadPercentage: 0, uploadSpeed: '0.0', downloadSpeed: '0.0' }));
     }
 
     return () => {
-      clearInterval(pingInterval);
+      if (socket) {
+        socket.onclose = null; // Prevent reconnect loop on unmount
+        socket.onerror = null;
+        if (socket.readyState === 1 || socket.readyState === 0) { // OPEN or CONNECTING
+            socket.close();
+        }
+      }
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+      }
     };
-  }, [isConnected, isGhostPilotActive, selectedProtocol, nodeData.id]);
+  }, [isConnected, isGhostPilotActive]);
 
   useEffect(() => {
     // Sync telemetry to Firestore
@@ -761,103 +742,83 @@ function ClientPortalInner() {
       )}
 
       {/* Main Content Container - Unified Mirage Version 2 */}
-      <div className="absolute inset-0 z-20 w-full h-full pointer-events-none flex flex-col items-center justify-center px-6 pt-10 font-sans">
-          <div className="pointer-events-auto flex flex-col items-center text-center w-full max-w-sm">
+      <div className="absolute inset-0 z-20 w-full h-full pointer-events-none flex flex-col items-center justify-between px-6 pt-12 pb-6 font-sans">
+          <div className="pointer-events-auto flex flex-col items-center text-center w-full max-w-sm mt-8">
              
-             {/* ⚡ البرق الذهبي بنبض ضوء */}
-             <div className="mb-2 mt-10">
-                 <span className="inline-block animate-pulse-scale origin-center text-[#FFD700] text-6xl filter drop-shadow-[0_0_15px_rgba(255,215,0,0.8)]">⚡</span>
-             </div>
-             
-             <h3 className="text-white/70 font-bold text-[13px] tracking-widest mb-6 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] flex items-center justify-center font-mono">
-               UFO ALBARQ | Google AI
+             {/* العنوان الرئيسي (احتفظنا به كعنوان للبراند) */}
+             <h3 className="text-[#B280FF] font-bold text-xl tracking-widest mb-10">
+               MIRAGE TACTICAL
              </h3>
              
-             <h1 className="text-[#00BFFF] text-[32px] font-bold mb-3 tracking-[0.1em] drop-shadow-[0_0_20px_rgba(0,191,255,0.6)]">
-               MIRAGE UFO
-             </h1>
-
-             <div className={`ghost-status-text ${isGhostPilotActive ? 'active' : ''} mb-2`}>
-               {isGhostPilotActive ? `${t.ghostMode || 'Ghost Mode'}: ON` : `${t.ghostMode || 'Ghost Mode'}: OFF`}
-             </div>
-
-             <label className="ghost-switch">
-               <input 
-                 type="checkbox" 
-                 checked={isGhostPilotActive}
-                 onChange={(e) => {
-                   setIsGhostPilotActive(e.target.checked);
-                   if (e.target.checked) setCommanderAlert("GHOST MODE ENGAGED. ENCRYPTION LEVEL MAXIMUM.");
+             {/* منطقة الأيقونة المركزية المرتبطة بحالة الاتصال */}
+             <div className="flex justify-center items-center mb-10 relative">
+               {/* المؤشر الذكي (Quantum Aura) */}
+               <motion.div 
+                 className={`absolute w-[180px] h-[180px] rounded-full blur-2xl z-0 transition-opacity duration-700 ${isConnecting ? 'opacity-80' : isConnected ? 'opacity-50' : 'opacity-20'}`}
+                 animate={{ 
+                   backgroundColor: isConnecting ? '#FFD700' : isGhostPilotActive ? '#A020F0' : isConnected ? '#50C878' : '#6600FF',
+                   scale: isConnecting ? [1, 1.1, 1] : isGhostPilotActive ? [1, 1.2, 0.9, 1] : 1
+                 }}
+                 transition={{ 
+                   duration: isConnecting ? 1.5 : isGhostPilotActive ? 3 : 0.5,
+                   repeat: isConnecting || isGhostPilotActive ? Infinity : 0
                  }}
                />
-               <span className="ghost-slider"></span>
-             </label>
-             
-             <p className="text-white/60 text-sm mb-8 px-4 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-relaxed">
-               {isRTL ? 'شبكة رقمية مستترة كلياً ومطورة لغرض الأمن العالمي' : 'Fully stealth digital network developed for global security'}
-             </p>
-
-             {/* Connection Button */}
-             {isConnected ? (
-               <div 
-                 className={`server-status-box ${isGhostPilotActive ? 'type-satellite' : 'type-server'}`} 
-                 onClick={handleConnect}
-               >
-                 Mirage: {isRTL ? 'حماية %100' : '100% Protection'} – {isGhostPilotActive ? '🛰️' : '⚡'} {isGhostPilotActive ? 'Satellite' : 'Server'}: {nodeData.name || "Default"}
-                 <div className="ai-supervision">{isRTL ? 'تحت إشراف Google AI' : 'Under Google AI Supervision'}</div>
+               <div className="relative z-10 flex items-center justify-center p-2 rounded-full transition-colors duration-500">
+                  <FloatingGold online={isConnected || isConnecting} signalStrength={isConnected ? 'strong' : 'weak'} size={150} ariaLabel={isGhostPilotActive ? "Ghost Mode Active" : "GOD MODE Active"} />
                </div>
-             ) : (
-               <button
-                 onClick={handleConnect}
-                 className="glass-reflection w-[260px] py-3 rounded-[20px] flex items-center justify-center gap-3 font-bold text-[16px] mb-10 transition-all active:scale-95 border-[1.5px] backdrop-blur-sm bg-[#2ECC71]/20 hover:bg-[#2ECC71]/30 border-[#2ECC71]/60 shadow-[0_0_15px_rgba(46,204,113,0.4)] text-white"
-               >
-                 {isConnecting ? (
-                    <div className="w-5 h-5 border-2 border-[#2ECC71] border-t-transparent rounded-full animate-spin"></div>
-                 ) : (
-                    <>
-                       <span className="text-[#2ECC71] drop-shadow-[0_0_8px_rgba(46,204,113,0.8)] text-xl">⚡</span> 
-                       <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-white font-bold">{isRTL ? 'اتصال سريع' : 'Quick Connect'}</span>
-                    </>
-                 )}
-               </button>
-             )}
+             </div>
+             
+             {/* معلومات البروتوكول النشط */}
+             <div className="flex items-center gap-3 mb-8 w-full justify-center">
+                <span className="text-white/60 font-bold">Protocol:</span>
+                <span className="text-[#00FFB2] font-bold">XTLS-Reality</span>
+             </div>
 
+             {/* زر التحكم الرئيسي */}
+             <button
+               onClick={handleConnect}
+               className="w-[85%] h-[60px] rounded-[30px] font-bold text-[20px] text-white transition-all active:scale-95 mb-8 duration-500"
+               style={{ 
+                 backgroundColor: isConnecting ? 'rgba(255, 178, 0, 1)' : isConnected ? 'rgba(0, 255, 128, 1)' : 'rgba(102, 0, 255, 1)',
+                 boxShadow: `0 0 15px ${isConnecting ? 'rgba(255, 178, 0, 0.4)' : isConnected ? 'rgba(0, 255, 128, 0.4)' : 'rgba(102, 0, 255, 0.4)'}`
+               }}
+             >
+               {isConnecting ? 'CONNECTING...' : isConnected ? 'SYSTEM LIVE' : 'START SYSTEM'}
+             </button>
+          </div>
+
+          <div className="pointer-events-auto w-full max-w-sm flex flex-col items-center">
              {/* Live Activity Monitor */}
-             <div className="flex justify-evenly w-[320px] text-center font-mono mb-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                <div className="flex flex-col items-center">
-                  <span className="text-[#2ECC71] text-[11px] font-bold mb-1 tracking-widest leading-none">{isRTL ? 'رفع حي' : 'LIVE UPLOAD'}</span>
-                  <span className="text-white text-[13px] leading-none mt-1">MB/s {nodeData.uploadSpeed}</span>
+             <div className="flex justify-evenly w-full text-center font-mono mb-6 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] px-4">
+                <div className="flex flex-col items-center bg-black/40 px-3 py-2 rounded-lg border border-white/10 w-[30%]">
+                  <span className="text-[#2ECC71] text-[10px] font-bold mb-1 tracking-widest leading-none">UL MB/s</span>
+                  <span className="text-white text-[16px] font-bold mt-1">{isConnected ? nodeData.uploadSpeed : '--'}</span>
                 </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-[#F1C40F] text-[11px] font-bold mb-1 tracking-widest leading-none">{isRTL ? 'تحميل حي' : 'LIVE DOWNLOAD'}</span>
-                  <span className="text-white text-[13px] leading-none mt-1">MB/s {nodeData.downloadSpeed}</span>
+                <div className="flex flex-col items-center bg-black/40 px-3 py-2 rounded-lg border border-white/10 w-[30%]">
+                  <span className="text-[#00BFFF] text-[10px] font-bold mb-1 tracking-widest leading-none">PING</span>
+                  <span id="ping-val" className="text-white text-[16px] font-bold mt-1">{isConnected ? `${nodeData.ping}ms` : '--'}</span>
                 </div>
-                <div className="flex flex-col items-center">
-                  <span className="text-[#00BFFF] text-[11px] font-bold mb-1 tracking-widest leading-none">PING</span>
-                  <span className="text-white text-[13px] leading-none mt-1">{nodeData.ping} ms</span>
+                <div className="flex flex-col items-center bg-black/40 px-3 py-2 rounded-lg border border-white/10 w-[30%]">
+                  <span className="text-[#F1C40F] text-[10px] font-bold mb-1 tracking-widest leading-none">DL MB/s</span>
+                  <span className="text-white text-[16px] font-bold mt-1">{isConnected ? nodeData.downloadSpeed : '--'}</span>
                 </div>
              </div>
 
-             {/* Animated Status Text */}
-             <div className="mt-2 h-6 relative w-full flex justify-center">
-               <AnimatePresence mode="wait">
-                 <motion.div
-                   key={isConnecting ? 'connecting' : isConnected ? 'connected' : isGhostPilotActive ? 'ghost' : 'idle'}
-                   initial={{ opacity: 0, y: 10 }}
-                   animate={{ opacity: 1, y: 0 }}
-                   exit={{ opacity: 0, y: -10 }}
-                   transition={{ duration: 0.6 }}
-                   className={`text-[13px] font-bold drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-mono ${isConnecting ? 'text-[#FFD700]' : isConnected ? 'text-[#2ECC71]' : isGhostPilotActive ? 'text-[#9B59B6]' : 'text-white/50'}`}
-                 >
-                   {isConnecting 
-                     ? (isRTL ? 'جاري الاتصال السريع ⚡...' : 'Connecting fast ⚡...') 
-                     : isConnected 
-                       ? (isRTL ? 'متصل 100%' : 'Connected 100%') 
-                       : isGhostPilotActive
-                         ? (isRTL ? `👻 ${t.ghostMode || 'وضع الشبح'} مفعّل – الهوية مخفية` : `👻 ${t.ghostMode || 'Ghost Mode'} Active - Identity Hidden`)
-                         : (isRTL ? 'الاتصال مغلق 📴' : 'Disconnected 📴')}
-                 </motion.div>
-               </AnimatePresence>
+             {/* شبكة الأزرار السفلية (Dashboard) */}
+             <div className="w-full grid grid-cols-2 gap-4 h-[120px]">
+               <button className="bg-[#1A1A33] rounded-md font-bold text-white hover:bg-[#2A2A4D] transition-colors shadow-[0_4px_10px_rgba(0,0,0,0.5)] flex items-center justify-center">
+                  METRICS
+               </button>
+               <button onClick={() => setShowPaymentModal(true)} className="bg-[#1A1A33] rounded-md font-bold text-white hover:bg-[#2A2A4D] transition-colors shadow-[0_4px_10px_rgba(0,0,0,0.5)] flex items-center justify-center">
+                  FINANCE
+               </button>
+               <button onClick={() => setIsSettingsSheetOpen(true)} className="bg-[#1A1A33] rounded-md font-bold text-white hover:bg-[#2A2A4D] transition-colors shadow-[0_4px_10px_rgba(0,0,0,0.5)] flex items-center justify-center">
+                  SETTINGS
+               </button>
+               <button onClick={() => setCommanderAlert("AI SENTINEL ONLINE. OVERSEEING NETWORK.")} className="bg-[#1A1A33] rounded-md font-bold text-white hover:bg-[#2A2A4D] transition-colors shadow-[0_4px_10px_rgba(0,0,0,0.5)] flex items-center justify-center">
+                  AI SENTINEL
+               </button>
              </div>
           </div>
       </div>

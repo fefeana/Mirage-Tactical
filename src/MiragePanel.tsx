@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI } from '@google/genai';
 import { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -21,26 +22,31 @@ const PieData = [
     { name: 'Yearly', value: 10, color: '#f59e0b' },
 ];
 
-const GlowingCircle = ({ value, label, color }: { value: number, label: string, color: string }) => {
+const GlowingCircle = ({ value, label, color, isHealing }: { value: number, label: string, color: string, isHealing?: boolean }) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div 
+            <motion.div 
+                animate={{
+                    backgroundColor: isHealing ? ['#FFD70080', `${color}33`] : `${color}33`,
+                    boxShadow: isHealing 
+                        ? [`0 0 30px #FFD700, inset 0 0 15px #FFD700`, `0 0 20px ${color}80, inset 0 0 10px ${color}80`] 
+                        : `0 0 20px ${color}80, inset 0 0 10px ${color}80`,
+                    borderColor: isHealing ? ['#FFD700', `${color}80`] : `${color}80`,
+                }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
                 style={{
                     width: '60px',
                     height: '60px',
                     borderRadius: '50%',
-                    backgroundColor: `${color}33`,
-                    boxShadow: `0 0 20px ${color}80, inset 0 0 10px ${color}80`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginBottom: '10px',
-                    border: `2px solid ${color}80`,
-                    transition: 'all 0.5s ease',
+                    border: `2px solid`,
                 }}
             >
                 <span style={{ color: '#fff', fontWeight: 'bold', fontSize: '0.9rem' }}>{value.toFixed(1)}</span>
-            </div>
+            </motion.div>
             <span style={{ fontSize: '0.7rem', opacity: 0.7, textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</span>
         </div>
     );
@@ -327,7 +333,20 @@ export default function MiragePanel() {
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                {servers[serverIndex].includes('Satellite') ? <Satellite color="#a855f7" size={30} /> : <Globe color="#3b82f6" size={30} />}
+                {servers[serverIndex].includes('Satellite') ? (
+                    <motion.div
+                        animate={{
+                            filter: autoHealActive 
+                                ? ['drop-shadow(0 0 5px #9D00FF)', 'drop-shadow(0 0 20px #9D00FF)', 'drop-shadow(0 0 5px #9D00FF)'] 
+                                : 'none'
+                        }}
+                        transition={{ duration: 1.5, repeat: autoHealActive ? Infinity : 0, ease: 'easeInOut' }}
+                    >
+                        <Satellite color={autoHealActive ? "#9D00FF" : "#a855f7"} size={30} />
+                    </motion.div>
+                ) : (
+                    <Globe color="#3b82f6" size={30} />
+                )}
                 <div>
                     <h4 style={{ margin: '0 0 5px 0', fontSize: '0.8rem', opacity: 0.6, textTransform: 'uppercase' }}>Active Node</h4>
                     <p style={{ margin: 0, fontWeight: 600, color: '#fff' }}>{servers[serverIndex]}</p>
@@ -335,18 +354,26 @@ export default function MiragePanel() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-around', margin: '10px 0' }}>
-                <GlowingCircle value={ping} label="Ping (ms)" color="#10b981" />
+                <GlowingCircle value={ping} label="Ping (ms)" color="#10b981" isHealing={autoHealActive} />
                 <GlowingCircle value={dlSpeed} label="DL (Mbps)" color="#3b82f6" />
                 <GlowingCircle value={ulSpeed} label="UL (Mbps)" color="#a855f7" />
             </div>
 
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', opacity: 0.8, marginBottom: '8px' }}>
-                    <span>Network Latency Trend</span>
+                    <span>Network Latency Trend (Auto-Heal Active)</span>
                     <span>{ping} ms</span>
                 </div>
-                <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', overflow: 'hidden' }}>
-                    <div style={{ width: `${Math.min((ping / 150) * 100, 100)}%`, height: '100%', background: ping < 100 ? '#10b981' : ping < 150 ? '#f59e0b' : '#ef4444', transition: 'all 0.3s ease' }} />
+                <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '10px', overflow: 'hidden', position: 'relative' }}>
+                    <motion.div 
+                        initial={false}
+                        animate={{ 
+                            width: `${Math.min(Math.max((ping / 300), 0), 1) * 100}%`,
+                            backgroundColor: ping > 200 ? 'rgba(255, 204, 0, 1)' : 'rgba(255, 230, 51, 0.8)' 
+                        }}
+                        transition={{ duration: ping < 100 ? 0.3 : 0.8, ease: [0.33, 1, 0.68, 1] }} 
+                        style={{ height: '100%', position: 'absolute', top: 0, left: 0 }}
+                    />
                 </div>
             </div>
             

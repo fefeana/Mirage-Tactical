@@ -1,0 +1,14 @@
+{
+  "system_config": {
+    "auto_heal": true,
+    "stealth_level": "maximum"
+  },
+  "nodes": {
+    "fast_yemen": [
+      {"name": "Local-Gate-01", "ip": "10.0.0.1", "protocol": "Hysteria2"}
+    ],
+    "global_stealth": [
+      {"name": "Shadow-EU", "ip": "45.12.33.1", "protocol": "VLESS-Reality"}
+    ]
+  }
+}

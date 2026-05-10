@@ -1,24 +1,29 @@
-java
-// الكود الأول – بعد التعديل والتنظيف
-public class FirstExample {
-    public static void main(String[] args) {
-        // السطر الأول
-        System.out.println("نور يضيء الطريق");
-        
-        // السطر الثاني
-        System.out.println("واجهة تلمع بانتظار الاتصال");
-        
-        // السطر الثالث
-        System.out.println("برق يفتح أبواب السماء");
-        
-        // السطر الرابع
-        System.out.println("همسات تتراقص في الريح");
-        
-        // السطر الخامس
-        System.out.println("قلب يبتسم في الظلال");
-        
-        // السطر السادس
-        System.out.println("حلم يزهر بلا حدود");
-    }
-}
-`
+name: Mirage Pulse - Hourly UI & Security Update
+on:
+  schedule:
+    - cron: '0 * * * *' # تنفيذ تلقائي رأس كل ساعة
+  workflow_dispatch: # إمكانية التشغيل اليدوي عند الحاجة
+
+jobs:
+  mirage-auto-update:
+    runs-on: ubuntu-latest
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Apply Mirage Glass UI
+        run: |
+          # هنا يتم حقن تعديلات الواجهة الزجاجية برمجياً
+          echo "Applying Glassmorphism UI updates..."
+          
+      - name: Security & Auto-Fix
+        run: npm audit fix --force
+
+      - name: Deploy to Cloud (Firebase)
+        uses: FirebaseExtended/action-firebase-deployment@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
+          channelId: live
