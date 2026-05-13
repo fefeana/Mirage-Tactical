@@ -1,29 +1,52 @@
+yaml
 name: Mirage Pulse - Hourly UI & Security Update
 on:
   schedule:
-    - cron: '0 * * * *' # تنفيذ تلقائي رأس كل ساعة
-  workflow_dispatch: # إمكانية التشغيل اليدوي عند الحاجة
+    - cron: '0    ' # تنفيذ تلقائي رأس كل ساعة
+  workflow_dispatch:
 
 jobs:
   mirage-auto-update:
     runs-on: ubuntu-latest
     env:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINIAPIKEY: ${{ secrets.GEMINIAPIKEY }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Apply Mirage Glass UI
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Mirage Glass UI
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Lint & Test
         run: |
-          # هنا يتم حقن تعديلات الواجهة الزجاجية برمجياً
-          echo "Applying Glassmorphism UI updates..."
-          
+          npm run lint
+          npm test
+
       - name: Security & Auto-Fix
         run: npm audit fix --force
+
+      - name: Auto Commit Changes
+        run: |
+          git config --global user.name "MirageBot"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Auto: Hourly UI & Security Update"
+          git push origin main
 
       - name: Deploy to Cloud (Firebase)
         uses: FirebaseExtended/action-firebase-deployment@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASESERVICEACCOUNT_MIRAGE }}'
           channelId: live
+`
