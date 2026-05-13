@@ -776,16 +776,44 @@ function ClientPortalInner() {
              </div>
 
              {/* زر التحكم الرئيسي */}
-             <button
-               onClick={handleConnect}
-               className="w-[85%] h-[60px] rounded-[30px] font-bold text-[20px] text-white transition-all active:scale-95 mb-8 duration-500"
-               style={{ 
-                 backgroundColor: isConnecting ? 'rgba(255, 178, 0, 1)' : isConnected ? 'rgba(0, 255, 128, 1)' : 'rgba(102, 0, 255, 1)',
-                 boxShadow: `0 0 15px ${isConnecting ? 'rgba(255, 178, 0, 0.4)' : isConnected ? 'rgba(0, 255, 128, 0.4)' : 'rgba(102, 0, 255, 0.4)'}`
-               }}
-             >
-               {isConnecting ? 'CONNECTING...' : isConnected ? 'SYSTEM LIVE' : 'START SYSTEM'}
-             </button>
+             <div className="relative w-[85%] flex justify-center mb-8">
+               {/* SignalWave Ripples */}
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  {(isConnected || isConnecting) && [0, 1].map((i) => (
+                      <motion.div
+                          key={i}
+                          className="absolute rounded-[30px]"
+                          style={{
+                              width: '100%',
+                              height: '60px',
+                              border: `2px solid ${isConnecting ? '#FFD700' : '#00FF80'}`,
+                          }}
+                          animate={{
+                              scaleX: [1, 1.3],
+                              scaleY: [1, 1.8],
+                              opacity: [0.6, 0]
+                          }}
+                          transition={{
+                              duration: 2.5,
+                              repeat: Infinity,
+                              ease: 'easeOut',
+                              delay: i * 1.25
+                          }}
+                      />
+                  ))}
+               </div>
+               
+               <button
+                 onClick={handleConnect}
+                 className="relative z-10 w-full h-[60px] rounded-[30px] font-bold text-[20px] text-white transition-all active:scale-95 duration-500"
+                 style={{ 
+                   backgroundColor: isConnecting ? 'rgba(255, 178, 0, 1)' : isConnected ? 'rgba(0, 255, 128, 1)' : 'rgba(102, 0, 255, 1)',
+                   boxShadow: `0 0 15px ${isConnecting ? 'rgba(255, 178, 0, 0.4)' : isConnected ? 'rgba(0, 255, 128, 0.4)' : 'rgba(102, 0, 255, 0.4)'}`
+                 }}
+               >
+                 {isConnecting ? 'CONNECTING...' : isConnected ? 'SYSTEM LIVE' : 'START SYSTEM'}
+               </button>
+             </div>
           </div>
 
           <div className="pointer-events-auto w-full max-w-sm flex flex-col items-center">

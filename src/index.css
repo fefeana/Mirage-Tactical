@@ -325,6 +325,16 @@ body {
   to { transform: rotate(0deg); }
 }
 
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 25px #ffcc00, inset 0 0 50px #ffcc00; }
+  50% { box-shadow: 0 0 40px #fff700, inset 0 0 70px #fff700; }
+}
+
+@keyframes floatUpDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 /* --- Mirage Aurora Styles --- */
 .aurora-container {
   position: relative;
@@ -581,4 +591,49 @@ body {
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+/* --- VPN Interface Fade Animations --- */
+.vpn-status {
+  margin-top: 15px;
+  font-size: 16px;
+  opacity: 0;
+  animation: fadeIn 1.5s forwards;
+}
+
+.vpn-title {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: gold;
+  opacity: 0;
+  animation: fadeIn 2s forwards;
+}
+
+.vpn-footer {
+  margin-top: 25px;
+  font-size: 14px;
+  color: gold;
+  opacity: 0;
+  animation: fadeIn 2.5s forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.error-line {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #ff4d4d, #ff8080);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(255, 80, 80, 0.6);
+  animation: fadeOutError 4s forwards;
+}
+
+@keyframes fadeOutError {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
 }

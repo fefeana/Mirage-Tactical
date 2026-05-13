@@ -103,6 +103,10 @@ service cloud.firestore {
       allow create: if true;
     }
     
+    match /translations/{translationId} {
+      allow read, write: if true;
+    }
+    
     match /chats/{chatId} {
       allow read, write: if true;
     }
