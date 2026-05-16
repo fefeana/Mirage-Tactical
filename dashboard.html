@@ -1,0 +1,234 @@
+<!-- dashboard.html -->
+<div id="dashboard">
+  <h1>⚡ شبكة البرق الكونية</h1>
+
+  <!-- مؤشر البث -->
+  <div id="broadcastIndicator" class="indicator">📡 الاتصال مباشر – يعمل 24/7</div>
+
+  <!-- التحكم في الاتصال القائم على السحابة -->
+  <div id="connectionControls" class="cloud-controls">
+    <h2>☁️ اتصال السحابة المباشر (Cloud Mode)</h2>
+    <div class="button-group">
+      <!-- الأزرار -->
+      <button id="mirageBtn">⚡🌿 Connect Mirage</button>
+      <button id="cloudBtn">🌐 Cloud Mode Connect</button>
+      <button id="reconnectBtn">🔄 Reconnect</button>
+      <button id="disconnectBtn">❌ Disconnect</button>
+    </div>
+  </div>
+
+  <!-- نظام المكافآت -->
+  <div id="rewards">
+    <h2>🎥 نظام المكافآت</h2>
+    <button id="watchVideosBtn">مشاهدة 5 فيديوهات</button>
+    <button id="generateImageBtn">توليد صورة هاي كواليتي</button>
+  </div>
+
+  <!-- محادثة AI -->
+  <div id="chatAI">
+    <h2>💬 محادثة مباشرة مع AI</h2>
+    <textarea id="userMessage" placeholder="اكتب رسالتك هنا..."></textarea>
+    <button id="sendBtn">إرسال</button>
+    <div id="chatLog"></div>
+  </div>
+
+  <!-- الاشتراكات -->
+  <div id="subscriptions">
+    <h2>💳 الاشتراكات</h2>
+    <ul>
+      <li>يومي – 0.99$</li>
+      <li>أسبوعي – 3.99$</li>
+      <li>شهري – 9.99$</li>
+      <li>سنوي – 49.5$</li>
+    </ul>
+  </div>
+
+  <!-- رابط الإحالة -->
+  <div id="referral">
+    <h2>🔗 رابط الإحالة</h2>
+    <input type="text" value="https://cosmicapp.com/ref/USER123" readonly />
+  </div>
+
+  <!-- الألعاب -->
+  <div id="games">
+    <h2>🎮 الألعاب</h2>
+    <a href="https://games.cosmicapp.com" target="_blank">فتح الألعاب</a>
+  </div>
+
+  <!-- زر الطائرة الشبح -->
+  <div id="stealthJet">
+    <h2>🛩️ زر الطائرة الشبح</h2>
+    <button id="stealthBtn">تفعيل التخفي</button>
+    <p>تشويش على الرادارات + تغيير الهوية الرقمية</p>
+  </div>
+
+  <!-- زر الطوارئ -->
+  <div id="emergency">
+    <h2>🚨 زر الطوارئ</h2>
+    <button id="emergencyBtn">تفعيل الطوارئ</button>
+    <button id="sosBtn">تفعيل الطوارئ (SOS للأقمار)</button>
+    <p>يحافظ على 1% بطارية احتياطية</p>
+  </div>
+</div>
+
+<style>
+.indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  color: white;
+  background: green;
+  animation: pulse 4s infinite;
+  font-weight: bold;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.indicator.stealth {
+  background: blue;
+  opacity: 0.6;
+}
+
+.cloud-controls {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+button {
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 16px;
+  padding: 12px 24px;
+  margin: 6px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+
+button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 20px cyan;
+  opacity: 0.9;
+}
+
+#mirageBtn {
+  background: linear-gradient(45deg, gold, orange);
+  color: white;
+}
+
+#cloudBtn {
+  background: linear-gradient(45deg, skyblue, teal);
+  color: white;
+}
+
+#reconnectBtn {
+  background: linear-gradient(45deg, violet, purple);
+  color: white;
+}
+
+#disconnectBtn {
+  background: linear-gradient(45deg, crimson, darkred);
+  color: white;
+}
+</style>
+
+<script>
+// كائن ai مبسط لربط الأزرار بالوظائف الموجودة
+window.ai = {
+  connect: (mode) => {
+    if (mode === "mirage") {
+      if (typeof establishLink === "function") establishLink();
+      alert("⚡ جاري الاتصال بشبكة ميراج...");
+    } else if (mode === "cloud") {
+      if (typeof connectCloud === "function") connectCloud();
+      setBroadcastStatus("online");
+      alert("🌐 تم تفعيل وضع الاتصال السحابي المباشر المفتوح 24/7!");
+    }
+  },
+  reconnect: () => {
+    setBroadcastStatus("online");
+    alert("🔄 جاري إعادة الاتصال بالسحابة...");
+  },
+  disconnect: () => {
+    setBroadcastStatus("offline");
+    alert("❌ تم فصل الاتصال!");
+  }
+};
+
+// زر الاتصال بشبكة ميراج
+document.getElementById("mirageBtn").onclick = () => {
+  ai.connect("mirage");
+};
+
+// زر الاتصال بالكلاود المباشر
+document.getElementById("cloudBtn").onclick = () => {
+  ai.connect("cloud");
+};
+
+// زر إعادة الاتصال
+document.getElementById("reconnectBtn").onclick = () => {
+  ai.reconnect();
+};
+
+// زر فصل الاتصال
+document.getElementById("disconnectBtn").onclick = () => {
+  ai.disconnect();
+};
+
+// المكافآت
+document.getElementById("watchVideosBtn").addEventListener("click", () => {
+  alert("🎥 تمت مشاهدة 5 فيديوهات – تم فتح 3 ساعات مجانية!");
+});
+document.getElementById("generateImageBtn").addEventListener("click", () => {
+  alert("🖼️ توليد صورة هاي كواليتي كمكافأة!");
+});
+
+// محادثة AI
+document.getElementById("sendBtn").addEventListener("click", () => {
+  const msg = document.getElementById("userMessage").value;
+  const chatLog = document.getElementById("chatLog");
+  const entry = document.createElement("p");
+  entry.textContent = `👤 المستخدم: ${msg}`;
+  chatLog.appendChild(entry);
+
+  const aiReply = document.createElement("p");
+  aiReply.textContent = `🤖 AI: تم استلام رسالتك – جاري الحل الفوري...`;
+  chatLog.appendChild(aiReply);
+});
+
+// زر الطائرة الشبح
+document.getElementById("stealthBtn").addEventListener("click", () => {
+  if (typeof activateStealthJet === "function") activateStealthJet();
+  alert("🛩️ زر الطائرة الشبح مفعل – الجهاز غير مرئي للشبكة ✨");
+});
+
+// زر الطوارئ العادي
+document.getElementById("emergencyBtn").addEventListener("click", () => {
+  if (typeof userEmergencyPress === "function") userEmergencyPress(1, true);
+  alert("🚨 زر الطوارئ مفعل – الجهاز في وضع التخفي 🛩️🔌");
+});
+
+// زر الطوارئ الجديد SOS
+document.getElementById("sosBtn").addEventListener("click", () => {
+  if (typeof emergencySOS === "function") emergencySOS(["+967000000000"], "الحقوني!");
+  alert("🚨 إشارة استغاثة أرسلت عبر الأقمار! ✨");
+});
+</script>

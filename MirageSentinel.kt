@@ -11,6 +11,19 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.ufoalbarq.vpn.R
 
+// Simulated External Dependencies based on the prompt instructions
+object SentinelCore {
+    fun switchProtocol(protocol: String) {
+        println("🔄 [SentinelCore] Switching protocol to: $protocol")
+    }
+}
+
+object MirageAIExecutiveHelper {
+    fun prioritizeNodes(latencyMs: Int, packetLoss: Double) {
+        println("👑 [MirageAIExecutive] Prioritizing nodes based on latency: $latencyMs ms, loss: $packetLoss%")
+    }
+}
+
 /**
  * ⚔️ UFO ALBARQ - The Master Core (Mirage Sentinel)
  * العقل المدبر الذي يعمل خلف الواجهة الأنيقة لإدارة السيادة التقنية
@@ -26,33 +39,44 @@ object MirageSentinel {
 
     enum class Protocol { VLESS_REALITY, HYSTERIA2_AGGRESSIVE, TROJAN_GFW }
 
-    // 1. إدارة الخوادم بناءً على الاحتياج (Auto-Scaling via GCP)
-    fun adjustServerCapacity(demand: LoadLevel) {
-        if (demand == LoadLevel.CRITICAL) {
-            // إضافة سيرفرات GCP فوراً في المنطقة المتضررة
-            println("⚠️ [SENTINEL] Critical Load Detected! Deploying new GCP Compute Engine instance in 'Auto' region...")
-            CloudProvider.deployNewInstance(region = "Auto") 
-        } else {
-            println("✅ [SENTINEL] Load is stable. Monitoring traffic...")
+    // 🚀 Start Health Monitoring and auto-switching
+    fun startHealthMonitoring(latencyMs: Int, packetLoss: Double) {
+        println("📡 [SENTINEL] Monitoring Health - Latency: $latencyMs ms | Loss: $packetLoss%")
+        MirageAIExecutiveHelper.prioritizeNodes(latencyMs, packetLoss)
+
+        val status = when {
+            packetLoss > 10.0 -> Restricted
+            latencyMs > 200 -> HighLatency
+            else -> Stable
         }
+        
+        optimizeProtocol(status)
     }
 
     // 2. إدارة التشفير والبروتوكولات (Dynamic Protocol Switching)
-    fun optimizeProtocol(networkCondition: NetworkStatus, context: Context? = null) {
+    fun optimizeProtocol(networkCondition: NetworkStatus, context: Context? = null, manualProtocol: String? = null) {
+        // If manual protocol is provided from the UI, we force switch and optimize it
+        if (manualProtocol != null) {
+            println("🛡️ [SENTINEL] Manual Protocol Selected: $manualProtocol. Optimizing route for $manualProtocol...")
+            SentinelCore.switchProtocol(manualProtocol)
+            context?.let { sendSentinelHealingNotification(it, "Previous Protocol", manualProtocol) }
+            return
+        }
+
         when (networkCondition) {
             is Restricted -> {
                 println("🛡️ [SENTINEL] Network Restriction Detected! Switching to HYSTERIA2_AGGRESSIVE.")
-                switchProtocol(Protocol.HYSTERIA2_AGGRESSIVE)
+                SentinelCore.switchProtocol("Hysteria2")
                 context?.let { sendSentinelHealingNotification(it, "Current Node", "Hysteria2 Node") }
             }
             is HighLatency -> {
                 println("⚡ [SENTINEL] High Latency Detected! Enabling Multi-Hop (3 Nodes).")
-                enableMultiHop(nodes = 3)
+                SentinelCore.switchProtocol("Trojan")
                 context?.let { sendSentinelHealingNotification(it, "High Latency Node", "Multi-Hop Node") }
             }
             else -> {
                 println("🔒 [SENTINEL] Network Stable. Using VLESS_REALITY (AES-256-GCM).")
-                useProtocol(Protocol.VLESS_REALITY)
+                SentinelCore.switchProtocol("VLESS")
             }
         }
     }

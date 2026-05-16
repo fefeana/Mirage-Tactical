@@ -88,11 +88,23 @@ fun MirageSettingsSheet(
             
             Spacer(modifier = Modifier.height(12.dp))
             
+            var selectedProtocol by remember { mutableStateOf<String?>(null) }
+            val context = androidx.compose.ui.platform.LocalContext.current
+
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(protocols) { protocol ->
                     FilterChip(
-                        selected = false, // يمكن ربطه بحالة الـ ViewModel
-                        onClick = { onProtocolSelected(protocol) },
+                        selected = selectedProtocol == protocol, 
+                        onClick = { 
+                            selectedProtocol = protocol
+                            onProtocolSelected(protocol) 
+                            // 🚀 [Mirage Protocol] dynamically updates backend configuration via MirageSentinel 
+                            com.ufoalbarq.vpn.domain.core.MirageSentinel.optimizeProtocol(
+                                networkCondition = com.ufoalbarq.vpn.domain.core.MirageSentinel.Stable, 
+                                context = context,
+                                manualProtocol = protocol
+                            )
+                        },
                         label = { Text(protocol, color = Color.White) },
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = Color.White.copy(alpha = 0.05f),

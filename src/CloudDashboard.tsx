@@ -18,7 +18,7 @@ export default function CloudDashboard() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'quickfix' | 'reports' | 'ai-core'>('overview');
     const [quickFixView, setQuickFixView] = useState<'list' | 'timeline' | 'chart'>('list');
-    const [activeArtifact, setActiveArtifact] = useState<'java' | 'js' | 'kotlin' | 'css' | 'xml'>('js');
+    const [activeArtifact, setActiveArtifact] = useState<'java' | 'js' | 'kotlin' | 'css' | 'xml' | 'bash' | 'yaml' | 'markdown' | 'html'>('yaml');
     const [showDigest, setShowDigest] = useState(false);
 
     const handleCategoryClick = (category: string) => {
@@ -743,6 +743,30 @@ export default function CloudDashboard() {
                                     >
                                         layout.xml
                                     </button>
+                                    <button 
+                                        onClick={() => setActiveArtifact('bash')}
+                                        className={`px-3 py-1 text-[10px] rounded transition-colors ${activeArtifact === 'bash' ? 'bg-[#cbd5e1]/20 text-[#cbd5e1] border border-[#cbd5e1]/50' : 'bg-[#1E293B] text-[#94A3B8] hover:text-white border border-transparent'}`}
+                                    >
+                                        git_setup.sh
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveArtifact('yaml')}
+                                        className={`px-3 py-1 text-[10px] rounded transition-colors ${activeArtifact === 'yaml' ? 'bg-[#EAB308]/20 text-[#EAB308] border border-[#EAB308]/50' : 'bg-[#1E293B] text-[#94A3B8] hover:text-white border border-transparent'}`}
+                                    >
+                                        app.yaml
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveArtifact('markdown')}
+                                        className={`px-3 py-1 text-[10px] rounded transition-colors ${activeArtifact === 'markdown' ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/50' : 'bg-[#1E293B] text-[#94A3B8] hover:text-white border border-transparent'}`}
+                                    >
+                                        README.md
+                                    </button>
+                                    <button 
+                                        onClick={() => setActiveArtifact('html')}
+                                        className={`px-3 py-1 text-[10px] rounded transition-colors ${activeArtifact === 'html' ? 'bg-[#ff4500]/20 text-[#ff4500] border border-[#ff4500]/50' : 'bg-[#1E293B] text-[#94A3B8] hover:text-white border border-transparent'}`}
+                                    >
+                                        ControlPanel.html
+                                    </button>
                                 </div>
                             </h2>
                             <button className="text-[10px] bg-[#1E293B] text-[#94A3B8] px-3 py-1 rounded hover:text-white transition-colors">
@@ -750,89 +774,167 @@ export default function CloudDashboard() {
                             </button>
                         </div>
                         <div className="p-6 flex-1 overflow-y-auto bg-[#04060A] text-[#94A3B8] font-mono text-[10px] sm:text-[11px] leading-relaxed whitespace-pre font-medium">
-{activeArtifact === 'xml' ? `<!-- 🧩 مثال مبسط داخل لوحة التحكم -->
-<LinearLayout
-    android:id="@+id/dashboardContainer"
-    android:layoutwidth="matchparent"
-    android:layoutheight="matchparent"
-    android:orientation="horizontal">
+{activeArtifact === 'markdown' ? `# UFO ALBARQ 🚀⚡
 
-    <!-- غرفة الدردشة -->
+مشروع متكامل يجمع بين Google AI Studio + GitHub + Gemini + Cloud Run + Firebase مع عقل ذكاء اصطناعي أساسي (AI Core).
+
+![Main Dashboard](https://via.placeholder.com/1200x600/04060A/A855F7?text=UFO+ALBARQ+Dashboard)
+
+---
+
+## 🧠 المكونات الأساسية
+- AI Core: دردشة، ترجمة، تحليلات، مالية، مراقبة، إشعارات.
+- Proxy Manager: إدارة بروكسيات متعددة مع تبديل تلقائي.
+- Protocols: دعم AES‑256, WireGuard, OpenVPN, IKEv2.
+- Certificates: توليد وإدارة TLS/SSL وربطها بالمستودعات.
+- Finance: متابعة الرصيد والمعاملات.
+- Sentinel: مراقبة الأمان والمالية.
+- Satellite Node: مراقبة الأداء الخارجي وربطها بالـ Dashboard.
+- Notifications: تنبيهات ذكية (انقطاع الإنترنت، انخفاض البطارية).
+- i18n: دعم لغات (عربي، إنجليزي، تركي، فرنسي).
+
+---
+
+## 📸Screenshots التعزيزات والإمكانيات
+| وحدة التحكم (AI Core) | التنبؤ والإصلاح الذاتي |
+| :---: | :---: |
+| ![Chat](https://via.placeholder.com/500x300/04060A/10B981?text=AI+Core) | ![Heal](https://via.placeholder.com/500x300/04060A/38BDF8?text=Smart+Healing) |
+
+---
+
+## ⚙️ الربط
+- GitHub MCP Registry
+- Google AI Studio
+- Gemini (نصوص + صور + فيديو)
+- Google Cloud Run
+- Firebase (قاعدة بيانات + تخزين)
+
+---
+
+## 🚀 طريقة التشغيل
+1. انسخ المشروع إلى جهازك:
+   \`\`\`bash
+   git clone https://github.com/username/UFO-ALBARQ.git
+   \`\`\`
+2. الرفع إلى GitHub
+   \`\`\`bash
+   git add .
+   git commit -m "Initial commit with AI Core"
+   git push origin main
+   \`\`\`
+
+---
+
+## 🗺️ بنية الشبكة والتحكم
+\`\`\`text
+[ Control Panel AI ]
+                 |
+   ---------------------------------
+   |               |               |
+[MCP Registry] [Google Cloud] [Firebase]
+   |               |               |
+ [AES-256]     [WireGuard]     [OpenVPN]
+   |               |               |
+   ----------- TLS/SSL ------------
+                 |
+          Multi-Channel Tunnels ⚡
+                 |
+             User Traffic 🚀
+\`\`\`
+
+---
+⚡ كذا صار عندك ملف README.md مرتب يشرح المشروع.` : activeArtifact === 'yaml' ? `app:
+  name: UFO-ALBARQ
+  mode: production
+  control_panel: enabled
+
+servers:
+  - MCP Registry (GitHub)
+  - Google Cloud Run
+  - Firebase
+
+protocols:
+  - AES-256
+  - WireGuard
+  - OpenVPN
+  - IKEv2
+
+certificates:
+  tls_ssl: enabled
+
+features:
+  encryption: strong
+  obfuscation: enabled
+  noise_injection: true
+  no_logs: true
+  leak_protection: true
+  load_balancing: distributed
+  multi_channel: parallel` : activeArtifact === 'bash' ? `# تهيئة وربط المستودع 🌌🦋
+git init
+git remote add origin https://github.com/fefeana/Mirage-Tactical-v2.git
+
+# إضافة الملفات ورفعها
+git add index.html
+git commit -m "إضافة الملف الرئيسي index.html"
+git push -u origin main
+
+# تفعيل GitHub Pages ⚡
+gh api -X PUT repos/fefeana/Mirage-Tactical-v2/pages \\
+  -F source='{"branch":"main","path":"/"}'
+
+# تفعيل Master Control (VIP:MIRAGE) ⚡🚀
+master-control --activate VIP:MIRAGE --priority high --smart-loadbalance --auto-restart` : activeArtifact === 'xml' ? `<LinearLayout
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RecyclerView
+        android:id="@+id/chatMessages"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"/>
+
+    <RecyclerView
+        android:id="@+id/logItems"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
     <LinearLayout
-        android:id="@+id/aiChatRoom"
-        android:layout_width="0dp"
-        android:layout_weight="2"
-        android:layoutheight="matchparent"
-        android:orientation="vertical"
-        android:background="#FFFFFF">
+        android:id="@+id/subscriptions"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
-        <TextView
-            android:id="@+id/chatHeader"
-            android:text="⚡ غرفة الدردشة مع AI"
-            android:textSize="18sp"
-            android:textColor="#444"
-            android:gravity="center"
-            android:layoutwidth="matchparent"
-            android:layout_height="48dp"
-            android:background="#EEE"/>
-        
-        <!-- باقي عناصر الغرفة (ScrollView + صندوق كتابة) -->
-        <ScrollView
-            android:id="@+id/chatScroll"
-            android:layoutwidth="matchparent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
-            <LinearLayout
-                android:id="@+id/chatMessages"
-                android:orientation="vertical"
-                android:layoutwidth="matchparent"
-                android:layoutheight="wrapcontent"/>
-        </ScrollView>
+    <TextView
+        android:id="@+id/finance"
+        android:text="رصيدك ومعاملاتك"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layoutwidth="matchparent"
-            android:layoutheight="wrapcontent">
-            <EditText
-                android:id="@+id/commandInput"
-                android:hint="اكتب رسالتك أو الأمر..."
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layoutheight="wrapcontent"/>
-            <Button
-                android:id="@+id/sendButton"
-                android:text="إرسال"
-                android:layoutwidth="wrapcontent"
-                android:layoutheight="wrapcontent"/>
-        </LinearLayout>
-    </LinearLayout>
+    <TextView
+        android:id="@+id/sentinel"
+        android:text="مراقبة الأمان والمالية"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
-    <!-- السجل الجانبي -->
-    <LinearLayout
-        android:id="@+id/activityLog"
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layoutheight="matchparent"
-        android:orientation="vertical"
-        android:background="#F5F5F5">
-        <TextView
-            android:text="سجل النشاطات"
-            android:textSize="16sp"
-            android:textColor="#333"
-            android:gravity="center"
-            android:layoutwidth="matchparent"
-            android:layout_height="48dp"
-            android:background="#E0E0E0"/>
-        <ScrollView
-            android:layoutwidth="matchparent"
-            android:layoutheight="matchparent">
-            <LinearLayout
-                android:id="@+id/logItems"
-                android:orientation="vertical"
-                android:layoutwidth="matchparent"
-                android:layoutheight="wrapcontent"/>
-        </ScrollView>
-    </LinearLayout>
+    <TextView
+        android:id="@+id/satellite"
+        android:text="مراقبة الأداء الخارجي"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <EditText
+        android:id="@+id/commandInput"
+        android:hint="أدخل الأمر هنا..."
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:id="@+id/sendButton"
+        android:text="إرسال"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 </LinearLayout>` : activeArtifact === 'css' ? `.error-line {
   position: absolute;
   bottom: 0;
@@ -889,59 +991,226 @@ function showGreenBox(status) {
     greenBox.style.opacity = '1';
   }
 }
-` : activeArtifact === 'kotlin' ? `// 🧩 كود Kotlin المحدث للوحة تحكم غرف المحادثة
-class DashboardActivity : AppCompatActivity() {
+` : activeArtifact === 'kotlin' ? `class AppInterface {
 
-    private lateinit var chatMessages: LinearLayout
-    private lateinit var logItems: LinearLayout
-    private lateinit var commandInput: EditText
-    private lateinit var sendButton: Button
+    fun sendCommand(command: String) {
+        // قناة اتصال آمنة بين التطبيق ولوحة التحكم
+        val secureChannel = SecureChannel()
+        secureChannel.encryptWith("AES-256")
+        secureChannel.useProtocol("WireGuard")
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.dashboard_container) // لازم يطابق اسم ملف XML
+        // إرسال الأمر إلى لوحة التحكم
+        secureChannel.sendTo("ControlPanel", command)
 
-        chatMessages = findViewById(R.id.chatMessages)
-        logItems = findViewById(R.id.logItems)
-        commandInput = findViewById(R.id.commandInput)
-        sendButton = findViewById(R.id.sendButton)
+        println("🚀 التطبيق أرسل أمر مشفر إلى لوحة التحكم بنجاح")
+    }
+}
 
-        sendButton.setOnClickListener {
-            val command = commandInput.text.toString()
-            if (command.isNotEmpty()) {
-                addMessage(command, true)
-                simulateAIResponse(command)
-                commandInput.text.clear()
+class DashboardKPIs {
+
+    fun showMetrics() {
+        println("⚡ البنج الحالي: " + Metrics.measureLatency() + " ms")
+        println("🚀 السرعة: " + Metrics.networkSpeed() + " Mbps")
+        println("🔒 حالة التشفير: " + Metrics.encryptionStatus())
+        println("🌀 مستوى الحجب والتشويش: " + Metrics.obfuscationLevel())
+        println("🌐 توزيع الضغط بين الخوادم: " + Metrics.loadDistribution())
+    }
+}
+
+class ServerCheck {
+
+    fun activeServers(): List<String> {
+        val servers = listOf("MCP Registry", "Google Cloud", "Firebase")
+        return servers.filter { Network.isActive(it) }
+    }
+}
+
+fun main() {
+    val masterControl = MasterControl()
+    masterControl.start()
+}
+
+class MasterControl {
+    private val aiEngine = AIEngine()
+    private val controlRoom = ControlRoom(aiEngine)
+
+    fun start() {
+        println("🛂 Master Control: الكل تحت السيطرة")
+
+        // تشغيل الصفحة النشطة
+        controlRoom.issueCommand("activePage:MCP Registry")
+
+        // الصفحة في راحة لكن تحت المراقبة
+        controlRoom.issueCommand("passivePage:AI Studio")
+
+        // إعادة تشغيل مباشر للصفحة في راحة
+        aiEngine.autoRestartLive("AI Studio")
+
+        // تفعيل وضع VIP:MIRAGE
+        controlRoom.issueCommand("master-control --activate VIP:MIRAGE --priority high --smart-loadbalance --auto-restart")
+    }
+}
+
+class ControlRoom(private val ai: AIEngine) {
+    fun issueCommand(cmd: String) {
+        println("📡 الغرفة أصدرت الأمر: $cmd")
+        ai.execute(cmd)
+    }
+}
+
+class AIEngine {
+    fun execute(cmd: String) {
+        when {
+            cmd.startsWith("activePage") -> {
+                println("⚡ تشغيل الصفحة النشطة: ${cmd.split(':')[1]}")
+                Network.openTunnel("MCP Registry", "Google Cloud", protocol="WireGuard", tls=true)
+            }
+            cmd.startsWith("passivePage") -> {
+                println("🛋️ الصفحة في وضع راحة لكن تحت مراقبة Master Control: ${cmd.split(':')[1]}")
+            }
+            cmd.startsWith("master-control") -> {
+                println("🚀 تفعيل أوامر Master Control المتقدمة: $cmd")
+                if (cmd.contains("--activate VIP:MIRAGE")) {
+                    println("💎 تم تفعيل بروتوكول VIP:MIRAGE بأولوية قصوى")
+                }
+                if (cmd.contains("--smart-loadbalance")) {
+                    println("⚖️ موازنة ذكية للأحمال لتخفيف الضغط")
+                }
+                if (cmd.contains("--auto-restart")) {
+                    println("🔄 تفعيل إعادة التشغيل التلقائي لحالة الطوارئ")
+                }
             }
         }
     }
 
-    private fun addMessage(text: String, isUser: Boolean) {
-        val messageView = TextView(this)
-        messageView.text = text
-        messageView.setPadding(16, 8, 16, 8)
-        messageView.setTextColor(if (isUser) Color.parseColor("#FFD700") else Color.parseColor("#6A5ACD"))
-        messageView.background = ContextCompat.getDrawable(this,
-            if (isUser) R.drawable.bubbleuser else R.drawable.bubbleai)
-        chatMessages.addView(messageView)
+    fun autoRestartLive(page: String) {
+        println("🔄 فحص مباشر للصفحة: $page")
+        val isDown = checkPageStatus(page)
+        if (isDown) {
+            println("🚨 الصفحة $page توقفت… إعادة تشغيل مباشر الآن ⚡")
+            restartPage(page)
+        } else {
+            println("✅ الصفحة $page تعمل بشكل طبيعي تحت Master Control")
+        }
     }
 
-    private fun simulateAIResponse(command: String) {
-        Handler(Looper.getMainLooper()).postDelayed({
-            val response = "تم تنفيذ الأمر: $command بنجاح ⚡"
-            addMessage(response, false)
-            addLogItem("تنفيذ الأمر: $command", "نجاح")
-        }, 1000)
+    private fun checkPageStatus(page: String): Boolean {
+        // محاكاة فحص حالة الصفحة
+        return true // نفترض أنها متوقفة للتجربة
     }
 
-    private fun addLogItem(action: String, status: String) {
-        val logView = TextView(this)
-        logView.text = "$action - الحالة: $status"
-        logView.setPadding(8, 4, 8, 4)
-        logView.setTextColor(Color.parseColor("#333333"))
-        logItems.addView(logView)
+    private fun restartPage(page: String) {
+        println("⚡ إعادة تشغيل الصفحة فورًا: $page")
     }
-}` : `// ⚡ شبح النت – الكود الشامل مع AI التنبؤ ⚡
+}` : activeArtifact === 'html' ? `<button id="mainControl">🔘 تشغيل الاتصال</button>
+<div id="indicator"></div>
+
+<style>
+  #mainControl {
+    background:#ffd700; color:#000; font-size:18px;
+    padding:10px 20px; border:none; border-radius:8px;
+    cursor:pointer; margin-top:15px;
+    transition:0.3s;
+  }
+  #mainControl:hover { background:#32cd32; color:#fff; }
+
+  #indicator {
+    width:20px; height:20px; border-radius:50%;
+    display:inline-block; margin-left:10px;
+    background:#ff4500; /* افتراضي: أحمر */
+    box-shadow:0 0 10px #ff4500;
+  }
+</style>
+
+<script>
+  let connected = false;
+  const btn = document.getElementById("mainControl");
+  const indicator = document.getElementById("indicator");
+
+  btn.addEventListener("click", ()=>{
+    connected = !connected;
+    if(connected){
+      btn.textContent = "⏹️ إيقاف الاتصال";
+      indicator.style.background = "#32cd32";
+      indicator.style.boxShadow = "0 0 10px #32cd32";
+      logEvent("SUCCESS","✅ الاتصال شغال – المؤشر أخضر");
+    } else {
+      btn.textContent = "🔘 تشغيل الاتصال";
+      indicator.style.background = "#ff4500";
+      indicator.style.boxShadow = "0 0 10px #ff4500";
+      logEvent("ERROR","⛔ الاتصال متوقف – المؤشر أحمر");
+    }
+  });
+
+  function logEvent(type,message){
+    const entry = { time:new Date().toLocaleTimeString(), type, message };
+    const container=document.getElementById("logs");
+    if(container) {
+      const div=document.createElement("div");
+      div.className="log "+type;
+      div.textContent=\`[\${entry.time}] (\${entry.type}) ➜ \${entry.message}\`;
+      container.appendChild(div);
+    } else {
+      console.log(\`[\${entry.time}] (\${entry.type}) ➜ \${entry.message}\`);
+    }
+  }
+</script>
+
+<canvas id="operationChart"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const logsData = [
+    { time: "10:00", type: "ERROR", message: "WebSocket closed without opened." },
+    { time: "12:00", type: "RESOLVED", message: "Auto-resolved via Load Balancer." },
+    { time: "14:00", type: "RESOLVED", message: "Auto-resolved via Load Balancer." },
+    { time: "16:00", type: "PENDING", message: "Requires admin verification." },
+    { time: "20:00", type: "FAILED", message: "Manual intervention needed." }
+  ];
+
+  function checkOperations(logsArray) {
+    let summary = { resolved: 0, pending: 0, failed: 0, errors: [] };
+    logsArray.forEach(log => {
+      if (log.type === "RESOLVED") summary.resolved++;
+      else if (log.type === "PENDING") summary.pending++;
+      else if (log.type === "FAILED") summary.failed++;
+      else if (log.type === "ERROR") summary.errors.push(log);
+    });
+    return summary;
+  }
+
+  const resultObj = checkOperations(logsData);
+
+  const ctx = document.getElementById("operationChart").getContext("2d");
+  new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["✅ Resolved", "⚠️ Pending", "❌ Failed"],
+      datasets: [{
+        data: [resultObj.resolved, resultObj.pending, resultObj.failed],
+        backgroundColor: ["#32cd32", "#ffd700", "#ff4500"],
+        borderColor: "#0d0d0d",
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: "⚡ Operation Status",
+          color: "#ffd700"
+        },
+        legend: {
+          labels: { color: "#f0f0f0" }
+        }
+      }
+    }
+  });
+
+  console.log("🚨 Errors:", resultObj.errors);
+  console.log("🌌 GOD mood engaged.");
+</script>
+` : `// ⚡ شبح النت – الكود الشامل مع AI التنبؤ ⚡
 // الذكاء الاصطناعي والإدارة الذكية (درع البرق المرتد)
 
 import android.net.VpnService;
