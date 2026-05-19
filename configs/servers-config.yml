@@ -1,0 +1,10 @@
+servers:
+  - name: us-east
+    ip: 192.168.1.10
+    protocol: wireguard
+  - name: eu-west
+    ip: 192.168.1.20
+    protocol: openvpn
+  - name: asia-south
+    ip: 192.168.1.30
+    protocol: aes256

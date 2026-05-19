@@ -7,6 +7,7 @@ import { mirageCloudEngine } from './services/MirageCloudEngine';
 import { collection, addDoc, query, orderBy, onSnapshot, doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import { handleAppError, ErrorSeverity } from './lib/errorHandler';
 
 type NodeStatus = 'ACTIVE' | 'BUSY' | 'OFFLINE' | 'REROUTING';
@@ -82,6 +83,7 @@ class ErrorHandler extends React.Component<React.PropsWithChildren<{}>, { hasErr
 }
 
 function ClientPortalInner() {
+  const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [showConnectedText, setShowConnectedText] = useState(false);
@@ -763,110 +765,80 @@ function ClientPortalInner() {
       )}
 
       {/* Main Content Container - Unified Mirage Version 2 */}
-      <div className="absolute inset-0 z-20 w-full h-full pointer-events-none flex flex-col items-center justify-between px-6 pt-12 pb-6 font-sans">
-          <div className="pointer-events-auto flex flex-col items-center text-center w-full max-w-sm mt-8">
+      <div className="absolute inset-0 z-20 w-full h-full pointer-events-none flex flex-col items-center justify-center px-4 font-sans">
+          
+          <div className="pointer-events-auto bg-[#070B19]/80 backdrop-blur-xl border border-white/5 rounded-[32px] w-full max-w-sm p-8 flex flex-col items-center shadow-2xl relative">
              
-             {/* العنوان الرئيسي (احتفظنا به كعنوان للبراند) */}
-             <h3 className="text-[#B280FF] font-bold text-xl tracking-widest mb-10">
-               MIRAGE TACTICAL
-             </h3>
-             
-             {/* منطقة الأيقونة المركزية المرتبطة بحالة الاتصال */}
-             <div className="flex justify-center items-center mb-10 relative">
-               {/* المؤشر الذكي (Quantum Aura) */}
-               <motion.div 
-                 className={`absolute w-[180px] h-[180px] rounded-full blur-2xl z-0 transition-opacity duration-700 ${isConnecting ? 'opacity-80' : isConnected ? 'opacity-50' : 'opacity-20'}`}
-                 animate={{ 
-                   backgroundColor: isConnecting ? '#FFD700' : isGhostPilotActive ? '#A020F0' : isConnected ? '#50C878' : '#6600FF',
-                   scale: isConnecting ? [1, 1.1, 1] : isGhostPilotActive ? [1, 1.2, 0.9, 1] : 1
-                 }}
-                 transition={{ 
-                   duration: isConnecting ? 1.5 : isGhostPilotActive ? 3 : 0.5,
-                   repeat: isConnecting || isGhostPilotActive ? Infinity : 0
-                 }}
-               />
-               <div className="relative z-10 flex items-center justify-center p-2 rounded-full transition-colors duration-500">
-                  <FloatingGold online={isConnected || isConnecting} signalStrength={isConnected ? 'strong' : 'weak'} size={150} ariaLabel={isGhostPilotActive ? "Ghost Mode Active" : "GOD MODE Active"} />
-               </div>
+             {/* Title Section */}
+             <div className="text-center mb-8">
+               <h3 className="text-[#B280FF] font-bold text-xl tracking-[0.2em] mb-2 uppercase drop-shadow-[0_0_8px_rgba(178,128,255,0.3)]">
+                 MIRAGE TACTICAL
+               </h3>
+               <p className="text-white/40 text-xs tracking-widest uppercase">
+                 God Mode / Sentinel VPN
+               </p>
              </div>
              
-             {/* معلومات البروتوكول النشط */}
-             <div className="flex items-center gap-3 mb-8 w-full justify-center">
-                <span className="text-white/60 font-bold">Protocol:</span>
-                <span className="text-[#00FFB2] font-bold">XTLS-Reality</span>
+             {/* Status Dot */}
+             <div className="flex items-center gap-3 mb-10 mt-2">
+               <div className={`w-3 h-3 rounded-full ${isConnected || isConnecting ? 'bg-[#00FF80] shadow-[0_0_10px_#00FF80]' : 'bg-white/20'} transition-all duration-300`} />
+               <span className="text-white text-lg font-medium tracking-wide">
+                 {isConnecting ? 'Establishing Link...' : isConnected ? 'Mirage Sentinel: Active' : 'Standby'}
+               </span>
+             </div>
+             
+             {/* Details Rows */}
+             <div className="w-full space-y-4 mb-12">
+               <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                 <span className="text-white/50 text-sm">Security Protocol</span>
+                 <span className={`text-sm ${isConnected || isConnecting ? 'text-[#00FF80]' : 'text-white/30'} font-medium transition-colors`}>
+                   {isConnected || isConnecting ? 'XTLS-Reality' : 'Standby'}
+                 </span>
+               </div>
+               <div className="flex justify-between items-center pb-2">
+                 <span className="text-white/50 text-sm">AI Routing</span>
+                 <span className={`text-sm ${isConnected || isConnecting ? 'text-[#FF00FF]' : 'text-white/30'} font-medium transition-colors`}>
+                   {isConnected || isConnecting ? 'ACTIVE' : 'OFFLINE'}
+                 </span>
+               </div>
              </div>
 
-             {/* زر التحكم الرئيسي */}
-             <div className="relative w-[85%] flex justify-center mb-8">
-               {/* SignalWave Ripples */}
-               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                  {(isConnected || isConnecting) && [0, 1].map((i) => (
-                      <motion.div
-                          key={i}
-                          className="absolute rounded-[30px]"
-                          style={{
-                              width: '100%',
-                              height: '60px',
-                              border: `2px solid ${isConnecting ? '#FFD700' : '#00FF80'}`,
-                          }}
-                          animate={{
-                              scaleX: [1, 1.3],
-                              scaleY: [1, 1.8],
-                              opacity: [0.6, 0]
-                          }}
-                          transition={{
-                              duration: 2.5,
-                              repeat: Infinity,
-                              ease: 'easeOut',
-                              delay: i * 1.25
-                          }}
-                      />
-                  ))}
-               </div>
-               
+             {/* Main Action Button */}
+             <div className="w-full mb-8">
                <button
                  onClick={handleConnect}
-                 className="relative z-10 w-full h-[60px] rounded-[30px] font-bold text-[20px] text-white transition-all active:scale-95 duration-500"
-                 style={{ 
-                   backgroundColor: isConnecting ? 'rgba(255, 178, 0, 1)' : isConnected ? 'rgba(0, 255, 128, 1)' : 'rgba(102, 0, 255, 1)',
-                   boxShadow: `0 0 15px ${isConnecting ? 'rgba(255, 178, 0, 0.4)' : isConnected ? 'rgba(0, 255, 128, 0.4)' : 'rgba(102, 0, 255, 0.4)'}`
-                 }}
+                 disabled={isConnecting}
+                 className={`w-full h-[56px] rounded-[28px] font-bold text-sm tracking-widest transition-all duration-300 flex items-center justify-center ${
+                   isConnected || isConnecting 
+                     ? 'bg-[#6600FF] text-white shadow-[0_0_20px_rgba(102,0,255,0.6)] border-none' 
+                     : 'bg-transparent text-white border border-[#6600FF] hover:bg-[#6600FF]/10'
+                 }`}
                >
-                 {isConnecting ? 'CONNECTING...' : isConnected ? 'SYSTEM LIVE' : 'START SYSTEM'}
+                 {isConnecting ? 'CONNECTING...' : isConnected ? 'SYSTEM LIVE' : 'ESTABLISH LINK'}
                </button>
              </div>
-          </div>
 
-          <div className="pointer-events-auto w-full max-w-sm flex flex-col items-center">
-             {/* Live Activity Monitor */}
-             <div className="flex justify-evenly w-full text-center font-mono mb-6 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] px-4">
-                <div className="flex flex-col items-center bg-black/40 px-3 py-2 rounded-lg border border-white/10 w-[30%]">
-                  <span className="text-[#2ECC71] text-[10px] font-bold mb-1 tracking-widest leading-none">UL MB/s</span>
-                  <span className="text-white text-[16px] font-bold mt-1">{isConnected ? nodeData.uploadSpeed : '--'}</span>
-                </div>
-                <div className="flex flex-col items-center bg-black/40 px-3 py-2 rounded-lg border border-white/10 w-[30%]">
-                  <span className="text-[#00BFFF] text-[10px] font-bold mb-1 tracking-widest leading-none">PING</span>
-                  <span id="ping-val" className="text-white text-[16px] font-bold mt-1">{isConnected ? `${nodeData.ping}ms` : '--'}</span>
-                </div>
-                <div className="flex flex-col items-center bg-black/40 px-3 py-2 rounded-lg border border-white/10 w-[30%]">
-                  <span className="text-[#F1C40F] text-[10px] font-bold mb-1 tracking-widest leading-none">DL MB/s</span>
-                  <span className="text-white text-[16px] font-bold mt-1">{isConnected ? nodeData.downloadSpeed : '--'}</span>
-                </div>
-             </div>
-
-             {/* شبكة الأزرار السفلية (Dashboard) */}
-             <div className="w-full grid grid-cols-2 gap-4 h-[120px]">
-               <button className="bg-[#1A1A33] rounded-md font-bold text-white hover:bg-[#2A2A4D] transition-colors shadow-[0_4px_10px_rgba(0,0,0,0.5)] flex items-center justify-center">
-                  METRICS
+             {/* Bottom Grid 2x2 */}
+             <div className="w-full grid grid-cols-2 gap-4">
+               <button onClick={() => navigate('/cloud')} className="bg-[#0D1326] border border-white/5 rounded-2xl h-[80px] flex flex-col items-center justify-center gap-2 hover:bg-[#151D36] transition-colors">
+                  <Activity className="w-5 h-5 text-[#38BDF8]" />
+                  <span className="text-white/80 text-[10px] font-bold tracking-widest uppercase">Metrics</span>
                </button>
-               <button onClick={() => setShowPaymentModal(true)} className="bg-[#1A1A33] rounded-md font-bold text-white hover:bg-[#2A2A4D] transition-colors shadow-[0_4px_10px_rgba(0,0,0,0.5)] flex items-center justify-center">
-                  FINANCE
+               <button onClick={() => navigate('/finance')} className="bg-[#0D1326] border border-white/5 rounded-2xl h-[80px] flex flex-col items-center justify-center gap-2 hover:bg-[#151D36] transition-colors">
+                  <div className="w-5 h-4 border-2 border-[#2ECC71] rounded-sm relative flex items-center justify-center">
+                    <div className="w-3 pos-absolute border-t-2 border-[#2ECC71]" />
+                  </div>
+                  <span className="text-white/80 text-[10px] font-bold tracking-widest uppercase">Finance</span>
                </button>
-               <button onClick={() => setIsSettingsSheetOpen(true)} className="bg-[#1A1A33] rounded-md font-bold text-white hover:bg-[#2A2A4D] transition-colors shadow-[0_4px_10px_rgba(0,0,0,0.5)] flex items-center justify-center">
-                  SETTINGS
+               <button onClick={() => navigate('/settings')} className="bg-[#0D1326] border border-white/5 rounded-2xl h-[80px] flex flex-col items-center justify-center gap-2 hover:bg-[#151D36] transition-colors">
+                  <Settings className="w-5 h-5 text-[#B280FF]" />
+                  <span className="text-white/80 text-[10px] font-bold tracking-widest uppercase">Settings</span>
                </button>
-               <button onClick={() => setCommanderAlert("AI SENTINEL ONLINE. OVERSEEING NETWORK.")} className="bg-[#1A1A33] rounded-md font-bold text-white hover:bg-[#2A2A4D] transition-colors shadow-[0_4px_10px_rgba(0,0,0,0.5)] flex items-center justify-center">
-                  AI SENTINEL
+               <button onClick={() => navigate('/ai-sentinel')} className="bg-[#0D1326] border border-white/5 rounded-2xl h-[80px] flex flex-col items-center justify-center gap-2 hover:bg-[#151D36] transition-colors">
+                  <div className="flex gap-1 items-center text-[#FF4D4D]">
+                    <span className="text-lg font-mono leading-none">&gt;</span><span className="w-2 h-[2px] bg-[#FF4D4D] mt-[6px]" />
+                  </div>
+                  <span className="text-white/80 text-[10px] font-bold tracking-widest uppercase">AI Sentinel</span>
                </button>
              </div>
           </div>

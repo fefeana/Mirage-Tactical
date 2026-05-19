@@ -1,0 +1,10 @@
+monitoring:
+  google-cloud:
+    enabled: true
+    project-id: mirage-monitoring
+  firebase-crashlytics:
+    enabled: true
+    app-id: mirage-app
+  alerts:
+    email: admin@mirage.com
+    slack: "#mirage-alerts"

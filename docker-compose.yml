@@ -1,0 +1,27 @@
+# ============================
+# God Mode / Sentinel VPN
+# ============================
+version: "1.0"
+
+services:
+  godmode:
+    image: mirage/godmode:latest
+    restart: always
+    environment:
+      - CONTROL_LAYER=enabled
+      - CERTIFICATES=auto
+      - TRAFFIC=global
+    volumes:
+      - ./secrets:/etc/secrets
+
+  sentinel-vpn:
+    image: mirage/sentinel:latest
+    restart: always
+    environment:
+      - SERVERS_CONFIG=/etc/config/servers-config.yml
+      - GLOBAL_CONFIG=/etc/config/global-config.yml
+    ports:
+      - "1194:1194/udp"
+      - "51820:51820/udp"
+    volumes:
+      - ./configs:/etc/config

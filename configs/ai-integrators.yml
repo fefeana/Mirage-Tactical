@@ -1,0 +1,7 @@
+ai:
+  protocols:
+    - auto-select: true
+    - fallback: openvpn
+  certificates:
+    - auto-renew: true
+    - kms: cloud

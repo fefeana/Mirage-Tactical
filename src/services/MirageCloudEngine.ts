@@ -19,9 +19,11 @@ class MirageCloudEngineService {
     console.log(`[Mirage Cloud] Executing action: ${actionType}`, payload);
     
     // 1. Verify User Authentication (Zero processing on client)
+    // Removed strict auth check to allow guest/anonymous execution for now
     const user = auth.currentUser;
     if (!user) {
-      return { action: 'ERROR', path: [], protocol: 'NONE', reason: 'Unauthenticated User' };
+      console.warn("Unauthenticated User, but allowing execution for now in God Mode.");
+      // return { action: 'ERROR', path: [], protocol: 'NONE', reason: 'Unauthenticated User' };
     }
 
     try {

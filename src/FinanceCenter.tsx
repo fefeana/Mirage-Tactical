@@ -22,7 +22,7 @@ export default function FinanceCenter() {
                 <div className="flex gap-4 mb-6">
                     <div className="flex-1 bg-[#11131A] border border-[#1C1E2B] rounded-2xl p-5">
                         <p className="text-[11px] text-gray-500 uppercase tracking-widest mb-2">Balance</p>
-                        <p className="text-[24px] font-bold text-[#00FF9D]">$289.54</p>
+                        <p className="text-[24px] font-bold text-[#00FF9D]">$266.44</p>
                     </div>
                     <div className="flex-1 bg-[#11131A] border border-[#1C1E2B] rounded-2xl p-5 border-t-2 border-t-[#FFC107]">
                         <p className="text-[11px] text-gray-500 uppercase tracking-widest mb-2">Plan</p>

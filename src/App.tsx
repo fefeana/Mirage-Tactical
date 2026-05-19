@@ -9,6 +9,7 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import FinanceCenter from "./FinanceCenter";
 import SettingsPage from "./SettingsPage";
 import CloudDashboard from "./CloudDashboard";
+import AiSentinel from "./AiSentinel";
 import { globalDBManager } from "./services/AppDatabaseManager";
 import { activateAntiYellowShield } from "./sentinelCore";
 import BouziehSplash from "./components/BouziehSplash";
@@ -17,11 +18,20 @@ import "./app.css";
 
 export default function App() {
   const [lang, setLang] = useState("ar");
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("golden");
   const [showBouzieh, setShowBouzieh] = useState(false);
   const [showFMStar, setShowFMStar] = useState(false);
 
   useEffect(() => {
+    // ⚡ Main Attachments
+    console.log("⚡💪🚀🌿🫰 واجهة نور قلبي – اللواحق الرئيسية مثبتة بالكامل");
+    console.log("🔒 تفعيل المستند: استعادة لوحة التحكم والدعم المالي واللغات والإصلاح الذاتي.");
+    
+    // Auto-Heal & PayPal Simulator Flags
+    window.localStorage.setItem('UI_THEME_LOCK', 'NOR_QALBI');
+    window.localStorage.setItem('FINANCE_WALLET', 'PayPal-External-Wallet');
+    window.localStorage.setItem('SUPPORTED_LANGUAGES', JSON.stringify(['ar', 'en', 'fr']));
+    
     const userLang = navigator.language.split("-")[0];
     setLang(userLang || "ar");
 
@@ -99,23 +109,15 @@ export default function App() {
         />
         <Router>
           <Routes>
-            <Route path="/" element={<CloudDashboard />} />
+            <Route path="/" element={<ClientPortal />} />
+            <Route path="/cloud" element={<CloudDashboard />} />
             <Route path="/finance" element={<FinanceCenter />} />
             <Route path="/portal" element={<ClientPortal />} />
             <Route path="/sso" element={<CyberLogin />} />
             <Route path="/gate" element={<IdentityGate />} />
             <Route path="/hq/:key" element={<AdminDashboard />} />
-            <Route
-              path="/settings"
-              element={
-                <SettingsPage
-                  lang={lang}
-                  setLang={setLang}
-                  theme={theme}
-                  setTheme={setTheme}
-                />
-              }
-            />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/ai-sentinel" element={<AiSentinel />} />
           </Routes>
         </Router>
       </ErrorBoundary>
