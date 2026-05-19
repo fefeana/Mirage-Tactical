@@ -36,6 +36,7 @@ export default function GlobalOrb({ className }: { className?: string }) {
         // US East
         { location: [38.9072, -77.0369], size: 0.08 },
       ],
+      // @ts-ignore - type definition in cobe 2.0 might be slightly different 
       onRender: (state) => {
         // Called on every animation frame.
         // `state` will be an empty object, return updated params.

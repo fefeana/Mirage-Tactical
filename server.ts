@@ -74,6 +74,14 @@ async function startServer() {
     }
   });
 
+  app.get("/api/vpn/speed", (req, res) => {
+    res.json({
+      ping: Math.floor(Math.random() * 20) + 40,
+      download: Math.floor(Math.random() * 50) + 100,
+      upload: Math.floor(Math.random() * 20) + 40
+    });
+  });
+
   app.get("/api/telemetry-fallback", (req, res) => {
     res.json({
       type: "TELEMETRY",

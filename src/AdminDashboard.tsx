@@ -397,6 +397,20 @@ export default function AdminDashboard() {
     const msgText = chatInput;
     setChatInput('');
 
+    // ==== ⚡ الشعائر (Rituals) ⚡ ====
+    if (msgText.includes("مسيو")) {
+      window.dispatchEvent(new CustomEvent('BOUZIEH_RITUAL'));
+    }
+    if (msgText.toLowerCase().includes("fmstar")) {
+      window.dispatchEvent(new CustomEvent('FMSTAR_RITUAL'));
+    }
+    if (msgText.includes("نور قلبي") || msgText.includes("/GOD mood") || msgText.includes("/GOD mode")) {
+      window.dispatchEvent(new CustomEvent('NOOR_QALBI'));
+    }
+    if (msgText.includes("جناح الحب")) {
+      window.dispatchEvent(new CustomEvent('JNAH_HOB'));
+    }
+
     try {
       // 1. Save Command locally to Firestore so it shows up in chat history
       await setDoc(doc(collection(db, 'messages')), {
@@ -414,7 +428,11 @@ export default function AdminDashboard() {
          aiResponseText = apiRes?.message || `Command "${msgText}" executed successfully via API.`;
       } catch (apiError) {
          console.warn("API executeCommand failed, using fallback AI response", apiError);
-         aiResponseText = `Fallback Mock: Command Executed. Action taken: ${msgText}`;
+         aiResponseText = msgText.toLowerCase().includes("fmstar") 
+           ? "🌿 FMStar chanall وبس 😉🚀"
+           : msgText.includes("مسيو") 
+           ? "🎸 مسيو بوزيه يرحب بك في عالم الميراج المحصن... 🎹"
+           : `Fallback Mock: Command Executed. Action taken: ${msgText}`;
       }
 
       // 3. Post AI response to chat

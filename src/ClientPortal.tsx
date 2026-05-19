@@ -135,6 +135,22 @@ function ClientPortalInner() {
     if (chatInput.trim()) {
       const userMessage = chatInput;
       setChatInput(''); // Clear immediately for UX
+      
+      // ==== ⚡ الشعائر (Rituals) ⚡ ====
+      if (userMessage.includes("مسيو")) {
+        window.dispatchEvent(new CustomEvent('BOUZIEH_RITUAL'));
+      }
+      if (userMessage.toLowerCase().includes("fmstar")) {
+        window.dispatchEvent(new CustomEvent('FMSTAR_RITUAL'));
+      }
+      if (userMessage.includes("نور قلبي") || userMessage.includes("/GOD mood") || userMessage.includes("/GOD mode")) {
+        window.dispatchEvent(new CustomEvent('NOOR_QALBI'));
+      }
+      if (userMessage.includes("جناح الحب")) {
+        window.dispatchEvent(new CustomEvent('JNAH_HOB'));
+        setIsGhostPilotActive(true); // تفعيل وضع الطيران
+      }
+
       try {
         await addDoc(collection(db, "chats"), {
           text: userMessage,
@@ -152,7 +168,12 @@ function ClientPortalInner() {
                  "Hysteria2 link maintaining velocity.",
                  "Mission acknowledged.",
              ];
-             const randomReply = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+             const randomReply = userMessage.toLowerCase().includes("fmstar") 
+               ? "🌿 FMStar chanall وبس 😉🚀"
+               : userMessage.includes("مسيو") 
+               ? "🎸 مسيو بوزيه يرحب بك في عالم الميراج المحصن... 🎹"
+               : aiResponses[Math.floor(Math.random() * aiResponses.length)];
+               
              try {
                 await addDoc(collection(db, "chats"), {
                   text: randomReply,
@@ -470,7 +491,7 @@ function ClientPortalInner() {
           ping: data.ping,
           uploadSpeed: data.ul,
           downloadSpeed: data.dl,
-          status: 'ONLINE',
+          status: 'ACTIVE',
           loadPercentage: Math.floor(Math.random() * (45 - 30 + 1)) + 30,
         }));
         

@@ -1,0 +1,38 @@
+.indicators {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.ping {
+  background: radial-gradient(circle, #00ff99 0%, #006644 100%);
+}
+
+.download {
+  background: radial-gradient(circle, #3399ff 0%, #003366 100%);
+}
+
+.upload {
+  background: radial-gradient(circle, #cc66ff 0%, #330066 100%);
+}
+
+label {
+  font-size: 0.8rem;
+  margin-top: 5px;
+  opacity: 0.8;
+}

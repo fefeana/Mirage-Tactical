@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar, Legend, PieChart, Pie, Cell, ComposedChart, Line } from 'recharts';
 import { Activity, Clock, AlertTriangle, ShieldCheck, Zap, Globe, Satellite, Terminal, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Indicators from './components/Indicators';
 
 export default function CloudDashboard() {
     const navigate = useNavigate();
@@ -244,6 +245,8 @@ export default function CloudDashboard() {
                             </ResponsiveContainer>
                         </div>
                     </div>
+
+                    <Indicators />
 
                     {/* Daily Indicators (Summary) */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1062,11 +1065,11 @@ class AIEngine {
     fun execute(cmd: String) {
         when {
             cmd.startsWith("activePage") -> {
-                println("⚡ تشغيل الصفحة النشطة: ${cmd.split(':')[1]}")
+                println("⚡ تشغيل الصفحة النشطة: " + cmd.split(':')[1])
                 Network.openTunnel("MCP Registry", "Google Cloud", protocol="WireGuard", tls=true)
             }
             cmd.startsWith("passivePage") -> {
-                println("🛋️ الصفحة في وضع راحة لكن تحت مراقبة Master Control: ${cmd.split(':')[1]}")
+                println("🛋️ الصفحة في وضع راحة لكن تحت مراقبة Master Control: " + cmd.split(':')[1])
             }
             cmd.startsWith("master-control") -> {
                 println("🚀 تفعيل أوامر Master Control المتقدمة: $cmd")
