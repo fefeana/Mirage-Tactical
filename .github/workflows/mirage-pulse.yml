@@ -1,36 +1,58 @@
-function normalizeCode(code, spaces = 2) {
-  const lines = code.split('\n');
-  let indentLevel = 0;
+name: ⚡ مسيو بوزيه مانيتيك 🚀
 
-  return lines.map(line => {
-    // إزالة المسافات الزائدة
-    let trimmed = line.trim();
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-    // تقليل مستوى التباعد عند إغلاق الأقواس
-    if (trimmed.startsWith('}') || trimmed.endsWith('}')) {
-      indentLevel = Math.max(indentLevel - 1, 0);
-    }
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
 
-    // بناء السطر بالمسافات الصحيحة
-    const newLine = ' '.repeat(indentLevel * spaces) + trimmed;
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
-    // زيادة مستوى التباعد عند فتح الأقواس
-    if (trimmed.endsWith('{')) {
-      indentLevel++;
-    }
+      # 🛠️ استدعاء دالة التنسيق
+      - name: Normalize code spacing
+        run: node scripts/normalizeCode.js
 
-    return newLine;
-  }).join('\n');
-}
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test -- --coverage
+      - run: npm run build
+      - run: npm run test:integration
 
-// 🛠️ مثال استخدام
-const rawCode = `
-function test() {
-console.log("Hello");
-if(true){
-console.log("World");
-}
-}
-`;
+      - run: |
+          gcloud functions deploy albarq2026-api \
+            --runtime nodejs20 --trigger-http --allow-unauthenticated \
+            --project ${{ secrets.GCP_PROJECT_ID }}
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
 
-console.log(normalizeCode(rawCode, 2));
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+          channelId: live
+          projectId: your-firebase-project-id
+
+      - run: |
+          curl -X POST https://mcp-server.example.com/api/deploy \
+            -H "Authorization: Bearer ${{ secrets.MCP_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "project": "AlBarq-2026",
+              "branch": "'"$GITHUB_REF_NAME"'",
+              "status": "deployed",
+              "timestamp": "'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"
+            }'
+
+      - uses: google-github-actions/upload-cloud-storage@v1
+        with:
+          path: build/
+          destination: gs://your-bucket-name/builds/
+          credentials: ${{ secrets.GCP_CREDENTIALS }}
