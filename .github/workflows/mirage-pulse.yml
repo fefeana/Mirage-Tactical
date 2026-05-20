@@ -23,7 +23,7 @@ function normalizeCode(code, spaces = 2) {
   }).join('\n');
 }
 
-// 🛠️ استخدام الدالة
+// 🛠️ مثال استخدام
 const rawCode = `
 function test() {
 console.log("Hello");
