@@ -1,29 +1,36 @@
-name: Mirage Pulse - Hourly UI & Security Update
-on:
-  schedule:
-    - cron: '0 * * * *' # تنفيذ تلقائي رأس كل ساعة
-  workflow_dispatch: # إمكانية التشغيل اليدوي عند الحاجة
+function normalizeCode(code, spaces = 2) {
+  const lines = code.split('\n');
+  let indentLevel = 0;
 
-jobs:
-  mirage-auto-update:
-    runs-on: ubuntu-latest
-    env:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+  return lines.map(line => {
+    // إزالة المسافات الزائدة
+    let trimmed = line.trim();
 
-      - name: Apply Mirage Glass UI
-        run: |
-          # هنا يتم حقن تعديلات الواجهة الزجاجية برمجياً
-          echo "Applying Glassmorphism UI updates..."
-          
-      - name: Security & Auto-Fix
-        run: npm audit fix --force
+    // تقليل مستوى التباعد عند إغلاق الأقواس
+    if (trimmed.startsWith('}') || trimmed.endsWith('}')) {
+      indentLevel = Math.max(indentLevel - 1, 0);
+    }
 
-      - name: Deploy to Cloud (Firebase)
-        uses: FirebaseExtended/action-firebase-deployment@v0
-        with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
-          channelId: live
+    // بناء السطر بالمسافات الصحيحة
+    const newLine = ' '.repeat(indentLevel * spaces) + trimmed;
+
+    // زيادة مستوى التباعد عند فتح الأقواس
+    if (trimmed.endsWith('{')) {
+      indentLevel++;
+    }
+
+    return newLine;
+  }).join('\n');
+}
+
+// 🛠️ استخدام الدالة
+const rawCode = `
+function test() {
+console.log("Hello");
+if(true){
+console.log("World");
+}
+}
+`;
+
+console.log(normalizeCode(rawCode, 2));
