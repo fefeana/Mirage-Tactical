@@ -1437,6 +1437,15 @@ class NodeViewModel(private val apiService: MirageApiService) : ViewModel() {
           >
             <MessageSquare size={18} /> COMM LINK
           </button>
+          
+          {/* New OODA Button */}
+          <button 
+            onClick={() => window.location.href = '/ooda'}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold tracking-widest transition-colors text-gray-500 hover:text-[#00ffcc] hover:bg-[#111] border-l-2 border-transparent hover:border-[#00ffcc] relative overflow-hidden group`}
+          >
+            <Zap size={18} className="group-hover:animate-pulse" /> OODA COMMAND (⚡)
+          </button>
+
           <button 
             onClick={() => setActiveTab('ai_command')}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold tracking-widest transition-colors ${activeTab === 'ai_command' ? 'bg-[#111] text-[#00ffcc] border-l-2 border-[#00ffcc]' : 'text-gray-500 hover:text-white hover:bg-[#111]'}`}

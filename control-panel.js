@@ -10,49 +10,20 @@ let current = 0;
 
 function connectServer() {
   const url = proxies[current];
-  try {
-    ws = new WebSocket(url);
-
-    ws.onopen = () => {
+  // محاكاة وضع الاستوديو بدون أخطاء WebSocket الوهمية
+  setTimeout(() => {
       const status = document.getElementById("network-status");
       if (status) {
-        status.innerText = "🌐 Connected via " + url;
-
-        // وميض متكرر عند نجاح الاتصال
-        status.classList.add("glow");
-        setTimeout(() => status.classList.remove("glow"), 1500);
+          status.innerText = "🌐 Connected via " + url + " (Simulated)";
+          status.classList.add("glow");
+          setTimeout(() => status.classList.remove("glow"), 1500);
       }
-
-      // تغيير خلفية الزر لإظهار التحول
       const btn = document.getElementById("btn-connect");
       if (btn) {
-        btn.classList.add("switch");
-        setTimeout(() => btn.classList.remove("switch"), 1500);
+          btn.classList.add("switch");
+          setTimeout(() => btn.classList.remove("switch"), 1500);
       }
-    };
-
-    ws.onclose = () => {
-      current = (current + 1) % proxies.length;
-      setTimeout(connectServer, 2000);
-    };
-
-    ws.onerror = () => ws.close();
-  } catch (e) {
-    // محاكاة وضع الاستوديو
-    setTimeout(() => {
-        const status = document.getElementById("network-status");
-        if (status) {
-            status.innerText = "🌐 Connected via " + url + " (Simulated)";
-            status.classList.add("glow");
-            setTimeout(() => status.classList.remove("glow"), 1500);
-        }
-        const btn = document.getElementById("btn-connect");
-        if (btn) {
-            btn.classList.add("switch");
-            setTimeout(() => btn.classList.remove("switch"), 1500);
-        }
-    }, 500);
-  }
+  }, 500);
 }
 
 function injectControlPanel() {

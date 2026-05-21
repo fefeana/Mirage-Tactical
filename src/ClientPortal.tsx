@@ -461,18 +461,15 @@ function ClientPortalInner() {
   // Heartbeat & Ghost Pilot
   const [commanderAlert, setCommanderAlert] = useState<string | null>(null);
 
-  // === SmartConnector (FlexibleConnection with HTTP Fallback) ===
+  // === SmartConnector (FlexibleConnection with HTTP Polling) ===
   useEffect(() => {
-    let socket: WebSocket | null = null;
-    let fallbackInterval: NodeJS.Timeout | null = null;
-    let retryCount = 0;
-    const maxRetries = 5;
+    let pollingInterval: NodeJS.Timeout | null = null;
 
-    function startPollingFallback() {
-      console.warn("فشل WebSocket تماماً. الانتقال إلى وضع HTTP Polling لضمان الاستمرارية.");
-      if (fallbackInterval) return;
+    function startPolling() {
+      console.log("✅ [Mirage Bridge]: استخدام وضع HTTP Polling لضمان الاستمرارية.");
+      if (pollingInterval) return;
       
-      fallbackInterval = setInterval(async () => {
+      pollingInterval = setInterval(async () => {
         try {
           const res = await fetch('/api/telemetry-fallback');
           if (res.ok) {
@@ -482,7 +479,7 @@ function ClientPortalInner() {
             }
           }
         } catch (e) {
-            // Ignore fetch errors during fallback
+            // Ignore fetch errors to keep console clean
         }
       }, 3000);
     }
@@ -499,65 +496,21 @@ function ClientPortalInner() {
         
         // تحديث الواجهة وتدقيق الـ Ping - تصحيح ذكي
         if (data.ping > 80 && !isGhostPilotActive) {
-            console.log("تحسين المسار تلقائياً..."); // إجراء صامت للحفاظ على جودة الـ 54ms
+            console.log("تحسين المسار تلقائياً..."); 
             setIsGhostPilotActive(true);
             setCommanderAlert("HIGH LATENCY DETECTED. AI SENTINEL REROUTING SILENTLY (Mesh/Satellite)...");
         }
     }
 
-    function connect() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      socket = new WebSocket(`${protocol}//${window.location.host}/api/telemetry`);
-
-      socket.onopen = () => {
-        console.log("✅ [Mirage Bridge]: المزامنة مع Google Cloud & Firebase نشطة (WebSocket)");
-        retryCount = 0; // تصفير العداد عند النجاح
-      };
-
-      socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'TELEMETRY') {
-            updateTelemetry(data);
-          }
-        } catch (e) {
-          // Silently handle parse errors
-        }
-      };
-
-      socket.onerror = (error) => {
-        console.error("⚠️ [Mirage Bridge]: خطأ في WebSocket، يتم الآن تفعيل وضع المرونة...");
-      };
-
-      socket.onclose = () => {
-        // إذا أغلق بدون سبب واضح، حاول مجدداً
-        if (retryCount < maxRetries) {
-            retryCount++;
-            let delay = Math.pow(2, retryCount) * 1000; 
-            console.log(`إعادة محاولة خلال ${delay/1000} ثانية...`);
-            setTimeout(() => connect(), delay);
-        } else {
-            startPollingFallback();
-        }
-      };
-    }
-
     if (isConnected) {
-      connect();
+      startPolling();
     } else {
       setNodeData(prev => ({ ...prev, status: 'OFFLINE', ping: 0, loadPercentage: 0, uploadSpeed: '0.0', downloadSpeed: '0.0' }));
     }
 
     return () => {
-      if (socket) {
-        socket.onclose = null; // Prevent reconnect loop on unmount
-        socket.onerror = null;
-        if (socket.readyState === 1 || socket.readyState === 0) { // OPEN or CONNECTING
-            socket.close();
-        }
-      }
-      if (fallbackInterval) {
-        clearInterval(fallbackInterval);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
       }
     };
   }, [isConnected, isGhostPilotActive]);
@@ -819,7 +772,7 @@ function ClientPortalInner() {
              </div>
 
              {/* Bottom Grid 2x2 */}
-             <div className="w-full grid grid-cols-2 gap-4">
+             <div className="w-full grid grid-cols-2 gap-4 mb-4">
                <button onClick={() => navigate('/cloud')} className="bg-[#0D1326] border border-white/5 rounded-2xl h-[80px] flex flex-col items-center justify-center gap-2 hover:bg-[#151D36] transition-colors">
                   <Activity className="w-5 h-5 text-[#38BDF8]" />
                   <span className="text-white/80 text-[10px] font-bold tracking-widest uppercase">Metrics</span>
@@ -839,6 +792,26 @@ function ClientPortalInner() {
                     <span className="text-lg font-mono leading-none">&gt;</span><span className="w-2 h-[2px] bg-[#FF4D4D] mt-[6px]" />
                   </div>
                   <span className="text-white/80 text-[10px] font-bold tracking-widest uppercase">AI Sentinel</span>
+               </button>
+             </div>
+
+             {/* Security Operation Toggles */}
+             <div className="w-full flex gap-3">
+               <button 
+                 id="ghostMode"
+                 disabled={!isConnected}
+                 onClick={() => setIsGhostPilotActive(!isGhostPilotActive)} 
+                 className={`flex-1 h-10 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-colors border ${isGhostPilotActive ? 'bg-[#00FFDD]/20 border-[#00FFDD] text-[#00FFDD]' : 'bg-black/40 border-white/10 text-white/50 hover:bg-white/5 disabled:opacity-50'}`}
+               >
+                 Ghost Mode
+               </button>
+               <button 
+                 id="emergencyMode"
+                 disabled={!isConnected}
+                 onClick={() => setCommanderAlert(commanderAlert ? null : "EMERGENCY PROTOCOL ACTIVATED. FORCING SATELLITE RELAY...")} 
+                 className={`flex-1 h-10 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-colors border ${commanderAlert ? 'bg-[#ff003c]/20 border-[#ff003c] text-[#ff003c]' : 'bg-black/40 border-white/10 text-white/50 hover:bg-white/5 disabled:opacity-50'}`}
+               >
+                 Emergency
                </button>
              </div>
           </div>

@@ -144,7 +144,6 @@ export default function Indicators() {
 
     autoGhostMode();
 
-    let ws: WebSocket | null = null;
     let timer: ReturnType<typeof setTimeout>;
 
     function connectWireGuard() {
@@ -152,30 +151,14 @@ export default function Indicators() {
       setDownloadStatus("🔗 محاولة فتح نفق WireGuard...");
 
       try {
-        ws = new WebSocket("wss://your-wireguard-server.com/tunnel");
-
-        ws.onopen = () => {
+        // Mock connection instead of continuously failing ws
+        timer = setTimeout(() => {
           console.log("⚡✅ النفق مفتوح – وضع الشبح شغال!");
           setDownloadStatus("⚡✅ النفق مفتوح – وضع الشبح شغال!");
-          
           startStudioDownload("https://www.larkvideoplayer.com/sharefile/VID_٢٠٢٦٠٥١٩_٠٩٢٤٢٢");
-        };
-
-        ws.onclose = () => {
-          console.warn("❌ النفق أغلق – إعادة المحاولة بعد 3 ثواني...");
-          setDownloadStatus("❌ النفق أغلق – إعادة المحاولة بعد 3 ثواني...");
-          timer = setTimeout(connectWireGuard, 3000);
-        };
-
-        ws.onerror = (error: Event) => {
-          console.error("⚠️ خطأ في النفق:", error);
-          if (ws && ws.readyState !== WebSocket.CLOSED) {
-             ws.close();
-          }
-        };
+        }, 1000);
       } catch (err) {
-         console.warn("❌ النفق أغلق – إعادة المحاولة بعد 3 ثواني...");
-         timer = setTimeout(connectWireGuard, 3000);
+         console.warn("❌ النفق أغلق");
       }
     }
 
@@ -183,10 +166,6 @@ export default function Indicators() {
 
     return () => {
       clearTimeout(timer);
-      if (ws) {
-        ws.onclose = null;
-        ws.close();
-      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

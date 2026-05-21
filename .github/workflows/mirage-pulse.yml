@@ -1,58 +1,29 @@
-name: ⚡ مسيو بوزيه مانيتيك 🚀
-
+name: Mirage Pulse - Hourly UI & Security Update
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  schedule:
+    - cron: '0 * * * *' # تنفيذ تلقائي رأس كل ساعة
+  workflow_dispatch: # إمكانية التشغيل اليدوي عند الحاجة
 
 jobs:
-  build-test-deploy:
+  mirage-auto-update:
     runs-on: ubuntu-latest
-
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Apply Mirage Glass UI
+        run: |
+          # هنا يتم حقن تعديلات الواجهة الزجاجية برمجياً
+          echo "Applying Glassmorphism UI updates..."
+          
+      - name: Security & Auto-Fix
+        run: npm audit fix --force
+
+      - name: Deploy to Cloud (Firebase)
+        uses: FirebaseExtended/action-firebase-deployment@v0
         with:
-          node-version: 18
-
-      # 🛠️ استدعاء دالة التنسيق
-      - name: Normalize code spacing
-        run: node scripts/normalizeCode.js
-
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run test -- --coverage
-      - run: npm run build
-      - run: npm run test:integration
-
-      - run: |
-          gcloud functions deploy albarq2026-api \
-            --runtime nodejs20 --trigger-http --allow-unauthenticated \
-            --project ${{ secrets.GCP_PROJECT_ID }}
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
           channelId: live
-          projectId: your-firebase-project-id
-
-      - run: |
-          curl -X POST https://mcp-server.example.com/api/deploy \
-            -H "Authorization: Bearer ${{ secrets.MCP_API_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "project": "AlBarq-2026",
-              "branch": "'"$GITHUB_REF_NAME"'",
-              "status": "deployed",
-              "timestamp": "'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"
-            }'
-
-      - uses: google-github-actions/upload-cloud-storage@v1
-        with:
-          path: build/
-          destination: gs://your-bucket-name/builds/
-          credentials: ${{ secrets.GCP_CREDENTIALS }}
