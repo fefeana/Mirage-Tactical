@@ -11,6 +11,7 @@ import FinanceCenter from "./FinanceCenter";
 import SettingsPage from "./SettingsPage";
 import CloudDashboard from "./CloudDashboard";
 import AiSentinel from "./AiSentinel";
+import AlBarqHub from "./components/AlBarqHub";
 import { globalDBManager } from "./services/AppDatabaseManager";
 import { activateAntiYellowShield } from "./sentinelCore";
 import BouziehSplash from "./components/BouziehSplash";
@@ -117,9 +118,10 @@ export default function App() {
             <Route path="/sso" element={<CyberLogin />} />
             <Route path="/gate" element={<IdentityGate />} />
             <Route path="/hq/:key" element={<AdminDashboard />} />
-          <Route path="/ooda" element={<OodaCommandCenter />} />
+            <Route path="/ooda" element={<OodaCommandCenter />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/ai-sentinel" element={<AiSentinel />} />
+            <Route path="/albarq" element={<AlBarqHub />} />
           </Routes>
         </Router>
       </ErrorBoundary>

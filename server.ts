@@ -5,7 +5,6 @@ import { GoogleGenAI } from "@google/genai";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
-import { WebSocketServer, WebSocket } from "ws";
 import http from "http";
 
 dotenv.config();
@@ -91,29 +90,8 @@ async function startServer() {
     });
   });
 
-  // === WebSocket Manager (SmartConnector Core) ===
-  const wss = new WebSocketServer({ server, path: "/api/telemetry" });
-
-  wss.on("connection", (ws: WebSocket) => {
-    console.log("✅ [Mirage Bridge]: Client Connected via WebSocket.");
-
-    // Simulate Real-time Network Telemetry
-    const telemetryInterval = setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: "TELEMETRY",
-          ping: Math.floor(Math.random() * 20) + 40, // 40-60ms optimal ping
-          dl: (Math.random() * 50 + 100).toFixed(1), // 100-150 Mbps
-          ul: (Math.random() * 20 + 40).toFixed(1)   // 40-60 Mbps
-        }));
-      }
-    }, 2000);
-
-    ws.on("close", () => {
-      console.log("⚠️ [Mirage Bridge]: Client Disconnected.");
-      clearInterval(telemetryInterval);
-    });
-  });
+  // === WebSocket Server Removed (SmartConnector Core now uses HTTP Polling) ===
+  // wss code has been completely removed to prevent "WebSocket closed without opened" errors.
 
   // === Vite Middleware for Frontend ===
   if (process.env.NODE_ENV !== "production") {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Terminal, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import AiHub from './components/AiHub';
 
 export default function AiSentinel() {
     const navigate = useNavigate();
@@ -46,7 +47,7 @@ export default function AiSentinel() {
                 </div>
 
                 {/* Terminal Window */}
-                <div className="bg-black border border-[#FF00FF]/50 rounded-lg p-4 h-[60vh] overflow-y-auto">
+                <div className="bg-black border border-[#FF00FF]/50 rounded-lg p-4 h-[40vh] overflow-y-auto mb-10">
                      {lines.map((line, index) => (
                          <div key={index} className="text-[#00FF9D] text-xs mb-2">
                              <span className="opacity-50 select-none mr-2">[{new Date().toISOString().split('T')[1].substring(0, 8)}]</span>
@@ -55,7 +56,11 @@ export default function AiSentinel() {
                      ))}
                      <div className="animate-pulse w-2 h-4 bg-[#00FF9D] mt-2 inline-block"></div>
                 </div>
+            </div>
 
+            {/* AI Hub Section */}
+            <div className="mt-8 border-t border-white/10 pt-8 w-full max-w-7xl mx-auto">
+                <AiHub />
             </div>
         </div>
     );
