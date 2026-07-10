@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster, toast } from "sonner";
 import AdminDashboard from "./AdminDashboard";
-import OodaCommandCenter from "./OodaCommandCenter";
 import ClientPortal from "./ClientPortal";
 import CyberLogin from "./components/CyberLogin";
 import IdentityGate from "./components/IdentityGate";
@@ -11,7 +10,6 @@ import FinanceCenter from "./FinanceCenter";
 import SettingsPage from "./SettingsPage";
 import CloudDashboard from "./CloudDashboard";
 import AiSentinel from "./AiSentinel";
-import AlBarqHub from "./components/AlBarqHub";
 import { globalDBManager } from "./services/AppDatabaseManager";
 import { activateAntiYellowShield } from "./sentinelCore";
 import BouziehSplash from "./components/BouziehSplash";
@@ -118,13 +116,11 @@ export default function App() {
             <Route path="/sso" element={<CyberLogin />} />
             <Route path="/gate" element={<IdentityGate />} />
             <Route path="/hq/:key" element={<AdminDashboard />} />
-            <Route path="/ooda" element={<OodaCommandCenter />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/ai-sentinel" element={<AiSentinel />} />
-            <Route path="/albarq" element={<AlBarqHub />} />
           </Routes>
         </Router>
       </ErrorBoundary>
     </div>
   );
-}
+          }
