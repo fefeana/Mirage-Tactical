@@ -11,9 +11,7 @@ class TempToken {
   String? _currentToken;
   DateTime? _expiryDate;
 
-  // ============================================================
-  // 🔑 توليد مفتاح (صلاحية 15 دقيقة)
-  // ============================================================
+  // 🔑 توليد مفتاح (صلاحية 15 دقيقة) + طباعة تلقائية
   String generate({int expiryMinutes = 15}) {
     final random = Random.secure();
     final bytes = List<int>.generate(24, (_) => random.nextInt(256));
@@ -23,12 +21,13 @@ class TempToken {
     _expiryDate = DateTime.now().add(Duration(minutes: expiryMinutes));
     _save(token, expiryMinutes);
 
+    print('🔑 المفتاح المؤقت: $token');
+    print('⏰ ينتهي بعد: $expiryMinutes دقيقة');
+
     return token;
   }
 
-  // ============================================================
   // 💾 حفظ
-  // ============================================================
   Future<void> _save(String token, int expiryMinutes) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('temp_token', token);
@@ -36,9 +35,7 @@ class TempToken {
     await prefs.setString('temp_created', DateTime.now().toIso8601String());
   }
 
-  // ============================================================
   // 🔍 التحقق
-  // ============================================================
   Future<bool> isValid(String token) async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString('temp_token');
@@ -53,9 +50,7 @@ class TempToken {
     return DateTime.now().isBefore(expiryDate);
   }
 
-  // ============================================================
   // 🗑️ إلغاء
-  // ============================================================
   Future<void> revoke() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('temp_token');
@@ -63,19 +58,16 @@ class TempToken {
     await prefs.remove('temp_created');
     _currentToken = null;
     _expiryDate = null;
+    print('🗑️ تم إلغاء المفتاح');
   }
 
-  // ============================================================
   // 📋 جلب المفتاح النشط
-  // ============================================================
   Future<String> getActive() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('temp_token') ?? '';
   }
 
-  // ============================================================
   // 📊 الحالة
-  // ============================================================
   String getStatus() {
     if (_currentToken == null) return '❌ لا يوجد مفتاح';
     if (_expiryDate == null) return '❌ تاريخ غير معروف';
