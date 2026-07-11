@@ -12,7 +12,7 @@ class TempToken {
   DateTime? _expiryDate;
 
   // 🔑 توليد مفتاح (صلاحية 30 دقيقة)
-  String generate({int expiryMinutes = 30}) {  // ← 30 دقيقة بدل 15
+  String generate({int expiryMinutes = 30}) {
     final random = Random.secure();
     final bytes = List<int>.generate(24, (_) => random.nextInt(256));
     final token = base64UrlEncode(bytes).substring(0, 32);
@@ -48,7 +48,7 @@ class TempToken {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString('temp_token');
     final created = prefs.getString('temp_created');
-    final expiry = prefs.getInt('temp_expiry') ?? 30;  // ← 30 دقيقة
+    final expiry = prefs.getInt('temp_expiry') ?? 30;
 
     if (saved != token || created == null) return false;
 
