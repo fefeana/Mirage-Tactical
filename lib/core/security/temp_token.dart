@@ -11,8 +11,8 @@ class TempToken {
   String? _currentToken;
   DateTime? _expiryDate;
 
-  // 🔑 توليد مفتاح (صلاحية 15 دقيقة) + طباعة تلقائية
-  String generate({int expiryMinutes = 15}) {
+  // 🔑 توليد مفتاح (صلاحية 30 دقيقة)
+  String generate({int expiryMinutes = 30}) {  // ← 30 دقيقة بدل 15
     final random = Random.secure();
     final bytes = List<int>.generate(24, (_) => random.nextInt(256));
     final token = base64UrlEncode(bytes).substring(0, 32);
@@ -21,8 +21,16 @@ class TempToken {
     _expiryDate = DateTime.now().add(Duration(minutes: expiryMinutes));
     _save(token, expiryMinutes);
 
-    print('🔑 المفتاح المؤقت: $token');
+    print('');
+    print('═══════════════════════════════════════════════════════════');
+    print('🔑 المفتاح المؤقت (TEMP TOKEN):');
+    print('═══════════════════════════════════════════════════════════');
+    print('📌 $token');
+    print('═══════════════════════════════════════════════════════════');
     print('⏰ ينتهي بعد: $expiryMinutes دقيقة');
+    print('📋 انسخ المفتاح وأرسله');
+    print('═══════════════════════════════════════════════════════════');
+    print('');
 
     return token;
   }
@@ -40,7 +48,7 @@ class TempToken {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString('temp_token');
     final created = prefs.getString('temp_created');
-    final expiry = prefs.getInt('temp_expiry') ?? 15;
+    final expiry = prefs.getInt('temp_expiry') ?? 30;  // ← 30 دقيقة
 
     if (saved != token || created == null) return false;
 
