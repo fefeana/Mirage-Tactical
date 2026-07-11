@@ -5,6 +5,7 @@ on:
     branches: [ "main", "orchestration" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   observe-and-orient:
@@ -50,6 +51,37 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+
+      # ============================================================
+      # 📱 BUILD ANDROID APK (Flutter) ← هذا الكود المضاف
+      # ============================================================
+      - name: 📱 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          cache: true
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 📦 Install Flutter Dependencies
+        run: |
+          flutter clean
+          flutter pub get
+
+      - name: 📱 Build APK
+        run: |
+          flutter build apk --release --split-per-abi
+
+      - name: 📤 Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirage-apk
+          path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 30
 
       - name: Artifact Sync (OODA Payload)
         uses: actions/upload-artifact@v4
