@@ -1,0 +1,1 @@
+cd Mirage-Tactical && tar -cvzf mirage_project.tar.gz --exclude='.*' .
