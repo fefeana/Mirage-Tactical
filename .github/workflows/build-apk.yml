@@ -2,7 +2,7 @@ name: ⚡ البارق الحقيقي - OODA APK Builder
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -10,30 +10,20 @@ jobs:
     name: 📱 BUILD APK
     runs-on: ubuntu-latest
     steps:
-      - name: 🌀 سحب الكود
-        uses: actions/checkout@v6
-
-      - name: ☕ إعداد Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: zulu
           java-version: '17'
-
-      - name: 🦋 إعداد Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
           cache: true
 
-      # ============================================================
-      # 🗡️ سيف الخلق الشامل (يملأ الملفات + يصلح pubspec.yaml)
-      # ============================================================
       - name: 🗡️ إنشاء وملء الملفات الناقصة
         run: |
-          echo "📂 إنشاء المجلدات..."
           mkdir -p lib/core/ai/agents lib/core/env lib/providers
 
-          echo "📄 كتابة base_ai_service.dart..."
           cat > lib/core/ai/base_ai_service.dart << 'EOF'
           abstract class BaseAIService {
             Future<String> generateResponse(String prompt, {Map<String, dynamic>? context});
@@ -41,7 +31,6 @@ jobs:
           }
           EOF
 
-          echo "📄 كتابة gemini_service.dart..."
           cat > lib/core/ai/gemini_service.dart << 'EOF'
           import 'package:google_generative_ai/google_generative_ai.dart';
           import 'base_ai_service.dart';
@@ -68,7 +57,6 @@ jobs:
           }
           EOF
 
-          echo "📄 كتابة deepseek_service.dart..."
           cat > lib/core/ai/deepseek_service.dart << 'EOF'
           import 'dart:convert';
           import 'package:http/http.dart' as http;
@@ -100,7 +88,6 @@ jobs:
           }
           EOF
 
-          echo "📄 كتابة mistral_service.dart..."
           cat > lib/core/ai/mistral_service.dart << 'EOF'
           import 'dart:convert';
           import 'package:http/http.dart' as http;
@@ -132,7 +119,6 @@ jobs:
           }
           EOF
 
-          echo "📄 كتابة ai_orchestrator.dart..."
           cat > lib/core/ai/ai_orchestrator.dart << 'EOF'
           import 'gemini_service.dart';
           import 'deepseek_service.dart';
@@ -159,7 +145,6 @@ jobs:
           }
           EOF
 
-          echo "📄 كتابة env_manager.dart..."
           cat > lib/core/env/env_manager.dart << 'EOF'
           import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -173,7 +158,6 @@ jobs:
           }
           EOF
 
-          echo "📄 كتابة ai_provider.dart..."
           cat > lib/providers/ai_provider.dart << 'EOF'
           import 'package:flutter/material.dart';
           import '../core/ai/ai_orchestrator.dart';
@@ -195,47 +179,17 @@ jobs:
           }
           EOF
 
-          echo "📄 كتابة api_contract.json..."
-          cat > api_contract.json << 'EOF'
-          {
-            "endpoints": {
-              "gemini": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={API_KEY}",
-              "deepseek": "https://api.deepseek.com/v1/chat/completions",
-              "mistral": "https://api.mistral.ai/v1/chat/completions"
-            },
-            "agents": ["security", "ads", "payment", "company", "search"]
-          }
-          EOF
-
-          echo "📄 كتابة .env.example..."
-          cat > .env.example << 'EOF'
-          GEMINI_API_KEY=AIzaSy...
-          DEEPSEEK_API_KEY=sk-...
-          MISTRAL_API_KEY=...
-          EOF
-
-          echo "📄 تحديث pubspec.yaml بإضافة التبعيات..."
-          if ! grep -q "google_generative_ai" pubspec.yaml; then
-            echo "  google_generative_ai: ^0.4.0" >> pubspec.yaml
-          fi
-          if ! grep -q "http:" pubspec.yaml; then
-            echo "  http: ^1.0.0" >> pubspec.yaml
-          fi
-          if ! grep -q "flutter_dotenv" pubspec.yaml; then
-            echo "  flutter_dotenv: ^5.0.0" >> pubspec.yaml
-          fi
-
-          echo "✅ جميع الملفات تم إنشاؤها وملؤها، وتم تحديث التبعيات!"
+          echo "✅ جميع الملفات تم إنشاؤها وملؤها!"
 
       - name: 📦 تثبيت المكتبات
         run: |
           flutter clean
           flutter pub get
 
-      - name: 🏗️ بناء APK (الحقيقي)
+      - name: 🏗️ بناء APK
         run: flutter build apk --release --split-per-abi
 
-      - name: 📤 رفع الـ APK الحقيقي
+      - name: 📤 رفع APK
         uses: actions/upload-artifact@v6
         with:
           name: mirage-apk-real
