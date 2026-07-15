@@ -1,4 +1,4 @@
-name: ⚡ البارق الحقيقي - OODA APK Builder
+name: ⚡ البارق الحقيقي - OODA APK Builder (المستقر)
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-apk:
-    name: 📱 BUILD APK
+    name: 📱 BUILD APK (مستقر)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -20,10 +20,18 @@ jobs:
           flutter-version: '3.22.0'
           cache: true
 
-      - name: 🗡️ إنشاء وملء الملفات الناقصة
+      # ============================================================
+      # 🗡️ سيف الخلق الشامل (إعادة كتابة كاملة)
+      # ============================================================
+      - name: 🗡️ إعادة كتابة المشروع بالكامل (لضمان السلامة)
         run: |
+          echo "🗡️ بدأ الساموراي في إعادة بناء المشروع..."
+
+          # 1️⃣ حذف الملفات القديمة (إن وجدت) لضمان عدم وجود أخطاء
+          rm -rf lib/core/ai lib/core/env lib/providers
           mkdir -p lib/core/ai/agents lib/core/env lib/providers
 
+          # 2️⃣ كتابة الملفات من الصفر (بأكواد سليمة 100%)
           cat > lib/core/ai/base_ai_service.dart << 'EOF'
           abstract class BaseAIService {
             Future<String> generateResponse(String prompt, {Map<String, dynamic>? context});
@@ -179,7 +187,35 @@ jobs:
           }
           EOF
 
-          echo "✅ جميع الملفات تم إنشاؤها وملؤها!"
+          # 3️⃣ إعادة كتابة pubspec.yaml بالكامل (لضمان التبعيات الصحيحة)
+          cat > pubspec.yaml << 'EOF'
+          name: mirage_tactical
+          description: A new Flutter project.
+          version: 1.0.0+1
+
+          environment:
+            sdk: '>=3.0.0 <4.0.0'
+
+          dependencies:
+            flutter:
+              sdk: flutter
+            google_generative_ai: ^0.4.0
+            http: ^1.0.0
+            flutter_dotenv: ^5.0.0
+            provider: ^6.0.0
+
+          dev_dependencies:
+            flutter_test:
+              sdk: flutter
+            flutter_lints: ^3.0.0
+
+          flutter:
+            uses-material-design: true
+            assets:
+              - .env
+          EOF
+
+          echo "✅ تم إعادة كتابة جميع الملفات و pubspec.yaml بنجاح!"
 
       - name: 📦 تثبيت المكتبات
         run: |
