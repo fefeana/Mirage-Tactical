@@ -1,13 +1,13 @@
 # ============================================================
 # 🗡️ سيف ميراج - بناء APK مع دورة OODA
 # ============================================================
-name: ⚡ البارق الحقيقي - OODA APK Builder (المستقر النهائي)
+name: ⚡ البارق الحقيقي - OODA APK Builder
 
 # متى يتم تشغيل هذا السير؟
 on:
   push:
-    branches: [ main, master ]  # عند الدفع إلى الفرع الرئيسي أو master
-  workflow_dispatch:            # يسمح بالتشغيل اليدوي من تبويب Actions
+    branches: [ main, master ]  # عند الدفع إلى الفرع الرئيسي
+  workflow_dispatch:            # يسمح بالتشغيل اليدوي
 
 # ============================================================
 # المهام (Jobs)
@@ -18,366 +18,77 @@ jobs:
   # ----------------------------------------------------------
   build-apk:
     name: 📱 BUILD APK (مستقر)
-    runs-on: ubuntu-latest       # بيئة التشغيل: أحدث إصدار من Ubuntu
+    runs-on: ubuntu-latest
 
     # ==========================================================
     # الخطوات (Steps)
     # ==========================================================
     steps:
       # --------------------------------------------------------
-      # 1. سحب الكود من المستودع
+      # 1. سحب الكود
       # --------------------------------------------------------
       - name: 🌀 سحب الكود
-        uses: actions/checkout@v6   # الإصدار 6 يدعم Node.js 24
+        uses: actions/checkout@v6
 
       # --------------------------------------------------------
-      # 2. إعداد Java (مطلوب لبناء Android)
+      # 2. إعداد Java
       # --------------------------------------------------------
       - name: ☕ إعداد Java
         uses: actions/setup-java@v4
         with:
-          distribution: zulu       # توزيعة Zulu الخاصة بـ Java
-          java-version: '17'       # إصدار Java 17
+          distribution: zulu
+          java-version: '17'
 
       # --------------------------------------------------------
-      # 3. إعداد Flutter SDK
+      # 3. إعداد Flutter
       # --------------------------------------------------------
       - name: 🦋 إعداد Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'  # إصدار Flutter المستقر
-          cache: true                # تفعيل التخزين المؤقت لتسريع البناء
+          flutter-version: '3.19.0'
+          cache: true
 
       # --------------------------------------------------------
-      # 4. 🗡️ سيف الخلق: إعادة كتابة المشروع بالكامل
-      #    (هذه الخطوة تضمن أن جميع الملفات موجودة وسليمة)
+      # 4. 🗡️ تشغيل سيف الخلق (ai_studio_code (5).sh)
+      #    هذا هو الملف الموجود في المستودع والذي يملأ الملفات
       # --------------------------------------------------------
-      - name: 🗡️ إعادة كتابة المشروع بالكامل (لضمان السلامة)
+      - name: 🗡️ تشغيل سيف الخلق
         run: |
-          # بداية الساموراي
-          echo "🗡️ بدأ الساموراي في إعادة بناء المشروع..."
-
-          # --------------------------------------------------
-          # 4.1. التأكد من أن المشروع هو Flutter project
-          # --------------------------------------------------
-          if [ ! -d "android" ]; then
-            echo "📦 مشروع Flutter غير موجود، جاري الإنشاء..."
-            flutter create --org com.mirage --project-name mirage_tactical .
+          echo "🔍 البحث عن سيف الخلق..."
+          if [ -f "ai_studio_code (5).sh" ]; then
+            echo "✅ تم العثور على السكربت، جعله قابلاً للتنفيذ..."
+            chmod +x "ai_studio_code (5).sh"
+            echo "🚀 تشغيل السكربت..."
+            bash "ai_studio_code (5).sh"
+          else
+            echo "⚠️ السكربت غير موجود! سيتم إنشاء الملفات يدوياً..."
+            # إنشاء مجلدات أساسية
+            mkdir -p lib/core/ai lib/core/env lib/providers lib/screens
+            # إنشاء main.dart بسيط
+            cat > lib/main.dart << 'EOF'
+            import 'package:flutter/material.dart';
+            void main() => runApp(MyApp());
+            class MyApp extends StatelessWidget {
+              @override
+              Widget build(BuildContext context) {
+                return MaterialApp(home: Scaffold(body: Center(child: Text('Mirage Tactical'))));
+              }
+            }
+            EOF
           fi
 
-          # --------------------------------------------------
-          # 4.2. حذف الملفات القديمة لتجنب التعارضات
-          # --------------------------------------------------
-          echo "🧹 تنظيف الملفات القديمة..."
-          rm -rf lib/core lib/providers lib/screens
-
-          # --------------------------------------------------
-          # 4.3. إنشاء المجلدات الجديدة
-          # --------------------------------------------------
-          echo "📂 إنشاء المجلدات..."
-          mkdir -p lib/core/ai/agents lib/core/env lib/providers lib/screens
-
-          # --------------------------------------------------
-          # 4.4. كتابة ملفات الخدمات (Services)
-          # --------------------------------------------------
-
-          # ----- base_ai_service.dart -----
-          cat > lib/core/ai/base_ai_service.dart << 'EOF'
-          abstract class BaseAIService {
-            Future<String> generateResponse(String prompt, {Map<String, dynamic>? context});
-            Future<String> streamResponse(String prompt);
-          }
-          EOF
-
-          # ----- gemini_service.dart -----
-          cat > lib/core/ai/gemini_service.dart << 'EOF'
-          import 'package:google_generative_ai/google_generative_ai.dart';
-          import 'base_ai_service.dart';
-          import '../env/env_manager.dart';
-
-          class GeminiService extends BaseAIService {
-            late GenerativeModel _model;
-            GeminiService() {
-              final apiKey = EnvManager.get('GEMINI_API_KEY');
-              _model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
-            }
-            @override
-            Future<String> generateResponse(String prompt, {Map<String, dynamic>? context}) async {
-              try {
-                final content = [Content.text(prompt)];
-                final response = await _model.generateContent(content);
-                return response.text ?? "No response from Gemini.";
-              } catch (e) {
-                return "Gemini Error: \$e";
-              }
-            }
-            @override
-            Future<String> streamResponse(String prompt) async => await generateResponse(prompt);
-          }
-          EOF
-
-          # ----- deepseek_service.dart -----
-          cat > lib/core/ai/deepseek_service.dart << 'EOF'
-          import 'dart:convert';
-          import 'package:http/http.dart' as http;
-          import 'base_ai_service.dart';
-          import '../env/env_manager.dart';
-
-          class DeepSeekService extends BaseAIService {
-            final String _baseUrl = 'https://api.deepseek.com/v1/chat/completions';
-            @override
-            Future<String> generateResponse(String prompt, {Map<String, dynamic>? context}) async {
-              final response = await http.post(
-                Uri.parse(_baseUrl),
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer \${EnvManager.get('DEEPSEEK_API_KEY')}',
-                },
-                body: jsonEncode({
-                  'model': 'deepseek-chat',
-                  'messages': [{'role': 'user', 'content': prompt}],
-                }),
-              );
-              if (response.statusCode == 200) {
-                return jsonDecode(response.body)['choices'][0]['message']['content'];
-              }
-              return 'DeepSeek Error: \${response.statusCode}';
-            }
-            @override
-            Future<String> streamResponse(String prompt) => generateResponse(prompt);
-          }
-          EOF
-
-          # ----- mistral_service.dart -----
-          cat > lib/core/ai/mistral_service.dart << 'EOF'
-          import 'dart:convert';
-          import 'package:http/http.dart' as http;
-          import 'base_ai_service.dart';
-          import '../env/env_manager.dart';
-
-          class MistralService extends BaseAIService {
-            final String _baseUrl = 'https://api.mistral.ai/v1/chat/completions';
-            @override
-            Future<String> generateResponse(String prompt, {Map<String, dynamic>? context}) async {
-              final response = await http.post(
-                Uri.parse(_baseUrl),
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer \${EnvManager.get('MISTRAL_API_KEY')}',
-                },
-                body: jsonEncode({
-                  'model': 'mistral-tiny',
-                  'messages': [{'role': 'user', 'content': prompt}],
-                }),
-              );
-              if (response.statusCode == 200) {
-                return jsonDecode(response.body)['choices'][0]['message']['content'];
-              }
-              return 'Mistral Error: \${response.statusCode}';
-            }
-            @override
-            Future<String> streamResponse(String prompt) => generateResponse(prompt);
-          }
-          EOF
-
-          # ----- ai_orchestrator.dart (قلب النظام) -----
-          cat > lib/core/ai/ai_orchestrator.dart << 'EOF'
-          import 'gemini_service.dart';
-          import 'deepseek_service.dart';
-          import 'mistral_service.dart';
-          import 'base_ai_service.dart';
-
-          enum AIProvider { gemini, deepseek, mistral }
-
-          class AiOrchestrator {
-            final Map<AIProvider, BaseAIService> _services = {};
-            AiOrchestrator() {
-              _services[AIProvider.gemini] = GeminiService();
-              _services[AIProvider.deepseek] = DeepSeekService();
-              _services[AIProvider.mistral] = MistralService();
-            }
-            Future<String> routeRequest(String prompt, AIProvider provider, {Map<String, dynamic>? context}) {
-              return _services[provider]!.generateResponse(prompt, context: context);
-            }
-            AIProvider selectBestProvider(String prompt) {
-              if (prompt.contains('كود') || prompt.contains('برمجة')) return AIProvider.deepseek;
-              if (prompt.contains('إعلان') || prompt.contains('تسويق')) return AIProvider.mistral;
-              return AIProvider.gemini;
-            }
-          }
-          EOF
-
-          # ----- env_manager.dart -----
-          cat > lib/core/env/env_manager.dart << 'EOF'
-          import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-          class EnvManager {
-            static Future<void> load() async => await dotenv.load();
-            static String get(String key) {
-              final value = dotenv.env[key];
-              if (value == null) throw Exception('Missing .env variable: \$key');
-              return value;
-            }
-          }
-          EOF
-
-          # ----- ai_provider.dart (State Management) -----
-          cat > lib/providers/ai_provider.dart << 'EOF'
-          import 'package:flutter/material.dart';
-          import '../core/ai/ai_orchestrator.dart';
-
-          class AIProvider extends ChangeNotifier {
-            final AiOrchestrator orchestrator = AiOrchestrator();
-            String _response = '';
-            bool _isLoading = false;
-            String get response => _response;
-            bool get isLoading => _isLoading;
-            Future<void> sendPrompt(String prompt) async {
-              _isLoading = true;
-              notifyListeners();
-              final provider = orchestrator.selectBestProvider(prompt);
-              _response = await orchestrator.routeRequest(prompt, provider);
-              _isLoading = false;
-              notifyListeners();
-            }
-          }
-          EOF
-
-          # --------------------------------------------------
-          # 4.5. كتابة main.dart (نقطة الدخول)
-          # --------------------------------------------------
-          cat > lib/main.dart << 'EOF'
-          import 'package:flutter/material.dart';
-          import 'package:provider/provider.dart';
-          import 'providers/ai_provider.dart';
-          import 'screens/ai_dashboard.dart';
-
-          void main() {
-            runApp(MyApp());
-          }
-
-          class MyApp extends StatelessWidget {
-            @override
-            Widget build(BuildContext context) {
-              return ChangeNotifierProvider(
-                create: (_) => AIProvider(),
-                child: MaterialApp(
-                  title: 'Mirage Tactical',
-                  theme: ThemeData.dark(),
-                  home: AIDashboard(),
-                ),
-              );
-            }
-          }
-          EOF
-
-          # --------------------------------------------------
-          # 4.6. كتابة AIDashboard (الواجهة الرئيسية)
-          # --------------------------------------------------
-          cat > lib/screens/ai_dashboard.dart << 'EOF'
-          import 'package:flutter/material.dart';
-          import 'package:provider/provider.dart';
-          import '../providers/ai_provider.dart';
-
-          class AIDashboard extends StatelessWidget {
-            final TextEditingController _controller = TextEditingController();
-
-            AIDashboard({super.key});
-
-            @override
-            Widget build(BuildContext context) {
-              final aiProvider = Provider.of<AIProvider>(context);
-              return Scaffold(
-                appBar: AppBar(title: Text('Mirage AI - OODA')),
-                body: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      TextField(
-                        controller: _controller,
-                        decoration: InputDecoration(
-                          labelText: 'أدخل الأمر...',
-                          suffixIcon: IconButton(
-                            icon: Icon(Icons.send),
-                            onPressed: () => aiProvider.sendPrompt(_controller.text),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      if (aiProvider.isLoading) CircularProgressIndicator(),
-                      if (aiProvider.response.isNotEmpty)
-                        Expanded(
-                          child: SingleChildScrollView(
-                            child: Text(aiProvider.response),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            }
-          }
-          EOF
-
-          # --------------------------------------------------
-          # 4.7. إنشاء ملفات البيئة (.env)
-          # --------------------------------------------------
-          echo "📄 إنشاء ملفات البيئة..."
-          touch .env
-          cat > .env.example << 'EOF'
-          GEMINI_API_KEY=AIzaSy...
-          DEEPSEEK_API_KEY=sk-...
-          MISTRAL_API_KEY=...
-          EOF
-
-          # --------------------------------------------------
-          # 4.8. إعادة كتابة pubspec.yaml (التبعيات الصحيحة)
-          # --------------------------------------------------
-          echo "📄 إعادة كتابة pubspec.yaml..."
-          cat > pubspec.yaml << 'EOF'
-          name: mirage_tactical
-          description: A new Flutter project.
-          version: 1.0.0+1
-
-          environment:
-            sdk: '>=3.0.0 <4.0.0'
-
-          dependencies:
-            flutter:
-              sdk: flutter
-            google_generative_ai: ^0.4.0
-            http: ^1.0.0
-            flutter_dotenv: ^5.0.0
-            provider: ^6.0.0
-
-          dev_dependencies:
-            flutter_test:
-              sdk: flutter
-            flutter_lints: ^3.0.0
-
-          flutter:
-            uses-material-design: true
-          EOF
-
-          # --------------------------------------------------
-          # 4.9. إنشاء api_contract.json (للتوثيق)
-          # --------------------------------------------------
-          cat > api_contract.json << 'EOF'
-          {
-            "endpoints": {
-              "gemini": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={API_KEY}",
-              "deepseek": "https://api.deepseek.com/v1/chat/completions",
-              "mistral": "https://api.mistral.ai/v1/chat/completions"
-            },
-            "agents": ["security", "ads", "payment", "company", "search"]
-          }
-          EOF
-
-          # نهاية الساموراي
-          echo "✅ تم إعادة كتابة جميع الملفات و pubspec.yaml بنجاح!"
+      # --------------------------------------------------------
+      # 5. التحقق من الملفات
+      # --------------------------------------------------------
+      - name: 📂 التحقق من الملفات
+        run: |
+          echo "📄 محتويات مجلد lib:"
+          ls -la lib/ || echo "⚠️ مجلد lib غير موجود!"
+          echo "📄 محتويات pubspec.yaml:"
+          head -10 pubspec.yaml || echo "⚠️ pubspec.yaml غير موجود!"
 
       # --------------------------------------------------------
-      # 5. تثبيت المكتبات
+      # 6. تثبيت المكتبات
       # --------------------------------------------------------
       - name: 📦 تثبيت المكتبات
         run: |
@@ -385,17 +96,17 @@ jobs:
           flutter pub get
 
       # --------------------------------------------------------
-      # 6. بناء APK (الحقيقي)
+      # 7. بناء APK
       # --------------------------------------------------------
       - name: 🏗️ بناء APK
         run: flutter build apk --release --split-per-abi
 
       # --------------------------------------------------------
-      # 7. رفع APK (Artifact)
+      # 8. رفع APK
       # --------------------------------------------------------
       - name: 📤 رفع APK
         uses: actions/upload-artifact@v6
         with:
-          name: mirage-apk-real
+          name: mirage-apk-final
           path: build/app/outputs/flutter-apk/*.apk
           retention-days: 30
