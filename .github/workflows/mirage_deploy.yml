@@ -6,18 +6,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  # ==========================================
-  # الخطوة 1: بناء ونشر الواجهة (UI Pulse)
-  # ==========================================
+  # ============================================================
+  # 1️⃣  بناء ونشر الواجهة (UI)
+  # ============================================================
   build-web:
     name: 🌐 Build & Deploy Web UI
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔧 Setup Node.js
+      - name: 🔧 Setup Node.js (Modern)
         uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -25,23 +25,23 @@ jobs:
       - name: 📦 Install dependencies & Build UI
         run: |
           npm install
-          npm run build  # ينتج مجلد dist/ أو public/
+          npm run build
 
       - name: 🚀 Deploy UI to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'   # ✅ تمت الإضافة
           channelId: live
-          entryPoint: './dist'  # أو './public' حسب هيكل مشروعك
+          entryPoint: './dist'
 
-  # ==========================================
-  # الخطوة 2: بناء APK (يعتمد على نجاح UI)
-  # ==========================================
+  # ============================================================
+  # 2️⃣  بناء APK (يعتمد على نجاح UI)
+  # ============================================================
   build-android:
     name: 📱 Build Android APK
     runs-on: ubuntu-latest
-    needs: build-web  # 🔴 ينتظر حتى تنجح الخطوة 1
+    needs: build-web
 
     steps:
       - name: 📥 Checkout code
@@ -58,26 +58,26 @@ jobs:
         with:
           arguments: clean assembleDebug
 
-      - name: 📦 Upload APK artifact
+      - name: 📦 Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: mirage-debug-apk
           path: app/build/outputs/apk/debug/*.apk
 
-  # ==========================================
-  # الخطوة 3: نشر الـ Backend (يعتمد على نجاح APK)
-  # ==========================================
+  # ============================================================
+  # 3️⃣  نشر الـ Backend (يعتمد على نجاح APK)
+  # ============================================================
   deploy-backend:
     name: ☁️ Deploy Backend
     runs-on: ubuntu-latest
-    needs: build-android  # 🔴 ينتظر حتى تنجح الخطوة 2
+    needs: build-android
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔧 Setup Node.js
+      - name: 🔧 Setup Node.js (Modern)
         uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -87,13 +87,13 @@ jobs:
           cd backend
           npm install
 
-      - name: 🚀 Deploy Backend to Firebase Functions
+      - name: 🚀 Deploy Backend to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'   # ✅ تمت الإضافة
           channelId: live
           entryPoint: './backend'
 
       - name: ✅ Notify success
-        run: echo "🎉 Full pipeline executed successfully!"
+        run: echo "🎉 Full pipeline executed successfully on Node.js 24!"
