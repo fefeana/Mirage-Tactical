@@ -1,0 +1,4 @@
+- name: 🔧 Setup Node.js
+  uses: actions/setup-node@v6  # ✅ v6 بدلاً من v4
+  with:
+    node-version: '24'  # ✅ 24 بدلاً من 20
