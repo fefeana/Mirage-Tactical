@@ -1,0 +1,30 @@
+// داخل BaseActivity.kt
+
+private lateinit var hubClient: AlBarqHubClient
+
+private fun initializeAlBarqHub() {
+    val userId = getUserId()
+    hubClient = AlBarqHubClient(this, userId)
+    
+    hubClient.setListener(object : AlBarqHubClient.AlBarqListener {
+        override fun onConnected() {
+            // اتصال ناجح بالسحابة
+        }
+        
+        override fun onUIUpdate(data: Map<String, Any>) {
+            val newUrl = data["url"]?.toString() 
+                ?: FirebaseRemoteConfig.getInstance().getString("living_ui_url")
+            if (newUrl != currentUrl) {
+                loadUI(newUrl)
+            }
+        }
+        
+        override fun onSettingsUpdate(data: Map<String, Any>) {
+            applySettings(data)
+        }
+        
+        // ... باقي الدوال
+    })
+    
+    hubClient.connect()
+}
