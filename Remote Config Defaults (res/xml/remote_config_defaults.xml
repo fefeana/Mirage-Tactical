@@ -1,0 +1,20 @@
+<!-- res/xml/remote_config_defaults.xml -->
+<?xml version="1.0" encoding="utf-8"?>
+<defaults>
+    <entry>
+        <key>living_ui_url</key>
+        <value>https://mirage-ui.web.app/latest</value>
+    </entry>
+    <entry>
+        <key>ui_version</key>
+        <value>1.0.0</value>
+    </entry>
+    <entry>
+        <key>enable_ai_assistant</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>refresh_interval</key>
+        <value>3600</value>
+    </entry>
+</defaults>
