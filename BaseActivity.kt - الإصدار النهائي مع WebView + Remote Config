@@ -1,0 +1,496 @@
+// app/src/main/java/com/mirage/BaseActivity.kt
+package com.mirage
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.res.Configuration
+import android.os.Build
+import android.os.Bundle
+import android.view.View
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.ProgressBar
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import com.mirage.databinding.ActivityBaseBinding
+import kotlinx.coroutines.*
+
+/**
+ * BaseActivity - قمرة القيادة الرئيسية لتطبيق ميراج
+ * 
+ * الدور: تحميل الواجهة من السحابة وعرضها في WebView
+ * لا يحتوي على أي منطق تجاري، كل شيء في السحابة
+ */
+open class BaseActivity : AppCompatActivity() {
+
+    // ======================== المتغيرات ========================
+    
+    private lateinit var binding: ActivityBaseBinding
+    private lateinit var webView: WebView
+    private lateinit var progressBar: ProgressBar
+    
+    private var isWebViewReady = false
+    private var currentUrl: String = ""
+    private var retryCount = 0
+    private val maxRetries = 3
+    
+    // ======================== دورة الحياة ========================
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        // تهيئة DataBinding
+        binding = ActivityBaseBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
+        // تهيئة المكونات
+        webView = binding.webView
+        progressBar = binding.progressBar
+        
+        // تهيئة Remote Config
+        initializeRemoteConfig()
+        
+        // تهيئة WebView
+        setupWebView()
+        
+        // تحميل الواجهة
+        loadUI()
+        
+        // معالجة زر الرجوع
+        handleBackPress()
+        
+        // استقبال الإشعارات (FCM)
+        setupNotifications()
+        
+        // ========================================================
+        // 🔥 التكامل مع AlBarqHub Client
+        // ========================================================
+        initializeAlBarqHub()
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // إعادة تحميل الواجهة إذا كانت قديمة
+        if (shouldRefreshUI()) {
+            loadUI()
+        }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // تنظيف WebView
+        webView.destroy()
+    }
+    
+    // ======================== تهيئة AlBarqHub ========================
+    
+    private fun initializeAlBarqHub() {
+        // تهيئة عميل AlBarqHub للاتصال بالسحابة
+        val userId = getUserId() // جلب معرف المستخدم
+        val hubClient = AlBarqHubClient(this, userId)
+        
+        hubClient.setListener(object : AlBarqHubClient.AlBarqListener {
+            override fun onConnected() {
+                runOnUiThread {
+                    Toast.makeText(this@BaseActivity, "🛸 متصل بالسحابة", Toast.LENGTH_SHORT).show()
+                    hideError()
+                }
+            }
+            
+            override fun onDisconnected() {
+                runOnUiThread {
+                    // محاولة إعادة الاتصال
+                    hubClient.connect()
+                }
+            }
+            
+            override fun onUIUpdate(data: Map<String, Any>) {
+                runOnUiThread {
+                    // تحديث الواجهة فوراً من السحابة
+                    val newUrl = data["url"]?.toString() 
+                        ?: FirebaseRemoteConfig.getInstance().getString("living_ui_url")
+                    if (newUrl != currentUrl) {
+                        loadUI(newUrl)
+                    }
+                    Toast.makeText(this@BaseActivity, "🎨 تحديث الواجهة من السحابة", Toast.LENGTH_SHORT).show()
+                }
+            }
+            
+            override fun onSettingsUpdate(data: Map<String, Any>) {
+                // تطبيق تحديثات الإعدادات من السحابة
+                applySettings(data)
+            }
+            
+            override fun onVPNUpdate(data: Map<String, Any>) {
+                // تحديث حالة VPN من السحابة
+                val status = data["status"]?.toString() ?: "unknown"
+                sendCommandToWebView("vpn_status", mapOf("status" to status))
+            }
+            
+            override fun onSecurityAlert(data: Map<String, Any>) {
+                runOnUiThread {
+                    val message = data["message"]?.toString() ?: "تنبيه أمني"
+                    AlertDialog.Builder(this@BaseActivity)
+                        .setTitle("🛡️ تنبيه أمني")
+                        .setMessage(message)
+                        .setPositiveButton("حسناً") { _, _ -> }
+                        .show()
+                }
+            }
+            
+            override fun onAISuggestion(data: Map<String, Any>) {
+                runOnUiThread {
+                    val suggestion = data["suggestion"]?.toString() ?: ""
+                    Toast.makeText(this@BaseActivity, "💡 $suggestion", Toast.LENGTH_LONG).show()
+                }
+            }
+            
+            override fun onHeartbeat(data: Map<String, Any>) {
+                // نبض من السحابة - تأكيد الاتصال
+                // Log.d("AlBarqHub", "💓 Heartbeat received")
+            }
+            
+            override fun onError(error: String) {
+                runOnUiThread {
+                    showError("⚠️ $error")
+                }
+            }
+        })
+        
+        // بدء الاتصال
+        hubClient.connect()
+    }
+    
+    // ======================== تهيئة Remote Config ========================
+    
+    private fun initializeRemoteConfig() {
+        val configSettings = FirebaseRemoteConfigSettings.Builder()
+            .setMinimumFetchIntervalInSeconds(3600) // تحديث كل ساعة
+            .build()
+        
+        FirebaseRemoteConfig.getInstance().apply {
+            setConfigSettingsAsync(configSettings)
+            setDefaultsAsync(R.xml.remote_config_defaults)
+            fetchAndActivate()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        // تم تحديث الإعدادات
+                    }
+                }
+        }
+    }
+    
+    // ======================== تهيئة WebView ========================
+    
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setupWebView() {
+        webView.apply {
+            settings.apply {
+                javaScriptEnabled = true
+                domStorageEnabled = true
+                allowFileAccess = true
+                allowContentAccess = true
+                setSupportZoom(true)
+                builtInZoomControls = true
+                displayZoomControls = false
+                loadWithOverviewMode = true
+                useWideViewPort = true
+                cacheMode = WebSettings.LOAD_DEFAULT
+                
+                // تحسين الأداء
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                }
+                
+                // تمكين وضع التصفح المتوافق
+                userAgentString = "MirageVPN/1.0 (Android ${Build.VERSION.RELEASE})"
+            }
+            
+            // معالج التنقل
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    val url = request?.url.toString()
+                    return if (url.startsWith("mirage://")) {
+                        handleMirageProtocol(url)
+                        true
+                    } else {
+                        false // نترك WebView يتعامل مع الرابط
+                    }
+                }
+                
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    isWebViewReady = true
+                    progressBar.visibility = View.GONE
+                    
+                    // إعلام السحابة بأن الواجهة جاهزة
+                    sendCommand("ui_ready", mapOf("url" to url))
+                }
+                
+                override fun onReceivedError(
+                    view: WebView?,
+                    errorCode: Int,
+                    description: String?,
+                    failingUrl: String?
+                ) {
+                    super.onReceivedError(view, errorCode, description, failingUrl)
+                    if (isWebViewReady) {
+                        // محاولة إعادة التحميل
+                        loadUI()
+                    }
+                }
+            }
+            
+            // معالج Chrome (للحصول على تقدم التحميل)
+            webChromeClient = object : WebChromeClient() {
+                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                    if (newProgress < 100) {
+                        progressBar.visibility = View.VISIBLE
+                        progressBar.progress = newProgress
+                    } else {
+                        progressBar.visibility = View.GONE
+                    }
+                }
+                
+                override fun onReceivedTitle(view: WebView?, title: String?) {
+                    super.onReceivedTitle(view, title)
+                    // تحديث عنوان النشاط
+                    supportActionBar?.title = title ?: "Mirage"
+                }
+            }
+        }
+    }
+    
+    // ======================== تحميل الواجهة ========================
+    
+    private fun loadUI() {
+        val uiUrl = FirebaseRemoteConfig.getInstance().getString("living_ui_url")
+        if (uiUrl.isNotEmpty()) {
+            loadUI(uiUrl)
+        } else {
+            // رابط افتراضي (احتياطي)
+            loadUI("https://mirage-ui.web.app/latest")
+        }
+    }
+    
+    private fun loadUI(url: String) {
+        if (url == currentUrl && isWebViewReady) {
+            // نفس الرابط، لا حاجة لإعادة التحميل
+            return
+        }
+        
+        currentUrl = url
+        progressBar.visibility = View.VISIBLE
+        webView.loadUrl(url)
+        
+        // تسجيل التحميل
+        sendCommand("ui_load", mapOf("url" to url))
+    }
+    
+    // ======================== تحديث الواجهة من السحابة ========================
+    
+    fun refreshUI() {
+        loadUI()
+    }
+    
+    fun refreshUI(newUrl: String) {
+        loadUI(newUrl)
+    }
+    
+    // ======================== التعامل مع بروتوكول Mirage ========================
+    
+    private fun handleMirageProtocol(url: String): Boolean {
+        return when {
+            url.startsWith("mirage://vpn/connect") -> {
+                sendCommand("vpn_connect", emptyMap())
+                true
+            }
+            url.startsWith("mirage://vpn/disconnect") -> {
+                sendCommand("vpn_disconnect", emptyMap())
+                true
+            }
+            url.startsWith("mirage://settings") -> {
+                // فتح الإعدادات
+                startActivity(SettingsScreen::class.java)
+                true
+            }
+            url.startsWith("mirage://dashboard") -> {
+                // فتح لوحة التحكم (من السحابة)
+                loadUI("https://mirage-ui.web.app/dashboard")
+                true
+            }
+            url.startsWith("mirage://speedtest") -> {
+                // تشغيل اختبار السرعة
+                startSpeedTest()
+                true
+            }
+            url.startsWith("mirage://ai") -> {
+                // فتح لوحة الذكاء الاصطناعي (من السحابة)
+                loadUI("https://mirage-ui.web.app/ai-hub")
+                true
+            }
+            else -> false
+        }
+    }
+    
+    // ======================== إرسال الأوامر للسحابة ========================
+    
+    private fun sendCommand(command: String, payload: Map<String, Any> = emptyMap()) {
+        // إرسال الأمر عبر AlBarqHub أو HTTP إذا كان متاحاً
+        // سيتم ربطه لاحقاً مع AlBarqHubClient
+    }
+    
+    private fun sendCommandToWebView(command: String, data: Map<String, Any>) {
+        if (isWebViewReady) {
+            val jsonData = org.json.JSONObject(data).toString()
+            webView.evaluateJavascript(
+                "window.handleMirageCommand('$command', $jsonData);",
+                null
+            )
+        }
+    }
+    
+    // ======================== تطبيق الإعدادات من السحابة ========================
+    
+    private fun applySettings(data: Map<String, Any>) {
+        // تطبيق الإعدادات المستلمة من السحابة
+        data.forEach { (key, value) ->
+            when (key) {
+                "theme" -> {
+                    when (value.toString()) {
+                        "dark" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                        "light" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                        else -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                    }
+                }
+                "language" -> {
+                    setLocale(value.toString())
+                }
+                "font_size" -> {
+                    // تغيير حجم الخط (سيتم إضافته لاحقاً)
+                }
+                // إضافة المزيد حسب الحاجة
+            }
+        }
+    }
+    
+    // ======================== تغيير اللغة ========================
+    
+    private fun setLocale(languageCode: String) {
+        val locale = java.util.Locale(languageCode)
+        java.util.Locale.setDefault(locale)
+        
+        val config = Configuration(resources.configuration)
+        config.setLocale(locale)
+        
+        resources.updateConfiguration(config, resources.displayMetrics)
+        
+        // إعادة تحميل الواجهة مع اللغة الجديدة
+        refreshUI()
+    }
+    
+    // ======================== اختبار السرعة ========================
+    
+    private fun startSpeedTest() {
+        // تشغيل اختبار السرعة وإرسال النتائج للسحابة
+        val speedTestManager = SpeedTestManager(this)
+        speedTestManager.runSpeedTest { result ->
+            sendCommand("speedtest_result", result)
+            Toast.makeText(this, "⚡ ${result["download"]} Mbps", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    // ======================== الحصول على معرف المستخدم ========================
+    
+    private fun getUserId(): String {
+        val sharedPref = getSharedPreferences("mirage_prefs", Context.MODE_PRIVATE)
+        var userId = sharedPref.getString("user_id", null)
+        if (userId == null) {
+            userId = java.util.UUID.randomUUID().toString()
+            sharedPref.edit().putString("user_id", userId).apply()
+        }
+        return userId
+    }
+    
+    // ======================== التحقق من تحديث الواجهة ========================
+    
+    private fun shouldRefreshUI(): Boolean {
+        // التحقق من آخر تحديث للواجهة
+        // يمكن استخدام Remote Config لتحديد الوقت المناسب للتحديث
+        return false
+    }
+    
+    // ======================== معالجة زر الرجوع ========================
+    
+    private fun handleBackPress() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    // عرض تأكيد الخروج
+                    AlertDialog.Builder(this@BaseActivity)
+                        .setTitle("خروج")
+                        .setMessage("هل تريد الخروج من التطبيق؟")
+                        .setPositiveButton("نعم") { _, _ ->
+                            finish()
+                        }
+                        .setNegativeButton("إلغاء", null)
+                        .show()
+                }
+            }
+        })
+    }
+    
+    // ======================== الإشعارات ========================
+    
+    private fun setupNotifications() {
+        // تهيئة FCM لاستقبال الإشعارات
+        // سيتم إضافته لاحقاً مع Firebase Cloud Messaging
+    }
+    
+    // ======================== عرض الأخطاء ========================
+    
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        // يمكن إضافة معالج للأخطاء هنا
+    }
+    
+    private fun hideError() {
+        // إخفاء رسائل الخطأ
+    }
+    
+    // ======================== دالة مساعدة للكشف عن الشبكة ========================
+    
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val networkInfo = connectivityManager.activeNetworkInfo
+        return networkInfo != null && networkInfo.isConnected
+    }
+    
+    // ======================== دالة مساعدة لإعادة الاتصال ========================
+    
+    private fun retryLoadUI() {
+        if (retryCount < maxRetries) {
+            retryCount++
+            CoroutineScope(Dispatchers.Main).launch {
+                delay(2000 * retryCount.toLong()) // تأخير متزايد
+                loadUI()
+            }
+        } else {
+            retryCount = 0
+            showError("⚠️ تعذر تحميل الواجهة. تأكد من اتصال الإنترنت.")
+        }
+    }
+}
