@@ -1,0 +1,185 @@
+// backend/src/albarq/master_albarq.js
+const admin = require('firebase-admin');
+const SSEHub = require('./SSEHub');
+const WebRTCServer = require('./WebRTCServer');
+const Heartbeat = require('./Heartbeat');
+const TranslationRouter = require('./TranslationRouter');
+const PredictiveCache = require('./PredictiveCache');
+
+const VegaAgent = require('../agents/VegaAgent');
+const AtlasAgent = require('../agents/AtlasAgent');
+const LyraAgent = require('../agents/LyraAgent');
+const NexusAgent = require('../agents/NexusAgent');
+
+class AlBarqMasterKernel {
+  constructor() {
+    this.agents = {
+      vega: VegaAgent,
+      atlas: AtlasAgent,
+      lyra: LyraAgent,
+      nexus: NexusAgent,
+    };
+    
+    this.isRunning = false;
+    this.startTime = null;
+  }
+
+  async start() {
+    if (this.isRunning) {
+      console.log('⚠️ Master Kernel is already running');
+      return;
+    }
+
+    console.log('🚀 Starting AlBarq Master Kernel...');
+    this.isRunning = true;
+    this.startTime = Date.now();
+
+    console.log('✅ SSE Hub initialized');
+    console.log('✅ WebRTC Server initialized');
+    console.log('✅ Heartbeat System initialized');
+    console.log('✅ Translation Router initialized');
+    console.log('✅ Predictive Cache initialized');
+    console.log('✅ Agents registered: Vega, Atlas, Lyra, Nexus');
+
+    console.log(`🎯 Master Kernel running (${new Date().toISOString()})`);
+  }
+
+  async processRequest(userId, request) {
+    try {
+      const translated = await TranslationRouter.translate({
+        userId,
+        command: request.command,
+        payload: request.payload,
+        context: request.context,
+      });
+
+      if (!translated.success) {
+        return {
+          success: false,
+          error: 'Translation failed',
+          fallback: translated.fallback,
+        };
+      }
+
+      const agentName = translated.agent;
+      const agent = this.agents[agentName.toLowerCase()];
+
+      if (!agent) {
+        return {
+          success: false,
+          error: `Agent ${agentName} not found`,
+        };
+      }
+
+      let result;
+      switch (agentName) {
+        case 'VegaAgent':
+          result = await agent.adaptUI(userId, translated.command.params);
+          break;
+        case 'AtlasAgent':
+          result = await agent.optimizeRouting(userId, translated.command.params);
+          break;
+        case 'LyraAgent':
+          result = await agent.analyzeThreats(userId, translated.command.params);
+          break;
+        case 'NexusAgent':
+          result = await agent.analyzeUserData(userId, translated.command.params);
+          break;
+        default:
+          result = await this.handleGenericCommand(userId, translated);
+      }
+
+      if (result.success) {
+        PredictiveCache.set(userId, `last_result:${request.command}`, result);
+      }
+
+      await this.logRequest(userId, request, result);
+
+      return {
+        success: true,
+        result,
+        agent: agentName,
+        timestamp: Date.now(),
+      };
+
+    } catch (error) {
+      console.error(`❌ Master Kernel error for ${userId}:`, error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  async handleGenericCommand(userId, translated) {
+    switch (translated.command.action) {
+      case 'get_status':
+        return {
+          status: 'online',
+          timestamp: Date.now(),
+          user: userId,
+        };
+      case 'get_config':
+        return {
+          config: await this.getUserConfig(userId),
+          timestamp: Date.now(),
+        };
+      default:
+        return {
+          message: 'Command processed by master kernel',
+          command: translated.command,
+          timestamp: Date.now(),
+        };
+    }
+  }
+
+  async getUserConfig(userId) {
+    try {
+      const doc = await admin.firestore()
+        .collection('users')
+        .doc(userId)
+        .get();
+      return doc.data() || {};
+    } catch {
+      return {};
+    }
+  }
+
+  async logRequest(userId, request, result) {
+    try {
+      await admin.firestore()
+        .collection('requests')
+        .add({
+          userId,
+          request,
+          result,
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (error) {
+      console.error('Failed to log request:', error);
+    }
+  }
+
+  getStatus() {
+    return {
+      isRunning: this.isRunning,
+      startTime: this.startTime,
+      uptime: this.startTime ? Date.now() - this.startTime : 0,
+      agents: Object.keys(this.agents),
+      connections: {
+        sse: SSEHub.getStats(),
+        webrtc: WebRTCServer.getStats(),
+        heartbeat: Heartbeat.getStats(),
+      },
+      cache: PredictiveCache.getStats(),
+    };
+  }
+
+  async stop() {
+    console.log('🛑 Stopping AlBarq Master Kernel...');
+    this.isRunning = false;
+    console.log('✅ Master Kernel stopped');
+  }
+}
+
+module.exports = new AlBarqMasterKernel();
