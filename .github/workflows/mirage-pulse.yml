@@ -1,29 +1,49 @@
-name: Mirage Pulse - Hourly UI & Security Update
+name: Mirage Pulse - Living UI (Cloud Native)
 on:
   schedule:
-    - cron: '0 * * * *' # تنفيذ تلقائي رأس كل ساعة
-  workflow_dispatch: # إمكانية التشغيل اليدوي عند الحاجة
+    - cron: '0 */3 * * *'  # كل 3 ساعات
+  workflow_dispatch:
 
 jobs:
-  mirage-auto-update:
+  update-living-ui:
     runs-on: ubuntu-latest
-    env:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
     steps:
-      - name: Checkout Code
+      - name: Checkout ONLY Web Source
         uses: actions/checkout@v4
+        with:
+          # نستخرج فقط مجلد الواجهة (public/ و src/ لو موجودين)
+          sparse-checkout: |
+            public
+            src
+            index.html
+            vite.config.ts
+            package.json
+            package-lock.json
 
-      - name: Apply Mirage Glass UI
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install & Auto-Fix Security (Web Only)
         run: |
-          # هنا يتم حقن تعديلات الواجهة الزجاجية برمجياً
-          echo "Applying Glassmorphism UI updates..."
-          
-      - name: Security & Auto-Fix
-        run: npm audit fix --force
+          npm ci
+          npm audit fix --force || true
+          npm run build  # ينتج مجلد dist/ يحتوي على الواجهة الجديدة
 
-      - name: Deploy to Cloud (Firebase)
-        uses: FirebaseExtended/action-firebase-deployment@v0
+      # 🔥 النشر الذكي (لا علاقة له بـ Android إطلاقاً)
+      - name: Deploy to Firebase Hosting (Dynamic Web)
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
           channelId: live
+          entryPoint: './dist'  # ننشر الويب فقط
+
+      - name: Notify APK to Refresh Cache (Remote Config)
+        run: |
+          # نُحدّث قيمة في Firebase Remote Config أو Firestore
+          # ليقرأها الـ APK عند فتحه، فيسحب آخر نسخة من الويب
+          curl -X POST "https://your-cloud-function.com/update-ui-version" \
+               -H "Authorization: Bearer ${{ secrets.CLOUD_FUNC_KEY }}" \
+               -d '{"version": "'$(date +%s)'"}'
