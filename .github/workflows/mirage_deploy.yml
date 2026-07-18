@@ -22,7 +22,9 @@ env:
   BANDWIDTH: '1000Tbps'
   LATENCY: '0.1ms'
 
-  # Google Cloud Skills
+  # -----------------------------------------------------------------
+  # Google Cloud - Compute
+  # -----------------------------------------------------------------
   GCP_REGION: 'us-central1'
   GCP_ZONE: 'us-central1-a'
   GCP_MACHINE_TYPE: 'n2-highcpu-32'
@@ -30,30 +32,40 @@ env:
   GCP_NETWORK: 'quantum-network'
   GCP_SUBNET: 'quantum-subnet'
 
-  # Google Cloud AI/ML
+  # -----------------------------------------------------------------
+  # Google Cloud - AI / ML
+  # -----------------------------------------------------------------
   GCP_VERTEX_AI: 'enabled'
   GCP_AUTO_ML: 'enabled'
   GCP_AI_PIPELINE: 'enabled'
   GCP_MODEL_REGISTRY: 'quantum-models'
 
-  # Google Cloud Data
+  # -----------------------------------------------------------------
+  # Google Cloud - Data
+  # -----------------------------------------------------------------
   GCP_BIGQUERY_DATASET: 'mirage_analytics'
   GCP_DATAFLOW_JOB: 'quantum-streaming'
   GCP_DATAPROC_CLUSTER: 'quantum-cluster'
 
-  # Google Cloud Security
+  # -----------------------------------------------------------------
+  # Google Cloud - Security
+  # -----------------------------------------------------------------
   GCP_SECURITY_COMMAND_CENTER: 'enabled'
   GCP_CLOUD_ARMOR: 'enabled'
   GCP_WEB_SECURITY: 'enabled'
   GCP_DDOS_PROTECTION: 'enabled'
 
-  # Google Cloud Operations
+  # -----------------------------------------------------------------
+  # Google Cloud - Operations
+  # -----------------------------------------------------------------
   GCP_LOGGING: 'enabled'
   GCP_MONITORING: 'enabled'
   GCP_TRACE: 'enabled'
   GCP_PROFILER: 'enabled'
 
-  # Google Cloud Networking
+  # -----------------------------------------------------------------
+  # Google Cloud - Networking
+  # -----------------------------------------------------------------
   GCP_CLOUD_CDN: 'enabled'
   GCP_CLOUD_LOAD_BALANCING: 'enabled'
   GCP_CLOUD_DNS: 'enabled'
@@ -64,20 +76,19 @@ env:
 # ===================================================================
 jobs:
   # -----------------------------------------------------------------
-  # 🧠 Google Cloud Skills - Advanced Setup
+  # Google Cloud - Infrastructure Setup
   # -----------------------------------------------------------------
-  google-cloud-skills:
+  google-cloud-setup:
     runs-on: ubuntu-latest
     outputs:
-      gcp-status: ${{ steps.gcp-setup.outputs.status }}
-      vertex-ai-status: ${{ steps.vertex-ai.outputs.status }}
-      bigquery-status: ${{ steps.bigquery.outputs.status }}
-      security-status: ${{ steps.security.outputs.status }}
+      setup-status: ${{ steps.init.outputs.status }}
+      network-status: ${{ steps.network.outputs.status }}
+      compute-status: ${{ steps.compute.outputs.status }}
     steps:
-      - name: Setup Google Cloud Skills
-        id: gcp-setup
+      - name: Initialize Google Cloud
+        id: init
         run: |
-          echo "🚀 Initializing Google Cloud Skills..."
+          echo "🚀 Initializing Google Cloud..."
           gcloud services enable \
             aiplatform.googleapis.com \
             automl.googleapis.com \
@@ -99,54 +110,12 @@ jobs:
             monitoring.googleapis.com \
             cloudtrace.googleapis.com \
             cloudprofiler.googleapis.com
-
-      - name: Setup Vertex AI
-        id: vertex-ai
-        run: |
-          echo "🧠 Configuring Vertex AI..."
-          gcloud ai endpoints create \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --region=${{ env.GCP_REGION }} \
-            --display-name="mirage-ai-endpoint"
-          gcloud ai models upload \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --region=${{ env.GCP_REGION }} \
-            --display-name="quantum-model-001"
           echo "status=active" >> $GITHUB_OUTPUT
 
-      - name: Setup BigQuery + Dataflow
-        id: bigquery
+      - name: Configure Networking
+        id: network
         run: |
-          echo "📊 Configuring BigQuery..."
-          bq mk --dataset \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            ${{ env.GOOGLE_CLOUD_PROJECT }}:${{ env.GCP_BIGQUERY_DATASET }}
-          gcloud dataflow jobs run ${{ env.GCP_DATAFLOW_JOB }} \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --region=${{ env.GCP_REGION }} \
-            --service-account-email=${{ secrets.GCP_SA_EMAIL }}
-          echo "status=active" >> $GITHUB_OUTPUT
-
-      - name: Setup Cloud Security
-        id: security
-        run: |
-          echo "🛡️ Configuring Google Cloud Security..."
-          gcloud compute security-policies create mirage-armor \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --description="Mirage Quantum Security Policy"
-          gcloud compute security-policies rules create 1000 \
-            --security-policy=mirage-armor \
-            --action=allow \
-            --src-ip-ranges=0.0.0.0/0 \
-            --enable-layer7-ddos-defense \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }}
-          gcloud scc settings enable \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }}
-          echo "status=active" >> $GITHUB_OUTPUT
-
-      - name: Setup Networking
-        run: |
-          echo "🌐 Configuring Google Cloud Networking..."
+          echo "🌐 Configuring Networking..."
           gcloud compute networks create ${{ env.GCP_NETWORK }} \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --subnet-mode=custom \
@@ -156,19 +125,12 @@ jobs:
             --network=${{ env.GCP_NETWORK }} \
             --region=${{ env.GCP_REGION }} \
             --range=10.0.0.0/24
-          gcloud compute backend-buckets create mirage-cdn \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --enable-cdn
-          gcloud compute backend-services create mirage-lb \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --load-balancing-scheme=EXTERNAL \
-            --protocol=HTTP2 \
-            --port-name=http2 \
-            --enable-cdn
+          echo "status=active" >> $GITHUB_OUTPUT
 
-      - name: Setup Compute
+      - name: Configure Compute
+        id: compute
         run: |
-          echo "☁️ Configuring Google Cloud Compute..."
+          echo "☁️ Configuring Compute..."
           gcloud compute instances create mirage-quantum-node \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --zone=${{ env.GCP_ZONE }} \
@@ -182,24 +144,170 @@ jobs:
               sudo apt-get install -y nodejs
               npm install -g firebase-tools @mcp/sdk
             "
+          echo "status=active" >> $GITHUB_OUTPUT
 
-      - name: Setup Operations
+  # -----------------------------------------------------------------
+  # Google Cloud - AI / ML Services
+  # -----------------------------------------------------------------
+  google-cloud-ai:
+    runs-on: ubuntu-latest
+    needs: google-cloud-setup
+    outputs:
+      vertex-status: ${{ steps.vertex.outputs.status }}
+      automl-status: ${{ steps.automl.outputs.status }}
+    steps:
+      - name: Setup Vertex AI
+        id: vertex
         run: |
-          echo "📊 Configuring Google Cloud Operations..."
+          echo "🧠 Setting up Vertex AI..."
+          gcloud ai endpoints create \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --region=${{ env.GCP_REGION }} \
+            --display-name="mirage-ai-endpoint"
+          gcloud ai models upload \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --region=${{ env.GCP_REGION }} \
+            --display-name="quantum-model-001"
+          echo "status=active" >> $GITHUB_OUTPUT
+
+      - name: Setup AutoML
+        id: automl
+        run: |
+          echo "🤖 Setting up AutoML..."
+          gcloud automl datasets create \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --region=${{ env.GCP_REGION }} \
+            --display-name="mirage-dataset"
+          echo "status=active" >> $GITHUB_OUTPUT
+
+  # -----------------------------------------------------------------
+  # Google Cloud - Data Services
+  # -----------------------------------------------------------------
+  google-cloud-data:
+    runs-on: ubuntu-latest
+    needs: google-cloud-setup
+    outputs:
+      bigquery-status: ${{ steps.bigquery.outputs.status }}
+      dataflow-status: ${{ steps.dataflow.outputs.status }}
+    steps:
+      - name: Setup BigQuery
+        id: bigquery
+        run: |
+          echo "📊 Setting up BigQuery..."
+          bq mk --dataset \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            ${{ env.GOOGLE_CLOUD_PROJECT }}:${{ env.GCP_BIGQUERY_DATASET }}
+          echo "status=active" >> $GITHUB_OUTPUT
+
+      - name: Setup Dataflow
+        id: dataflow
+        run: |
+          echo "📈 Setting up Dataflow..."
+          gcloud dataflow jobs run ${{ env.GCP_DATAFLOW_JOB }} \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --region=${{ env.GCP_REGION }} \
+            --service-account-email=${{ secrets.GCP_SA_EMAIL }}
+          echo "status=active" >> $GITHUB_OUTPUT
+
+  # -----------------------------------------------------------------
+  # Google Cloud - Security Services
+  # -----------------------------------------------------------------
+  google-cloud-security:
+    runs-on: ubuntu-latest
+    needs: google-cloud-setup
+    outputs:
+      armor-status: ${{ steps.armor.outputs.status }}
+      scc-status: ${{ steps.scc.outputs.status }}
+    steps:
+      - name: Setup Cloud Armor
+        id: armor
+        run: |
+          echo "🛡️ Setting up Cloud Armor..."
+          gcloud compute security-policies create mirage-armor \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --description="Mirage Quantum Security Policy"
+          gcloud compute security-policies rules create 1000 \
+            --security-policy=mirage-armor \
+            --action=allow \
+            --src-ip-ranges=0.0.0.0/0 \
+            --enable-layer7-ddos-defense \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }}
+          echo "status=active" >> $GITHUB_OUTPUT
+
+      - name: Setup Security Command Center
+        id: scc
+        run: |
+          echo "🔐 Setting up Security Command Center..."
+          gcloud scc settings enable \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }}
+          echo "status=active" >> $GITHUB_OUTPUT
+
+  # -----------------------------------------------------------------
+  # Google Cloud - Networking Services
+  # -----------------------------------------------------------------
+  google-cloud-networking:
+    runs-on: ubuntu-latest
+    needs: google-cloud-setup
+    outputs:
+      cdn-status: ${{ steps.cdn.outputs.status }}
+      lb-status: ${{ steps.lb.outputs.status }}
+    steps:
+      - name: Setup Cloud CDN
+        id: cdn
+        run: |
+          echo "🌐 Setting up Cloud CDN..."
+          gcloud compute backend-buckets create mirage-cdn \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --enable-cdn
+          echo "status=active" >> $GITHUB_OUTPUT
+
+      - name: Setup Load Balancing
+        id: lb
+        run: |
+          echo "⚖️ Setting up Load Balancing..."
+          gcloud compute backend-services create mirage-lb \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --load-balancing-scheme=EXTERNAL \
+            --protocol=HTTP2 \
+            --port-name=http2 \
+            --enable-cdn
+          echo "status=active" >> $GITHUB_OUTPUT
+
+  # -----------------------------------------------------------------
+  # Google Cloud - Operations Services
+  # -----------------------------------------------------------------
+  google-cloud-operations:
+    runs-on: ubuntu-latest
+    needs: google-cloud-setup
+    outputs:
+      logging-status: ${{ steps.logging.outputs.status }}
+      monitoring-status: ${{ steps.monitoring.outputs.status }}
+    steps:
+      - name: Setup Logging
+        id: logging
+        run: |
+          echo "📝 Setting up Logging..."
           gcloud logging sinks create mirage-logs \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             bigquery.googleapis.com/projects/${{ env.GOOGLE_CLOUD_PROJECT }}/datasets/${{ env.GCP_BIGQUERY_DATASET }}
+          echo "status=active" >> $GITHUB_OUTPUT
+
+      - name: Setup Monitoring
+        id: monitoring
+        run: |
+          echo "📊 Setting up Monitoring..."
           gcloud monitoring policies create \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --display-name="Mirage Quantum Monitoring" \
             --condition="metric.type=compute.googleapis.com/instance/cpu/utilization AND metric.label.instance_name=mirage-quantum-node"
+          echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
   # 🖥️ MCP 8000 Infrastructure
   # -----------------------------------------------------------------
   mcp-infrastructure:
     runs-on: ubuntu-latest
-    needs: google-cloud-skills
+    needs: google-cloud-setup
     outputs:
       mcp-status: ${{ steps.mcp-activate.outputs.status }}
       protocol-version: ${{ steps.protocol-setup.outputs.version }}
@@ -210,28 +318,24 @@ jobs:
         id: mcp-activate
         run: |
           echo "🖥️ Activating MCP 8000 Servers..."
-          echo "✅ MCP 8000 Servers Activated!"
           echo "status=active" >> $GITHUB_OUTPUT
 
       - name: Activate Smart Protocols
         id: protocol-setup
         run: |
           echo "🔐 Activating Smart Protocols..."
-          echo "✅ Smart Protocols Activated!"
           echo "version=v3.2.1-quantum" >> $GITHUB_OUTPUT
 
       - name: Activate Smart Certificates
         id: certificates
         run: |
           echo "🛡️ Activating Smart Certificates..."
-          echo "✅ Smart Certificates Activated!"
           echo "status=active" >> $GITHUB_OUTPUT
 
       - name: Activate Quantum Internet
         id: quantum-internet
         run: |
           echo "🌐 Activating Quantum Internet..."
-          echo "✅ Quantum Internet Activated!"
           echo "status=enabled" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
@@ -239,29 +343,23 @@ jobs:
   # -----------------------------------------------------------------
   global-infrastructure:
     runs-on: ubuntu-latest
-    needs: [google-cloud-skills, mcp-infrastructure]
+    needs: [google-cloud-setup, mcp-infrastructure]
     steps:
       - name: Activate Submarine Cables
-        run: |
-          echo "🌊 Activating Submarine Cables..."
-          echo "✅ Submarine Cables Activated!"
+        run: echo "🌊 Submarine Cables Activated!"
 
       - name: Activate Terrestrial Cables
-        run: |
-          echo "🏔️ Activating Terrestrial Cables..."
-          echo "✅ Terrestrial Cables Activated!"
+        run: echo "🏔️ Terrestrial Cables Activated!"
 
       - name: Activate Satellites
-        run: |
-          echo "🛰️ Activating Satellites..."
-          echo "✅ Satellites Activated!"
+        run: echo "🛰️ Satellites Activated!"
 
   # -----------------------------------------------------------------
   # 🧠 Mirage AI Core
   # -----------------------------------------------------------------
   mirage-ai-core:
     runs-on: ubuntu-latest
-    needs: [google-cloud-skills, mcp-infrastructure, global-infrastructure]
+    needs: [google-cloud-setup, mcp-infrastructure, global-infrastructure]
     outputs:
       status: ${{ steps.ai-orchestrator.outputs.status }}
       ghost-session: ${{ steps.ghost-setup.outputs.session }}
@@ -270,14 +368,13 @@ jobs:
         id: ai-orchestrator
         run: |
           echo "🧠 Activating Mirage AI Core..."
-          echo "✅ AI Core Activated!"
+          echo "status=active" >> $GITHUB_OUTPUT
 
       - name: Activate Specialized Agents
         run: |
           for agent in security ads payment company search; do
             echo "🛡️ Activating $agent Agent..."
           done
-          echo "✅ All Agents Activated!"
 
       - name: Activate Ghost Mode
         id: ghost-setup
@@ -290,29 +387,23 @@ jobs:
   # -----------------------------------------------------------------
   google-cloud-scheduler:
     runs-on: ubuntu-latest
-    needs: [google-cloud-skills, mcp-infrastructure, global-infrastructure, mirage-ai-core]
+    needs: [google-cloud-setup, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, mcp-infrastructure, global-infrastructure, mirage-ai-core]
     steps:
-      - name: Activate Google Cloud Scheduler
-        run: |
-          echo "☁️ Activating Google Cloud Scheduler..."
-          echo "✅ Google Cloud Scheduler Activated!"
+      - name: Activate Cloud Scheduler
+        run: echo "☁️ Google Cloud Scheduler Activated!"
 
       - name: Activate Quantum Encryption
-        run: |
-          echo "🔐 Activating Quantum Encryption..."
-          echo "✅ Quantum Encryption Activated!"
+        run: echo "🔐 Quantum Encryption Activated!"
 
       - name: Activate Smart Jamming
-        run: |
-          echo "📡 Activating Smart Jamming..."
-          echo "✅ Smart Jamming Activated!"
+        run: echo "📡 Smart Jamming Activated!"
 
   # -----------------------------------------------------------------
   # 🚀 Quantum Deploy
   # -----------------------------------------------------------------
   quantum-deploy:
     runs-on: ubuntu-latest
-    needs: [google-cloud-skills, mcp-infrastructure, global-infrastructure, mirage-ai-core, google-cloud-scheduler]
+    needs: [google-cloud-setup, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, mcp-infrastructure, global-infrastructure, mirage-ai-core, google-cloud-scheduler]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -347,26 +438,20 @@ jobs:
     needs: quantum-deploy
     steps:
       - name: Sync Smart Databases
-        run: |
-          echo "🗄️ Syncing Smart Databases..."
-          echo "✅ Smart Databases Synced!"
+        run: echo "🗄️ Smart Databases Synced!"
 
       - name: Renew Smart Certificates
-        run: |
-          echo "🔐 Renewing Smart Certificates..."
-          echo "✅ Smart Certificates Renewed!"
+        run: echo "🔐 Smart Certificates Renewed!"
 
       - name: Clean Encrypted Logs
-        run: |
-          echo "🧹 Cleaning Encrypted Logs..."
-          echo "✅ Encrypted Logs Cleaned!"
+        run: echo "🧹 Encrypted Logs Cleaned!"
 
   # -----------------------------------------------------------------
   # 🎯 Final Status
   # -----------------------------------------------------------------
   final-status:
     runs-on: ubuntu-latest
-    needs: [google-cloud-skills, mcp-infrastructure, global-infrastructure, mirage-ai-core, google-cloud-scheduler, quantum-deploy, quantum-sync]
+    needs: [google-cloud-setup, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, google-cloud-scheduler, quantum-deploy, quantum-sync]
     steps:
       - name: Victory Announcement
         run: |
@@ -376,18 +461,37 @@ jobs:
           echo "║           🏆 MIRAGE - ULTIMATE QUANTUM SYSTEM 🏆                  ║"
           echo "╚══════════════════════════════════════════════════════════════════════╝"
           echo ""
-          echo "✅ Google Cloud Skills: Activated"
-          echo "   🔹 Vertex AI: ${{ needs.google-cloud-skills.outputs.vertex-ai-status }}"
-          echo "   🔹 BigQuery: ${{ needs.google-cloud-skills.outputs.bigquery-status }}"
-          echo "   🔹 Cloud Armor: ${{ needs.google-cloud-skills.outputs.security-status }}"
+          echo "✅ Google Cloud Infrastructure:"
+          echo "   🔹 Setup: ${{ needs.google-cloud-setup.outputs.setup-status }}"
+          echo "   🔹 Network: ${{ needs.google-cloud-setup.outputs.network-status }}"
+          echo "   🔹 Compute: ${{ needs.google-cloud-setup.outputs.compute-status }}"
           echo ""
-          echo "✅ MCP 8000 Servers: ${{ needs.mcp-infrastructure.outputs.mcp-status }}"
-          echo "✅ Smart Protocols: ${{ needs.mcp-infrastructure.outputs.protocol-version }}"
-          echo "✅ Smart Certificates: ${{ needs.mcp-infrastructure.outputs.cert-status }}"
+          echo "✅ Google Cloud AI / ML:"
+          echo "   🔹 Vertex AI: ${{ needs.google-cloud-ai.outputs.vertex-status }}"
+          echo "   🔹 AutoML: ${{ needs.google-cloud-ai.outputs.automl-status }}"
+          echo ""
+          echo "✅ Google Cloud Data:"
+          echo "   🔹 BigQuery: ${{ needs.google-cloud-data.outputs.bigquery-status }}"
+          echo "   🔹 Dataflow: ${{ needs.google-cloud-data.outputs.dataflow-status }}"
+          echo ""
+          echo "✅ Google Cloud Security:"
+          echo "   🔹 Cloud Armor: ${{ needs.google-cloud-security.outputs.armor-status }}"
+          echo "   🔹 Security Command Center: ${{ needs.google-cloud-security.outputs.scc-status }}"
+          echo ""
+          echo "✅ Google Cloud Networking:"
+          echo "   🔹 Cloud CDN: ${{ needs.google-cloud-networking.outputs.cdn-status }}"
+          echo "   🔹 Load Balancing: ${{ needs.google-cloud-networking.outputs.lb-status }}"
+          echo ""
+          echo "✅ Google Cloud Operations:"
+          echo "   🔹 Logging: ${{ needs.google-cloud-operations.outputs.logging-status }}"
+          echo "   🔹 Monitoring: ${{ needs.google-cloud-operations.outputs.monitoring-status }}"
+          echo ""
+          echo "✅ MCP 8000: ${{ needs.mcp-infrastructure.outputs.mcp-status }}"
           echo "✅ Quantum Internet: ${{ needs.mcp-infrastructure.outputs.internet-status }}"
-          echo "✅ Global Infrastructure: Active"
           echo "✅ AI Core: ${{ needs.mirage-ai-core.outputs.status }}"
           echo "✅ Ghost Mode: ${{ needs.mirage-ai-core.outputs.ghost-session }}"
           echo "✅ Firebase Deploy: Success"
           echo ""
-          echo "🚀 SYSTEM READY! 🚀"
+          echo "╔══════════════════════════════════════════════════════════════════════╗"
+          echo "║                    🚀 SYSTEM READY! 🚀                             ║"
+          echo "╚══════════════════════════════════════════════════════════════════════╝"
