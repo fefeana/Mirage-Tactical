@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
@@ -29,8 +29,8 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}   # ✅ صح!
           channelId: live
-          projectId: gen-lang-client-0675561551   # ✅ الآن صحيح 100%
+          projectId: gen-lang-client-0675561551   # ✅ صح!
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
