@@ -21,7 +21,7 @@ env:
   QUANTUM_INTERNET: 'enabled'
   BANDWIDTH: '1000Tbps'
   LATENCY: '0.1ms'
-  
+
   # Google Cloud Skills
   GCP_REGION: 'us-central1'
   GCP_ZONE: 'us-central1-a'
@@ -29,30 +29,30 @@ env:
   GCP_DISK_SIZE: '500GB'
   GCP_NETWORK: 'quantum-network'
   GCP_SUBNET: 'quantum-subnet'
-  
+
   # Google Cloud AI/ML
   GCP_VERTEX_AI: 'enabled'
   GCP_AUTO_ML: 'enabled'
   GCP_AI_PIPELINE: 'enabled'
   GCP_MODEL_REGISTRY: 'quantum-models'
-  
+
   # Google Cloud Data
   GCP_BIGQUERY_DATASET: 'mirage_analytics'
   GCP_DATAFLOW_JOB: 'quantum-streaming'
   GCP_DATAPROC_CLUSTER: 'quantum-cluster'
-  
+
   # Google Cloud Security
   GCP_SECURITY_COMMAND_CENTER: 'enabled'
   GCP_CLOUD_ARMOR: 'enabled'
   GCP_WEB_SECURITY: 'enabled'
   GCP_DDOS_PROTECTION: 'enabled'
-  
+
   # Google Cloud Operations
   GCP_LOGGING: 'enabled'
   GCP_MONITORING: 'enabled'
   GCP_TRACE: 'enabled'
   GCP_PROFILER: 'enabled'
-  
+
   # Google Cloud Networking
   GCP_CLOUD_CDN: 'enabled'
   GCP_CLOUD_LOAD_BALANCING: 'enabled'
@@ -78,8 +78,6 @@ jobs:
         id: gcp-setup
         run: |
           echo "🚀 Initializing Google Cloud Skills..."
-          
-          # Enable Google Cloud Services
           gcloud services enable \
             aiplatform.googleapis.com \
             automl.googleapis.com \
@@ -102,7 +100,7 @@ jobs:
             cloudtrace.googleapis.com \
             cloudprofiler.googleapis.com
 
-      - name: Setup Google Cloud AI - Vertex AI
+      - name: Setup Vertex AI
         id: vertex-ai
         run: |
           echo "🧠 Configuring Vertex AI..."
@@ -110,75 +108,57 @@ jobs:
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --region=${{ env.GCP_REGION }} \
             --display-name="mirage-ai-endpoint"
-          
-          # Enable AutoML
           gcloud ai models upload \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --region=${{ env.GCP_REGION }} \
             --display-name="quantum-model-001"
           echo "status=active" >> $GITHUB_OUTPUT
 
-      - name: Setup Google Cloud Data - BigQuery + Dataflow
+      - name: Setup BigQuery + Dataflow
         id: bigquery
         run: |
           echo "📊 Configuring BigQuery..."
           bq mk --dataset \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             ${{ env.GOOGLE_CLOUD_PROJECT }}:${{ env.GCP_BIGQUERY_DATASET }}
-          
-          # Dataflow
           gcloud dataflow jobs run ${{ env.GCP_DATAFLOW_JOB }} \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --region=${{ env.GCP_REGION }} \
             --service-account-email=${{ secrets.GCP_SA_EMAIL }}
           echo "status=active" >> $GITHUB_OUTPUT
 
-      - name: Setup Google Cloud Security
+      - name: Setup Cloud Security
         id: security
         run: |
           echo "🛡️ Configuring Google Cloud Security..."
-          
-          # Cloud Armor
           gcloud compute security-policies create mirage-armor \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --description="Mirage Quantum Security Policy"
-          
-          # Enable DDoS Protection
           gcloud compute security-policies rules create 1000 \
             --security-policy=mirage-armor \
             --action=allow \
             --src-ip-ranges=0.0.0.0/0 \
             --enable-layer7-ddos-defense \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }}
-          
-          # Security Command Center
           gcloud scc settings enable \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }}
           echo "status=active" >> $GITHUB_OUTPUT
 
-      - name: Setup Google Cloud Networking
+      - name: Setup Networking
         run: |
           echo "🌐 Configuring Google Cloud Networking..."
-          
-          # VPC Network
           gcloud compute networks create ${{ env.GCP_NETWORK }} \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --subnet-mode=custom \
             --bgp-routing-mode=global
-          
-          # Subnet
           gcloud compute networks subnets create ${{ env.GCP_SUBNET }} \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --network=${{ env.GCP_NETWORK }} \
             --region=${{ env.GCP_REGION }} \
             --range=10.0.0.0/24
-          
-          # Cloud CDN
           gcloud compute backend-buckets create mirage-cdn \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --enable-cdn
-          
-          # Cloud Load Balancing
           gcloud compute backend-services create mirage-lb \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --load-balancing-scheme=EXTERNAL \
@@ -186,11 +166,9 @@ jobs:
             --port-name=http2 \
             --enable-cdn
 
-      - name: Setup Google Cloud Compute
+      - name: Setup Compute
         run: |
           echo "☁️ Configuring Google Cloud Compute..."
-          
-          # Create custom machine
           gcloud compute instances create mirage-quantum-node \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --zone=${{ env.GCP_ZONE }} \
@@ -200,22 +178,17 @@ jobs:
             --subnet=${{ env.GCP_SUBNET }} \
             --metadata=startup-script="#!/bin/bash
               echo 'Quantum Node Ready!'
-              # Install Node.js
               curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
               sudo apt-get install -y nodejs
               npm install -g firebase-tools @mcp/sdk
             "
 
-      - name: Setup Google Cloud Operations
+      - name: Setup Operations
         run: |
           echo "📊 Configuring Google Cloud Operations..."
-          
-          # Setup Logging
           gcloud logging sinks create mirage-logs \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             bigquery.googleapis.com/projects/${{ env.GOOGLE_CLOUD_PROJECT }}/datasets/${{ env.GCP_BIGQUERY_DATASET }}
-          
-          # Setup Monitoring
           gcloud monitoring policies create \
             --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
             --display-name="Mirage Quantum Monitoring" \
@@ -262,7 +235,7 @@ jobs:
           echo "status=enabled" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 🌊 Global Infrastructure (Cables + Satellites)
+  # 🌊 Global Infrastructure
   # -----------------------------------------------------------------
   global-infrastructure:
     runs-on: ubuntu-latest
