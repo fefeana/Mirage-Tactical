@@ -22,9 +22,7 @@ env:
   BANDWIDTH: '1000Tbps'
   LATENCY: '0.1ms'
 
-  # -----------------------------------------------------------------
   # Google Cloud - Compute
-  # -----------------------------------------------------------------
   GCP_REGION: 'us-central1'
   GCP_ZONE: 'us-central1-a'
   GCP_MACHINE_TYPE: 'n2-highcpu-32'
@@ -32,40 +30,30 @@ env:
   GCP_NETWORK: 'quantum-network'
   GCP_SUBNET: 'quantum-subnet'
 
-  # -----------------------------------------------------------------
   # Google Cloud - AI / ML
-  # -----------------------------------------------------------------
   GCP_VERTEX_AI: 'enabled'
   GCP_AUTO_ML: 'enabled'
   GCP_AI_PIPELINE: 'enabled'
   GCP_MODEL_REGISTRY: 'quantum-models'
 
-  # -----------------------------------------------------------------
   # Google Cloud - Data
-  # -----------------------------------------------------------------
   GCP_BIGQUERY_DATASET: 'mirage_analytics'
   GCP_DATAFLOW_JOB: 'quantum-streaming'
   GCP_DATAPROC_CLUSTER: 'quantum-cluster'
 
-  # -----------------------------------------------------------------
   # Google Cloud - Security
-  # -----------------------------------------------------------------
   GCP_SECURITY_COMMAND_CENTER: 'enabled'
   GCP_CLOUD_ARMOR: 'enabled'
   GCP_WEB_SECURITY: 'enabled'
   GCP_DDOS_PROTECTION: 'enabled'
 
-  # -----------------------------------------------------------------
   # Google Cloud - Operations
-  # -----------------------------------------------------------------
   GCP_LOGGING: 'enabled'
   GCP_MONITORING: 'enabled'
   GCP_TRACE: 'enabled'
   GCP_PROFILER: 'enabled'
 
-  # -----------------------------------------------------------------
   # Google Cloud - Networking
-  # -----------------------------------------------------------------
   GCP_CLOUD_CDN: 'enabled'
   GCP_CLOUD_LOAD_BALANCING: 'enabled'
   GCP_CLOUD_DNS: 'enabled'
