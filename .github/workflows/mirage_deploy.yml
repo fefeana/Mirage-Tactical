@@ -1,11 +1,39 @@
+# ------------------------------------------------
+# ⚔️ مخطوطة ميراج OODA - النشر القتالي الكامل ⚔️
+# ------------------------------------------------
+name: Mirage OODA Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Deploy to Firebase
+      - name: استنساخ الكود (Checkout)
+        uses: actions/checkout@v4
+
+      - name: تجهيز العقدة (Setup Node)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: تثبيت الحزم (Install Dependencies)
+        run: npm ci
+
+      - name: بناء المشروع (Build Project)
+        run: npm run build
+
+      - name: النشر إلى Firebase Hosting 🚀
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
+          channelId: live
+          projectId: gen-lang-client-0675561551   # <--- تم التحديث بالمعرف الصحيح!
         env:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}
-        run: echo "OODA - - - Pipeline Executed Successfully!"
-        # channelId: live  # (إذا أردت تفعيلها، ضعها في أمر Firebase الفعلي)
+          FIREBASE_CLI_EXPERIMENTS: webframeworks
