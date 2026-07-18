@@ -1,104 +1,89 @@
-name: Mirage OODA Pipeline (UI → APK → Backend)
+name: Mirage OODA Pipeline
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  # ============================================================
-  # 1️⃣  Observe & Orient: بناء ونشر الواجهة (UI)
-  # ============================================================
   build-web:
-    name: 🌐 OODA - Build & Deploy Web UI
+    name: Build Web UI
     runs-on: ubuntu-latest
-
     steps:
-      - name: 🔄 Activate OODA Cycle
-        run: echo "⚡ OODA: Observe → Orient → Decide → Act"
-
-      - name: 📥 Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🔧 Setup Node.js (Modern)
+      - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: '24'
 
-      - name: 📦 Install dependencies & Build UI
+      - name: Install and Build
         run: |
           rm -f package-lock.json
           npm install
           npm run build
 
-      - name: 🚀 Deploy UI to Firebase Hosting
+      - name: Deploy UI
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}
           channelId: live
-          entryPoint: './dist'
+          entryPoint: ./dist
 
-  # ============================================================
-  # 2️⃣  Decide: بناء APK (يعتمد على نجاح UI)
-  # ============================================================
   build-android:
-    name: 📱 OODA - Build Android APK
+    name: Build APK
     runs-on: ubuntu-latest
     needs: build-web
-
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: ☕ Set up JDK 17
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: 🔨 Build APK with Gradle
+      - name: Build with Gradle
         uses: gradle/gradle-build-action@v3
         with:
           arguments: clean assembleDebug
 
-      - name: 📦 Upload APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: mirage-debug-apk
           path: app/build/outputs/apk/debug/*.apk
 
-  # ============================================================
-  # 3️⃣  Act: نشر الـ Backend (يعتمد على نجاح APK)
-  # ============================================================
   deploy-backend:
-    name: ☁️ OODA - Deploy Backend
+    name: Deploy Backend
     runs-on: ubuntu-latest
     needs: build-android
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🔧 Setup Node.js (Modern)
+      - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: '24'
 
-      - name: 📦 Install dependencies
+      - name: Install Dependencies
         run: |
           cd backend
           rm -f package-lock.json
           npm install
 
-      - name: 🚀 Deploy Backend to Firebase
+      - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}
           channelId: live
-          entryPoint: './'
+          entryPoint: ./
 
-      - name: ✅ Notify success
-        run: echo "🎉 OODA Pipeline executed successfully on Node.js 24!"
+      - name: Done
+        run: echo "Pipeline executed successfully!"
