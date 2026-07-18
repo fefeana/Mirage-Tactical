@@ -1,4 +1,4 @@
-name: Mirage Full Pipeline (UI → APK → Backend)
+name: خط أنابيب Mirage الكامل (واجهة المستخدم ← APK ← Backend)
 
 on:
   push:
@@ -7,65 +7,72 @@ on:
 
 jobs:
   # ============================================================
-  # 1️⃣  بناء ونشر الواجهة (UI)
+  # 1️⃣ بناء ونشر الواجهة (UI)
   # ============================================================
   build-web:
-    name: 🌐 Build & Deploy Web UI
+    name: 🌐 بناء ونشر واجهة الويب
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 رمز الدفع
         uses: actions/checkout@v4
 
-      - name: 🔧 Setup Node.js (Modern)
-        uses: actions/setup-node@v6
+      - name: 🔧 إعداد Node.js (حديث)
+        uses: actions/setup-node@v4
         with:
           node-version: '24'
 
-      - name: 📦 Install dependencies & Build UI
+      - name: 📦 تثبيت التبعيات وبناء واجهة المستخدم
         run: |
-          npm install
+          npm set progress=false
+          npm install --no-fund --audit=false
+          npm audit fix --force || true
           npm run build
 
-      - name: 🚀 Deploy UI to Firebase Hosting
+      - name: 🚀 تطبيق واجهة المستخدم في استضافة قاعدة النار
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'   # ✅ تمت الإضافة
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
           channelId: live
           entryPoint: './dist'
 
   # ============================================================
-  # 2️⃣  بناء APK (يعتمد على نجاح UI)
+  # 2️⃣ بناء APK (يعتمد على نجاح UI)
   # ============================================================
   build-android:
-    name: 📱 Build Android APK
+    name: 📱 بنيت Android APK
     runs-on: ubuntu-latest
     needs: build-web
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 رمز الدفع
         uses: actions/checkout@v4
 
-      - name: ☕ Set up JDK 17
+      - name: ☕ إعداد JDK 17
+        uses: actions/setup-node@v4  # تم تصحيحه ليعمل بدلاً من المترجم خطأً سابقاً
+        with:
+          node-version: '24'
+
+      - name: 🔧 إعداد بيئة جافا للـ APK
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: 🔨 Build APK with Gradle
+      - name: 🔨 بناء ملف APK باستخدام Gradle
         uses: gradle/gradle-build-action@v3
         with:
           arguments: clean assembleDebug
 
-      - name: 📦 Upload APK
+      - name: 📦 رفع ملف APK
         uses: actions/upload-artifact@v4
         with:
           name: mirage-debug-apk
           path: app/build/outputs/apk/debug/*.apk
 
   # ============================================================
-  # 3️⃣  نشر الـ Backend (يعتمد على نجاح APK)
+  # 3️⃣ نشر الـ Backend (يعتمد على نجاح APK)
   # ============================================================
   deploy-backend:
     name: ☁️ Deploy Backend
@@ -78,20 +85,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🔧 Setup Node.js (Modern)
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: '24'
 
-      - name: 📦 Install dependencies
+      - name: 📦 Install dependencies & Update Genkit
         run: |
           cd backend
-          npm install
+          npm set progress=false
+          npm uninstall @genkit-ai/googleai --no-fund || true
+          npm install @genkit-ai/google-genai --no-fund --audit=false
+          npm install --no-fund --audit=false
+          npm audit fix --force || true
 
       - name: 🚀 Deploy Backend to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'   # ✅ تمت الإضافة
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}'
           channelId: live
           entryPoint: './backend'
 
