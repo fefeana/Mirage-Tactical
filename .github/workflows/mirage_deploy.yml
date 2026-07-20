@@ -1,5 +1,5 @@
 # ===================================================================
-# ⚡ ميراج OODA - النسخة المستقرة (للنجاح المضمون) ⚡
+# ⚡ ميراج OODA - النسخة المستقرة والمُحسَّنة ⚡
 # ===================================================================
 name: Mirage OODA Pipeline
 
@@ -394,7 +394,7 @@ jobs:
     steps:
       - name: تحميل الكود
         uses: actions/checkout@v4
-      - name: تجهيز Node.js
+      - name: تجهيز Node.js (الإصدار 22)
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -440,6 +440,19 @@ jobs:
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
+      # رفع القطع الأثرية (تم إصلاح المدخلات غير الصحيحة)
+      - name: رفع القطع الأثرية (APK)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirage-apk
+          path: build/outputs/apk/release/*.apk
+      
+      - name: رفع القطع الأثرية (Web)
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirage-web
+          path: build/web/*
+
   # -----------------------------------------------------------------
   # 12. المزامنة
   # -----------------------------------------------------------------
@@ -467,7 +480,7 @@ jobs:
             -d '{"keep": "90-days", "compress": true, "encrypt": true}'
 
   # -----------------------------------------------------------------
-  # 13. النتيجة النهائية (تعتمد على إشعارات GitHub التلقائية)
+  # 13. النتيجة النهائية (إشعارات GitHub التلقائية)
   # -----------------------------------------------------------------
   final-status:
     runs-on: ubuntu-latest
@@ -481,8 +494,4 @@ jobs:
           echo "✅ البنية الأساسية: ${{ needs.google-cloud-setup.outputs.setup-status }}"
           echo "✅ Vertex AI: ${{ needs.google-cloud-ai.outputs.vertex-status }}"
           echo "✅ BigQuery: ${{ needs.google-cloud-data.outputs.bigquery-status }}"
-          echo "✅ Cloud Armor: ${{ needs.google-cloud-security.outputs.armor-status }}"
-          echo "✅ Cloud CDN: ${{ needs.google-cloud-networking.outputs.cdn-status }}"
-          echo "✅ Logging: ${{ needs.google-cloud-operations.outputs.logging-status }}"
-          echo "✅ MCP 8000: ${{ needs.mcp-infrastructure.outputs.mcp-status }}"
-          echo "✅ الإنترنت الكمي: ${{ needs.mcp-infrastructure.outputs.inter
+          echo "✅ Cloud Armor: ${{ nee
