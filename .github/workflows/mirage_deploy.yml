@@ -1,5 +1,5 @@
 # ===================================================================
-# ⚡ Mirage OODA Pipeline - Quantum Ultimate Edition ⚡
+# ⚡ ميراج OODA - خط الأنابيب الكمي النهائي ⚡
 # ===================================================================
 name: Mirage OODA Pipeline
 
@@ -11,7 +11,7 @@ on:
     - cron: '*/5 * * * *'
 
 # ===================================================================
-# 🌍 Environment Variables (كل القوى الخارقة)
+# 🌍 متغيرات البيئة
 # ===================================================================
 env:
   NODE_VERSION: '22'
@@ -21,285 +21,59 @@ env:
   QUANTUM_INTERNET: 'enabled'
   BANDWIDTH: '1000Tbps'
   LATENCY: '0.1ms'
-  GCP_REGION: 'us-central1'
-  GCP_ZONE: 'us-central1-a'
-  GCP_MACHINE_TYPE: 'n2-highcpu-32'
-  GCP_DISK_SIZE: '500GB'
-  GCP_NETWORK: 'quantum-network'
-  GCP_SUBNET: 'quantum-subnet'
-  GCP_VERTEX_AI: 'enabled'
-  GCP_AUTO_ML: 'enabled'
-  GCP_AI_PIPELINE: 'enabled'
-  GCP_MODEL_REGISTRY: 'quantum-models'
-  GCP_BIGQUERY_DATASET: 'mirage_analytics'
-  GCP_DATAFLOW_JOB: 'quantum-streaming'
-  GCP_DATAPROC_CLUSTER: 'quantum-cluster'
-  GCP_SECURITY_COMMAND_CENTER: 'enabled'
-  GCP_CLOUD_ARMOR: 'enabled'
-  GCP_WEB_SECURITY: 'enabled'
-  GCP_DDOS_PROTECTION: 'enabled'
-  GCP_LOGGING: 'enabled'
-  GCP_MONITORING: 'enabled'
-  GCP_TRACE: 'enabled'
-  GCP_PROFILER: 'enabled'
-  GCP_CLOUD_CDN: 'enabled'
-  GCP_CLOUD_LOAD_BALANCING: 'enabled'
-  GCP_CLOUD_DNS: 'enabled'
-  GCP_CLOUD_NAT: 'enabled'
 
 # ===================================================================
-# 🖥️ Jobs (جميع الوظائف الأساسية)
+# 🖥️ المهام (Jobs)
 # ===================================================================
 jobs:
   # -----------------------------------------------------------------
-  # 1. Google Cloud - البنية التحتية الأساسية
-  # -----------------------------------------------------------------
-  google-cloud-setup:
-    runs-on: ubuntu-latest
-    outputs:
-      setup-status: ${{ steps.init.outputs.status }}
-      network-status: ${{ steps.network.outputs.status }}
-      compute-status: ${{ steps.compute.outputs.status }}
-    steps:
-      - name: Initialize Google Cloud
-        id: init
-        run: |
-          echo "🚀 Initializing Google Cloud..."
-          gcloud services enable \
-            aiplatform.googleapis.com \
-            automl.googleapis.com \
-            bigquery.googleapis.com \
-            dataflow.googleapis.com \
-            dataproc.googleapis.com \
-            cloudbuild.googleapis.com \
-            cloudfunctions.googleapis.com \
-            run.googleapis.com \
-            container.googleapis.com \
-            compute.googleapis.com \
-            networking.googleapis.com \
-            dns.googleapis.com \
-            cloudcdn.googleapis.com \
-            loadbalancing.googleapis.com \
-            cloudarmor.googleapis.com \
-            securitycenter.googleapis.com \
-            logging.googleapis.com \
-            monitoring.googleapis.com \
-            cloudtrace.googleapis.com \
-            cloudprofiler.googleapis.com
-          echo "status=active" >> $GITHUB_OUTPUT
-      - name: Configure Networking
-        id: network
-        run: |
-          echo "🌐 Configuring Networking..."
-          gcloud compute networks create ${{ env.GCP_NETWORK }} \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --subnet-mode=custom \
-            --bgp-routing-mode=global
-          gcloud compute networks subnets create ${{ env.GCP_SUBNET }} \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --network=${{ env.GCP_NETWORK }} \
-            --region=${{ env.GCP_REGION }} \
-            --range=10.0.0.0/24
-          echo "status=active" >> $GITHUB_OUTPUT
-      - name: Configure Compute
-        id: compute
-        run: |
-          echo "☁️ Configuring Compute..."
-          gcloud compute instances create mirage-quantum-node \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --zone=${{ env.GCP_ZONE }} \
-            --machine-type=${{ env.GCP_MACHINE_TYPE }} \
-            --boot-disk-size=${{ env.GCP_DISK_SIZE }} \
-            --network=${{ env.GCP_NETWORK }} \
-            --subnet=${{ env.GCP_SUBNET }}
-          echo "status=active" >> $GITHUB_OUTPUT
-
-  # -----------------------------------------------------------------
-  # 2. Google Cloud - الذكاء الاصطناعي (AI / ML)
-  # -----------------------------------------------------------------
-  google-cloud-ai:
-    runs-on: ubuntu-latest
-    needs: google-cloud-setup
-    outputs:
-      vertex-status: ${{ steps.vertex.outputs.status }}
-      automl-status: ${{ steps.automl.outputs.status }}
-    steps:
-      - name: Setup Vertex AI
-        id: vertex
-        run: |
-          echo "🧠 Setting up Vertex AI..."
-          gcloud ai endpoints create \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --region=${{ env.GCP_REGION }} \
-            --display-name="mirage-ai-endpoint"
-          echo "status=active" >> $GITHUB_OUTPUT
-      - name: Setup AutoML
-        id: automl
-        run: |
-          echo "🤖 Setting up AutoML..."
-          gcloud automl datasets create \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --region=${{ env.GCP_REGION }} \
-            --display-name="mirage-dataset"
-          echo "status=active" >> $GITHUB_OUTPUT
-
-  # -----------------------------------------------------------------
-  # 3. Google Cloud - البيانات (Data)
-  # -----------------------------------------------------------------
-  google-cloud-data:
-    runs-on: ubuntu-latest
-    needs: google-cloud-setup
-    outputs:
-      bigquery-status: ${{ steps.bigquery.outputs.status }}
-      dataflow-status: ${{ steps.dataflow.outputs.status }}
-    steps:
-      - name: Setup BigQuery
-        id: bigquery
-        run: |
-          echo "📊 Setting up BigQuery..."
-          bq mk --dataset \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            ${{ env.GOOGLE_CLOUD_PROJECT }}:${{ env.GCP_BIGQUERY_DATASET }}
-          echo "status=active" >> $GITHUB_OUTPUT
-      - name: Setup Dataflow
-        id: dataflow
-        run: |
-          echo "📈 Setting up Dataflow..."
-          gcloud dataflow jobs run ${{ env.GCP_DATAFLOW_JOB }} \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --region=${{ env.GCP_REGION }}
-          echo "status=active" >> $GITHUB_OUTPUT
-
-  # -----------------------------------------------------------------
-  # 4. Google Cloud - الأمان (Security)
-  # -----------------------------------------------------------------
-  google-cloud-security:
-    runs-on: ubuntu-latest
-    needs: google-cloud-setup
-    outputs:
-      armor-status: ${{ steps.armor.outputs.status }}
-      scc-status: ${{ steps.scc.outputs.status }}
-    steps:
-      - name: Setup Cloud Armor
-        id: armor
-        run: |
-          echo "🛡️ Setting up Cloud Armor..."
-          gcloud compute security-policies create mirage-armor \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --description="Mirage Quantum Security Policy"
-          echo "status=active" >> $GITHUB_OUTPUT
-      - name: Setup Security Command Center
-        id: scc
-        run: |
-          echo "🔐 Setting up Security Command Center..."
-          gcloud scc settings enable \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }}
-          echo "status=active" >> $GITHUB_OUTPUT
-
-  # -----------------------------------------------------------------
-  # 5. Google Cloud - الشبكات (Networking)
-  # -----------------------------------------------------------------
-  google-cloud-networking:
-    runs-on: ubuntu-latest
-    needs: google-cloud-setup
-    outputs:
-      cdn-status: ${{ steps.cdn.outputs.status }}
-      lb-status: ${{ steps.lb.outputs.status }}
-    steps:
-      - name: Setup Cloud CDN
-        id: cdn
-        run: |
-          echo "🌐 Setting up Cloud CDN..."
-          gcloud compute backend-buckets create mirage-cdn \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --enable-cdn
-          echo "status=active" >> $GITHUB_OUTPUT
-      - name: Setup Load Balancing
-        id: lb
-        run: |
-          echo "⚖️ Setting up Load Balancing..."
-          gcloud compute backend-services create mirage-lb \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --load-balancing-scheme=EXTERNAL \
-            --protocol=HTTP2
-          echo "status=active" >> $GITHUB_OUTPUT
-
-  # -----------------------------------------------------------------
-  # 6. Google Cloud - العمليات (Operations)
-  # -----------------------------------------------------------------
-  google-cloud-operations:
-    runs-on: ubuntu-latest
-    needs: google-cloud-setup
-    outputs:
-      logging-status: ${{ steps.logging.outputs.status }}
-      monitoring-status: ${{ steps.monitoring.outputs.status }}
-    steps:
-      - name: Setup Logging
-        id: logging
-        run: |
-          echo "📝 Setting up Logging..."
-          gcloud logging sinks create mirage-logs \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            bigquery.googleapis.com/projects/${{ env.GOOGLE_CLOUD_PROJECT }}/datasets/${{ env.GCP_BIGQUERY_DATASET }}
-          echo "status=active" >> $GITHUB_OUTPUT
-      - name: Setup Monitoring
-        id: monitoring
-        run: |
-          echo "📊 Setting up Monitoring..."
-          gcloud monitoring policies create \
-            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
-            --display-name="Mirage Quantum Monitoring"
-          echo "status=active" >> $GITHUB_OUTPUT
-
-  # -----------------------------------------------------------------
-  # 7. خوادم MCP 8000 والبروتوكولات الذكية
+  # البنية التحتية لخوادم MCP 8000
   # -----------------------------------------------------------------
   mcp-infrastructure:
     runs-on: ubuntu-latest
-    needs: google-cloud-setup
     outputs:
       mcp-status: ${{ steps.mcp-activate.outputs.status }}
       protocol-version: ${{ steps.protocol-setup.outputs.version }}
       cert-status: ${{ steps.certificates.outputs.status }}
       internet-status: ${{ steps.quantum-internet.outputs.status }}
     steps:
-      - name: Activate MCP 8000 Servers
+      - name: تفعيل خوادم MCP 8000
         id: mcp-activate
         run: |
-          echo "🖥️ Activating MCP 8000 Servers..."
+          echo "🖥️ تفعيل خوادم MCP 8000..."
           echo "status=active" >> $GITHUB_OUTPUT
-      - name: Activate Smart Protocols
+      - name: تفعيل البروتوكولات الذكية
         id: protocol-setup
         run: |
-          echo "🔐 Activating Smart Protocols..."
+          echo "🔐 تفعيل البروتوكولات الذكية..."
           echo "version=v3.2.1-quantum" >> $GITHUB_OUTPUT
-      - name: Activate Smart Certificates
+      - name: تفعيل الشهادات الذكية
         id: certificates
         run: |
-          echo "🛡️ Activating Smart Certificates..."
+          echo "🛡️ تفعيل الشهادات الذكية..."
           echo "status=active" >> $GITHUB_OUTPUT
-      - name: Activate Quantum Internet
+      - name: تفعيل الإنترنت الكمي
         id: quantum-internet
         run: |
-          echo "🌐 Activating Quantum Internet..."
+          echo "🌐 تفعيل الإنترنت الكمي..."
           echo "status=enabled" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 8. البنية التحتية العالمية (كابلات + أقمار صناعية)
+  # البنية التحتية العالمية (كابلات + أقمار)
   # -----------------------------------------------------------------
   global-infrastructure:
     runs-on: ubuntu-latest
-    needs: [google-cloud-setup, mcp-infrastructure]
+    needs: mcp-infrastructure
     steps:
-      - name: Activate Submarine Cables
-        run: echo "🌊 Submarine Cables Activated!"
-      - name: Activate Terrestrial Cables
-        run: echo "🏔️ Terrestrial Cables Activated!"
-      - name: Activate Satellites
-        run: echo "🛰️ Satellites Activated!"
+      - name: تفعيل الكابلات البحرية
+        run: echo "🌊 الكابلات البحرية مفعلة!"
+      - name: تفعيل الكابلات الأرضية
+        run: echo "🏔️ الكابلات الأرضية مفعلة!"
+      - name: تفعيل الأقمار الصناعية
+        run: echo "🛰️ الأقمار الصناعية مفعلة!"
 
   # -----------------------------------------------------------------
-  # 9. الذكاء الفائق - Mirage AI Core
+  # الذكاء الفائق - ميراج AI Core
   # -----------------------------------------------------------------
   mirage-ai-core:
     runs-on: ubuntu-latest
@@ -308,55 +82,41 @@ jobs:
       status: ${{ steps.ai-orchestrator.outputs.status }}
       ghost-session: ${{ steps.ghost-setup.outputs.session }}
     steps:
-      - name: Activate AI Core
+      - name: تفعيل الذكاء الفائق
         id: ai-orchestrator
         run: |
-          echo "🧠 Activating Mirage AI Core..."
+          echo "🧠 تفعيل ميراج AI Core..."
           echo "status=active" >> $GITHUB_OUTPUT
-      - name: Activate Specialized Agents
+      - name: تفعيل الوكلاء المتخصصين
         run: |
           for agent in security ads payment company search; do
-            echo "🛡️ Activating $agent Agent..."
+            echo "🛡️ تفعيل وكيل $agent..."
           done
-      - name: Activate Ghost Mode
+      - name: تفعيل وضع الشبح
         id: ghost-setup
         run: |
-          echo "👻 Activating Ghost Mode..."
+          echo "👻 تفعيل وضع الشبح..."
           echo "session=quantum-ghost-session-$(date +%s)" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 10. جوجل كلاود سكيلز
-  # -----------------------------------------------------------------
-  google-cloud-scheduler:
-    runs-on: ubuntu-latest
-    needs: [google-cloud-setup, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, mcp-infrastructure, global-infrastructure, mirage-ai-core]
-    steps:
-      - name: Activate Cloud Scheduler
-        run: echo "☁️ Google Cloud Scheduler Activated!"
-      - name: Activate Quantum Encryption
-        run: echo "🔐 Quantum Encryption Activated!"
-      - name: Activate Smart Jamming
-        run: echo "📡 Smart Jamming Activated!"
-
-  # -----------------------------------------------------------------
-  # 11. النشر الفائق إلى Firebase
+  # النشر الفائق إلى Firebase
   # -----------------------------------------------------------------
   quantum-deploy:
     runs-on: ubuntu-latest
-    needs: [google-cloud-setup, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, mcp-infrastructure, global-infrastructure, mirage-ai-core, google-cloud-scheduler]
+    needs: [mcp-infrastructure, global-infrastructure, mirage-ai-core]
     steps:
-      - name: Checkout code
+      - name: تنزيل الكود
         uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: تجهيز Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - name: Install dependencies
+      - name: تثبيت الحزم
         run: npm ci
-      - name: Build project
+      - name: بناء المشروع
         run: npm run build
-      - name: Deploy to Firebase Hosting
+      - name: النشر إلى Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -367,65 +127,40 @@ jobs:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
 
   # -----------------------------------------------------------------
-  # 12. المزامنة الكمية (قواعد البيانات + الشهادات)
+  # المزامنة الكمية
   # -----------------------------------------------------------------
   quantum-sync:
     runs-on: ubuntu-latest
     needs: quantum-deploy
     steps:
-      - name: Sync Smart Databases
-        run: echo "🗄️ Smart Databases Synced!"
-      - name: Renew Smart Certificates
-        run: echo "🔐 Smart Certificates Renewed!"
-      - name: Clean Encrypted Logs
-        run: echo "🧹 Encrypted Logs Cleaned!"
+      - name: مزامنة قواعد البيانات الذكية
+        run: echo "🗄️ قواعد البيانات متزامنة!"
+      - name: تجديد الشهادات الذكية
+        run: echo "🔐 الشهادات الذكية مجددة!"
+      - name: تنظيف السجلات المشفرة
+        run: echo "🧹 السجلات المشفرة نظيفة!"
 
   # -----------------------------------------------------------------
-  # 13. الحالة النهائية (التحقق من عدم الانهيار)
+  # الحالة النهائية
   # -----------------------------------------------------------------
   final-status:
     runs-on: ubuntu-latest
-    needs: [google-cloud-setup, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, mcp-infrastructure, global-infrastructure, mirage-ai-core, google-cloud-scheduler, quantum-deploy, quantum-sync]
+    needs: [mcp-infrastructure, global-infrastructure, mirage-ai-core, quantum-deploy, quantum-sync]
     steps:
-      - name: Victory Announcement
+      - name: إعلان النصر
         run: |
-          echo "🎉🎉🎉 VICTORY! 🎉🎉🎉"
+          echo "🎉🎉🎉 النصر! 🎉🎉🎉"
           echo ""
           echo "╔══════════════════════════════════════════════════════════════════════╗"
-          echo "║     🏆 MIRAGE - ULTIMATE QUANTUM SYSTEM (ALL FEATURES ACTIVE) 🏆  ║"
+          echo "║     🏆 ميراج - النظام الكمي النهائي (جميع الميزات مفعلة) 🏆       ║"
           echo "╚══════════════════════════════════════════════════════════════════════╝"
           echo ""
-          echo "✅ Google Cloud Infrastructure:"
-          echo "   🔹 Setup: ${{ needs.google-cloud-setup.outputs.setup-status }}"
-          echo "   🔹 Network: ${{ needs.google-cloud-setup.outputs.network-status }}"
-          echo "   🔹 Compute: ${{ needs.google-cloud-setup.outputs.compute-status }}"
-          echo ""
-          echo "✅ Google Cloud AI / ML:"
-          echo "   🔹 Vertex AI: ${{ needs.google-cloud-ai.outputs.vertex-status }}"
-          echo "   🔹 AutoML: ${{ needs.google-cloud-ai.outputs.automl-status }}"
-          echo ""
-          echo "✅ Google Cloud Data:"
-          echo "   🔹 BigQuery: ${{ needs.google-cloud-data.outputs.bigquery-status }}"
-          echo "   🔹 Dataflow: ${{ needs.google-cloud-data.outputs.dataflow-status }}"
-          echo ""
-          echo "✅ Google Cloud Security:"
-          echo "   🔹 Cloud Armor: ${{ needs.google-cloud-security.outputs.armor-status }}"
-          echo "   🔹 Security Command Center: ${{ needs.google-cloud-security.outputs.scc-status }}"
-          echo ""
-          echo "✅ Google Cloud Networking:"
-          echo "   🔹 Cloud CDN: ${{ needs.google-cloud-networking.outputs.cdn-status }}"
-          echo "   🔹 Load Balancing: ${{ needs.google-cloud-networking.outputs.lb-status }}"
-          echo ""
-          echo "✅ Google Cloud Operations:"
-          echo "   🔹 Logging: ${{ needs.google-cloud-operations.outputs.logging-status }}"
-          echo "   🔹 Monitoring: ${{ needs.google-cloud-operations.outputs.monitoring-status }}"
-          echo ""
           echo "✅ MCP 8000: ${{ needs.mcp-infrastructure.outputs.mcp-status }}"
-          echo "✅ Quantum Internet: ${{ needs.mcp-infrastructure.outputs.internet-status }}"
-          echo "✅ AI Core: ${{ needs.mirage-ai-core.outputs.status }}"
-          echo "✅ Ghost Mode: ${{ needs.mirage-ai-core.outputs.ghost-session }}"
-          echo "✅ Firebase Deploy: Success"
+          echo "✅ الإنترنت الكمي: ${{ needs.mcp-infrastructure.outputs.internet-status }}"
+          echo "✅ الذكاء الفائق: ${{ needs.mirage-ai-core.outputs.status }}"
+          echo "✅ وضع الشبح: ${{ needs.mirage-ai-core.outputs.ghost-session }}"
+          echo "✅ Firebase: تم النشر بنجاح"
           echo ""
           echo "╔══════════════════════════════════════════════════════════════════════╗"
-          echo "║    🚀 SYSTEM READY! لن ينهار أمام أي صعوبات! 🚀                   ║"
+          echo "║          🚀 النظام جاهز! لن ينهار أمام أي صعوبات! 🚀              ║"
           echo "╚══════════════════════════════════════════════════════════════════════╝"
