@@ -1,5 +1,5 @@
 # ===================================================================
-# ⚡ ميراج OODA - النسخة المستقرة والمُحسَّنة ⚡
+# ⚡ ميراج OODA - النسخة النهائية (مُحسّنة بالكامل) ⚡
 # ===================================================================
 name: Mirage OODA Pipeline
 
@@ -98,7 +98,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 2. الذكاء الاصطناعي (Parallel)
+  # 2. الذكاء الاصطناعي
   # -----------------------------------------------------------------
   google-cloud-ai:
     runs-on: ubuntu-latest
@@ -131,7 +131,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 3. البيانات (Parallel)
+  # 3. البيانات
   # -----------------------------------------------------------------
   google-cloud-data:
     runs-on: ubuntu-latest
@@ -159,7 +159,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 4. الأمان (Parallel)
+  # 4. الأمان
   # -----------------------------------------------------------------
   google-cloud-security:
     runs-on: ubuntu-latest
@@ -191,7 +191,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 5. الشبكات (Parallel)
+  # 5. الشبكات المتقدمة
   # -----------------------------------------------------------------
   google-cloud-networking:
     runs-on: ubuntu-latest
@@ -221,7 +221,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 6. العمليات (Parallel)
+  # 6. العمليات
   # -----------------------------------------------------------------
   google-cloud-operations:
     runs-on: ubuntu-latest
@@ -249,7 +249,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 7. MCP 8000
+  # 7. MCP 8000 (الأسماء مضبوطة تماماً)
   # -----------------------------------------------------------------
   mcp-infrastructure:
     runs-on: ubuntu-latest
@@ -386,24 +386,23 @@ jobs:
             -d '{"type": "adaptive", "intensity": "full-spectrum"}'
 
   # -----------------------------------------------------------------
-  # 11. النشر إلى Firebase (مع Self-Healing)
+  # 11. النشر إلى Firebase
   # -----------------------------------------------------------------
   quantum-deploy:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     needs: [google-cloud-scheduler, mirage-ai-core, mcp-infrastructure, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations]
     steps:
       - name: تحميل الكود
         uses: actions/checkout@v4
-      - name: تجهيز Node.js (الإصدار 22)
+      - name: تجهيز Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       - name: تثبيت الحزم
         run: npm ci
-      
-      # Self-Healing: 3 محاولات للبناء
-      - name: بناء المشروع (مع 3 محاولات)
+      - name: بناء المشروع
         id: build
         run: |
           for i in {1..3}; do
@@ -419,9 +418,7 @@ jobs:
             echo "⏳ فشل البناء، نعيد المحاولة بعد 5 ثوانٍ..."
             sleep 5
           done
-
-      # Self-Healing: 3 محاولات للنشر
-      - name: النشر إلى Firebase (مع 3 محاولات)
+      - name: النشر إلى Firebase
         id: deploy
         run: |
           for i in {1..3}; do
@@ -439,14 +436,11 @@ jobs:
           done
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-
-      # رفع القطع الأثرية (تم إصلاح المدخلات غير الصحيحة)
       - name: رفع القطع الأثرية (APK)
         uses: actions/upload-artifact@v4
         with:
           name: mirage-apk
           path: build/outputs/apk/release/*.apk
-      
       - name: رفع القطع الأثرية (Web)
         uses: actions/upload-artifact@v4
         with:
@@ -480,7 +474,7 @@ jobs:
             -d '{"keep": "90-days", "compress": true, "encrypt": true}'
 
   # -----------------------------------------------------------------
-  # 13. النتيجة النهائية (إشعارات GitHub التلقائية)
+  # 13. النتيجة النهائية
   # -----------------------------------------------------------------
   final-status:
     runs-on: ubuntu-latest
@@ -494,4 +488,6 @@ jobs:
           echo "✅ البنية الأساسية: ${{ needs.google-cloud-setup.outputs.setup-status }}"
           echo "✅ Vertex AI: ${{ needs.google-cloud-ai.outputs.vertex-status }}"
           echo "✅ BigQuery: ${{ needs.google-cloud-data.outputs.bigquery-status }}"
-          echo "✅ Cloud Armor: ${{ nee
+          echo "✅ Cloud Armor: ${{ needs.google-cloud-security.outputs.armor-status }}"
+          echo "✅ Cloud CDN: ${{ needs.google-cloud-networking.outputs.cdn-status }}"
+          echo "✅ Logging: ${{ needs.google-cloud-operations.outputs.logging-st
