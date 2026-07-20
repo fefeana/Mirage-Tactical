@@ -399,14 +399,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - name: تثبيت الحزم
+      - name: تثبيت الحزم والأدوات
         run: |
           npm ci
           npm install -g firebase-tools
       - name: بناء المشروع
         run: npm run build
       - name: النشر إلى Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
+        uses: FirebaseExtended/action-hosting-deploy@v1
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MIRAGE }}
@@ -459,4 +459,4 @@ jobs:
           echo "✅ Cloud CDN: ${{ needs.google-cloud-networking.outputs.cdn-status }}"
           echo "✅ Logging: ${{ needs.google-cloud-operations.outputs.logging-status }}"
           echo "✅ MCP 8000: ${{ needs.mcp-infrastructure.outputs.mcp-status }}"
-          echo "✅ الإنترنت الكمي: ${{ needs.
+          echo "✅ الإنترنت الكمي: $
