@@ -27,6 +27,7 @@ env:
   GCP_NETWORK: 'quantum-network'
   GCP_SUBNET: 'quantum-subnet'
   GCP_BIGQUERY_DATASET: 'mirage_analytics'
+  GCP_DATAFLOW_JOB: 'quantum-streaming'
 
 # ===================================================================
 # 🖥️ المهام (Jobs) - جميع الأقسام الأساسية
@@ -458,4 +459,4 @@ jobs:
           echo "✅ Cloud CDN: ${{ needs.google-cloud-networking.outputs.cdn-status }}"
           echo "✅ Logging: ${{ needs.google-cloud-operations.outputs.logging-status }}"
           echo "✅ MCP 8000: ${{ needs.mcp-infrastructure.outputs.mcp-status }}"
-          echo "✅ الإنترنت الكمي: ${{ needs.mc
+      
