@@ -1,5 +1,5 @@
 # ===================================================================
-# ⚡ ميراج OODA - النسخة النهائية (مُحسّنة بالكامل) ⚡
+# ⚡ ميراج OODA - النسخة النهائية (مُعدلة بالكامل) ⚡
 # ===================================================================
 name: Mirage OODA Pipeline
 
@@ -249,7 +249,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 7. MCP 8000 (الأسماء مضبوطة تماماً)
+  # 7. MCP 8000 (جميع الأسماء مضبوطة)
   # -----------------------------------------------------------------
   mcp-infrastructure:
     runs-on: ubuntu-latest
@@ -386,7 +386,7 @@ jobs:
             -d '{"type": "adaptive", "intensity": "full-spectrum"}'
 
   # -----------------------------------------------------------------
-  # 11. النشر إلى Firebase
+  # 11. النشر إلى Firebase (مع إزالة continue-on-error)
   # -----------------------------------------------------------------
   quantum-deploy:
     runs-on: ubuntu-latest
@@ -490,4 +490,4 @@ jobs:
           echo "✅ BigQuery: ${{ needs.google-cloud-data.outputs.bigquery-status }}"
           echo "✅ Cloud Armor: ${{ needs.google-cloud-security.outputs.armor-status }}"
           echo "✅ Cloud CDN: ${{ needs.google-cloud-networking.outputs.cdn-status }}"
-          echo "✅ Logging: ${{ needs.google-cloud-operations.outputs.logging-st
+          echo "✅ Logging: ${{ needs.google-cloud-ope
