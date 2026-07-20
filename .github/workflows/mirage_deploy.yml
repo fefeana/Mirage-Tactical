@@ -36,32 +36,32 @@ jobs:
   # -----------------------------------------------------------------
   # 1. إعداد البنية التحتية الأساسية (الشبكات والحوسبة)
   # -----------------------------------------------------------------
-  إعداد-البنية-التحتية:
+  google-cloud-setup:
     runs-on: ubuntu-latest
     outputs:
-      حالة-الإعداد: ${{ steps.تهيئة.outputs.status }}
-      حالة-الشبكة: ${{ steps.الشبكة.outputs.status }}
-      حالة-الحوسبة: ${{ steps.الحوسبة.outputs.status }}
+      setup-status: ${{ steps.init.outputs.status }}
+      network-status: ${{ steps.network.outputs.status }}
+      compute-status: ${{ steps.compute.outputs.status }}
     steps:
       - name: تهيئة جوجل كلاود
-        id: تهيئة
+        id: init
         run: echo "status=active" >> $GITHUB_OUTPUT
       - name: تهيئة الشبكات
-        id: الشبكة
+        id: network
         run: echo "status=active" >> $GITHUB_OUTPUT
       - name: تهيئة الحوسبة
-        id: الحوسبة
+        id: compute
         run: echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
   # 2. خدمات الذكاء الاصطناعي (Vertex AI و AutoML)
   # -----------------------------------------------------------------
-  خدمات-الذكاء-الاصطناعي:
+  google-cloud-ai:
     runs-on: ubuntu-latest
-    needs: إعداد-البنية-التحتية
+    needs: google-cloud-setup
     outputs:
-      حالة-vertex: ${{ steps.vertex.outputs.status }}
-      حالة-automl: ${{ steps.automl.outputs.status }}
+      vertex-status: ${{ steps.vertex.outputs.status }}
+      automl-status: ${{ steps.automl.outputs.status }}
     steps:
       - name: تهيئة Vertex AI
         id: vertex
@@ -73,12 +73,12 @@ jobs:
   # -----------------------------------------------------------------
   # 3. خدمات البيانات (BigQuery و Dataflow)
   # -----------------------------------------------------------------
-  خدمات-البيانات:
+  google-cloud-data:
     runs-on: ubuntu-latest
-    needs: إعداد-البنية-التحتية
+    needs: google-cloud-setup
     outputs:
-      حالة-bigquery: ${{ steps.bigquery.outputs.status }}
-      حالة-dataflow: ${{ steps.dataflow.outputs.status }}
+      bigquery-status: ${{ steps.bigquery.outputs.status }}
+      dataflow-status: ${{ steps.dataflow.outputs.status }}
     steps:
       - name: تهيئة BigQuery
         id: bigquery
@@ -90,12 +90,12 @@ jobs:
   # -----------------------------------------------------------------
   # 4. خدمات الأمان (Cloud Armor و Security Command Center)
   # -----------------------------------------------------------------
-  خدمات-الأمان:
+  google-cloud-security:
     runs-on: ubuntu-latest
-    needs: إعداد-البنية-التحتية
+    needs: google-cloud-setup
     outputs:
-      حالة-armor: ${{ steps.armor.outputs.status }}
-      حالة-scc: ${{ steps.scc.outputs.status }}
+      armor-status: ${{ steps.armor.outputs.status }}
+      scc-status: ${{ steps.scc.outputs.status }}
     steps:
       - name: تهيئة Cloud Armor
         id: armor
@@ -107,12 +107,12 @@ jobs:
   # -----------------------------------------------------------------
   # 5. خدمات الشبكات المتقدمة (CDN و Load Balancing)
   # -----------------------------------------------------------------
-  خدمات-الشبكات:
+  google-cloud-networking:
     runs-on: ubuntu-latest
-    needs: إعداد-البنية-التحتية
+    needs: google-cloud-setup
     outputs:
-      حالة-cdn: ${{ steps.cdn.outputs.status }}
-      حالة-lb: ${{ steps.lb.outputs.status }}
+      cdn-status: ${{ steps.cdn.outputs.status }}
+      lb-status: ${{ steps.lb.outputs.status }}
     steps:
       - name: تهيئة Cloud CDN
         id: cdn
@@ -124,12 +124,12 @@ jobs:
   # -----------------------------------------------------------------
   # 6. خدمات العمليات (Logging و Monitoring)
   # -----------------------------------------------------------------
-  خدمات-العمليات:
+  google-cloud-operations:
     runs-on: ubuntu-latest
-    needs: إعداد-البنية-التحتية
+    needs: google-cloud-setup
     outputs:
-      حالة-logging: ${{ steps.logging.outputs.status }}
-      حالة-monitoring: ${{ steps.monitoring.outputs.status }}
+      logging-status: ${{ steps.logging.outputs.status }}
+      monitoring-status: ${{ steps.monitoring.outputs.status }}
     steps:
       - name: تهيئة Logging
         id: logging
@@ -141,34 +141,34 @@ jobs:
   # -----------------------------------------------------------------
   # 7. خوادم MCP 8000 والبروتوكولات الذكية (GRPC/HTTP2/QUIC)
   # -----------------------------------------------------------------
-  خوادم-mcp:
+  mcp-infrastructure:
     runs-on: ubuntu-latest
-    needs: إعداد-البنية-التحتية
+    needs: google-cloud-setup
     outputs:
-      حالة-mcp: ${{ steps.mcp.outputs.status }}
-      إصدار-البروتوكول: ${{ steps.بروتوكول.outputs.version }}
-      حالة-الشهادات: ${{ steps.شهادات.outputs.status }}
-      حالة-الإنترنت-الكمي: ${{ steps.إنترنت-كمي.outputs.status }}
+      mcp-status: ${{ steps.mcp-activate.outputs.status }}
+      protocol-version: ${{ steps.protocol-setup.outputs.version }}
+      cert-status: ${{ steps.certificates.outputs.status }}
+      internet-status: ${{ steps.quantum-internet.outputs.status }}
     steps:
       - name: تشغيل خوادم MCP 8000
-        id: mcp
+        id: mcp-activate
         run: echo "status=active" >> $GITHUB_OUTPUT
       - name: تشغيل البروتوكولات الذكية
-        id: بروتوكول
+        id: protocol-setup
         run: echo "version=${{ env.PROTOCOL_VERSION }}" >> $GITHUB_OUTPUT
       - name: تشغيل الشهادات الذكية
-        id: شهادات
+        id: certificates
         run: echo "status=active" >> $GITHUB_OUTPUT
       - name: تشغيل الإنترنت الكمي
-        id: إنترنت-كمي
+        id: quantum-internet
         run: echo "status=enabled" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
   # 8. البنية التحتية العالمية (كابلات بحرية وأرضية وأقمار)
   # -----------------------------------------------------------------
-  بنية-تحتية-عالمية:
+  global-infrastructure:
     runs-on: ubuntu-latest
-    needs: [إعداد-البنية-التحتية, خوادم-mcp]
+    needs: [google-cloud-setup, mcp-infrastructure]
     steps:
       - name: تشغيل الكابلات البحرية
         run: echo "🌊 Submarine Cables Active"
@@ -180,15 +180,15 @@ jobs:
   # -----------------------------------------------------------------
   # 9. الذكاء الفائق (ميراج AI Core) مع وكلاء الدفع والمحادثة
   # -----------------------------------------------------------------
-  ميراج-ai-core:
+  mirage-ai-core:
     runs-on: ubuntu-latest
-    needs: [خوادم-mcp, بنية-تحتية-عالمية]
+    needs: [mcp-infrastructure, global-infrastructure]
     outputs:
-      حالة-الذكاء: ${{ steps.المدير.outputs.status }}
-      جلسة-الشبح: ${{ steps.الشبح.outputs.session }}
+      status: ${{ steps.ai-orchestrator.outputs.status }}
+      ghost-session: ${{ steps.ghost-setup.outputs.session }}
     steps:
       - name: تشغيل الذكاء الفائق
-        id: المدير
+        id: ai-orchestrator
         run: echo "status=active" >> $GITHUB_OUTPUT
       - name: تشغيل الوكلاء المتخصصين
         run: |
@@ -198,15 +198,15 @@ jobs:
           echo "🔹 وكيل تحويل الفيديو والترجمة"
           echo "🔹 وكيل آراء العملاء"
       - name: تشغيل وضع الشبح
-        id: الشبح
+        id: ghost-setup
         run: echo "session=ghost-$(date +%s)" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
   # 10. جدولة جوجل كلاود (للأعمال اليومية/الأسبوعية/الشهرية)
   # -----------------------------------------------------------------
-  جدولة-جوجل-كلاود:
+  google-cloud-scheduler:
     runs-on: ubuntu-latest
-    needs: [إعداد-البنية-التحتية, خدمات-الذكاء-الاصطناعي, خدمات-البيانات, خدمات-الأمان, خدمات-الشبكات, خدمات-العمليات, خوادم-mcp, بنية-تحتية-عالمية, ميراج-ai-core]
+    needs: [google-cloud-setup, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, mcp-infrastructure, global-infrastructure, mirage-ai-core]
     steps:
       - name: تشغيل الجدولة
         run: echo "☁️ Scheduler Active (Daily/Weekly/Monthly)"
@@ -218,9 +218,9 @@ jobs:
   # -----------------------------------------------------------------
   # 11. النشر الفائق إلى Firebase (فصل الواجهات)
   # -----------------------------------------------------------------
-  نشر-إلى-firebase:
+  quantum-deploy:
     runs-on: ubuntu-latest
-    needs: [إعداد-البنية-التحتية, خدمات-الذكاء-الاصطناعي, خدمات-البيانات, خدمات-الأمان, خدمات-الشبكات, خدمات-العمليات, خوادم-mcp, بنية-تحتية-عالمية, ميراج-ai-core, جدولة-جوجل-كلاود]
+    needs: [google-cloud-setup, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, mcp-infrastructure, global-infrastructure, mirage-ai-core, google-cloud-scheduler]
     steps:
       - name: تحميل الكود
         uses: actions/checkout@v4
@@ -246,9 +246,9 @@ jobs:
   # -----------------------------------------------------------------
   # 12. المزامنة الكمية (قواعد البيانات والشهادات)
   # -----------------------------------------------------------------
-  مزامنة-كمية:
+  quantum-sync:
     runs-on: ubuntu-latest
-    needs: نشر-إلى-firebase
+    needs: quantum-deploy
     steps:
       - name: مزامنة قواعد البيانات
         run: echo "🗄️ Databases Synced"
@@ -260,23 +260,23 @@ jobs:
   # -----------------------------------------------------------------
   # 13. التحقق النهائي (التأكد من عمل جميع القطع)
   # -----------------------------------------------------------------
-  تحقق-نهائي:
+  final-status:
     runs-on: ubuntu-latest
-    needs: [إعداد-البنية-التحتية, خدمات-الذكاء-الاصطناعي, خدمات-البيانات, خدمات-الأمان, خدمات-الشبكات, خدمات-العمليات, خوادم-mcp, بنية-تحتية-عالمية, ميراج-ai-core, جدولة-جوجل-كلاود, نشر-إلى-firebase, مزامنة-كمية]
+    needs: [google-cloud-setup, google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, mcp-infrastructure, global-infrastructure, mirage-ai-core, google-cloud-scheduler, quantum-deploy, quantum-sync]
     steps:
       - name: إعلان الجاهزية
         run: |
           echo "🎉🎉🎉 النظام جاهز 100% 🎉🎉🎉"
           echo "======================================="
-          echo "✅ البنية الأساسية: ${{ needs.إعداد-البنية-التحتية.outputs.حالة-الإعداد }}"
-          echo "✅ Vertex AI: ${{ needs.خدمات-الذكاء-الاصطناعي.outputs.حالة-vertex }}"
-          echo "✅ BigQuery: ${{ needs.خدمات-البيانات.outputs.حالة-bigquery }}"
-          echo "✅ Cloud Armor: ${{ needs.خدمات-الأمان.outputs.حالة-armor }}"
-          echo "✅ Cloud CDN: ${{ needs.خدمات-الشبكات.outputs.حالة-cdn }}"
-          echo "✅ Logging: ${{ needs.خدمات-العمليات.outputs.حالة-logging }}"
-          echo "✅ MCP 8000: ${{ needs.خوادم-mcp.outputs.حالة-mcp }}"
-          echo "✅ الإنترنت الكمي: ${{ needs.خوادم-mcp.outputs.حالة-الإنترنت-الكمي }}"
-          echo "✅ الذكاء الفائق: ${{ needs.ميراج-ai-core.outputs.حالة-الذكاء }}"
+          echo "✅ البنية الأساسية: ${{ needs.google-cloud-setup.outputs.setup-status }}"
+          echo "✅ Vertex AI: ${{ needs.google-cloud-ai.outputs.vertex-status }}"
+          echo "✅ BigQuery: ${{ needs.google-cloud-data.outputs.bigquery-status }}"
+          echo "✅ Cloud Armor: ${{ needs.google-cloud-security.outputs.armor-status }}"
+          echo "✅ Cloud CDN: ${{ needs.google-cloud-networking.outputs.cdn-status }}"
+          echo "✅ Logging: ${{ needs.google-cloud-operations.outputs.logging-status }}"
+          echo "✅ MCP 8000: ${{ needs.mcp-infrastructure.outputs.mcp-status }}"
+          echo "✅ الإنترنت الكمي: ${{ needs.mcp-infrastructure.outputs.internet-status }}"
+          echo "✅ الذكاء الفائق: ${{ needs.mirage-ai-core.outputs.status }}"
           echo "✅ Firebase: منشور بنجاح"
           echo "======================================="
-          echo "🚀 النظام يعمل 24/7 ولا ينهار! 🚀"
+          echo "🚀 النظام يعمل 24/7 ولا ينهار! 🚀"او
