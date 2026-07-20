@@ -1,5 +1,5 @@
 # ===================================================================
-# ⚡ ميراج OODA - خط الأنابيب الكمي النهائي ⚡
+# ⚡ Mirage OODA Pipeline - Full Stack ⚡
 # ===================================================================
 name: Mirage OODA Pipeline
 
@@ -11,7 +11,7 @@ on:
     - cron: '*/5 * * * *'
 
 # ===================================================================
-# 🌍 المتغيرات البيئية
+# 🌍 Environment Variables
 # ===================================================================
 env:
   NODE_VERSION: '22'
@@ -29,24 +29,24 @@ env:
   GCP_BIGQUERY_DATASET: 'mirage_analytics'
 
 # ===================================================================
-# 🖥️ المهام
+# 🖥️ Jobs
 # ===================================================================
 jobs:
 
   # -----------------------------------------------------------------
-  # 1. البنية التحتية الأساسية
+  # 1. Infrastructure Setup
   # -----------------------------------------------------------------
   infrastructure-setup:
     runs-on: ubuntu-latest
     outputs:
       status: ${{ steps.init.outputs.status }}
     steps:
-      - name: تهيئة البنية الأساسية
+      - name: Init
         id: init
         run: echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 2. الذكاء الاصطناعي
+  # 2. AI Services
   # -----------------------------------------------------------------
   ai-services:
     runs-on: ubuntu-latest
@@ -55,15 +55,15 @@ jobs:
       vertex-status: ${{ steps.vertex.outputs.status }}
       automl-status: ${{ steps.automl.outputs.status }}
     steps:
-      - name: تهيئة Vertex AI
+      - name: Vertex AI
         id: vertex
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تهيئة AutoML
+      - name: AutoML
         id: automl
         run: echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 3. خدمات البيانات
+  # 3. Data Services
   # -----------------------------------------------------------------
   data-services:
     runs-on: ubuntu-latest
@@ -72,15 +72,15 @@ jobs:
       bigquery-status: ${{ steps.bigquery.outputs.status }}
       dataflow-status: ${{ steps.dataflow.outputs.status }}
     steps:
-      - name: تهيئة BigQuery
+      - name: BigQuery
         id: bigquery
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تهيئة Dataflow
+      - name: Dataflow
         id: dataflow
         run: echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 4. خدمات الأمان
+  # 4. Security Services
   # -----------------------------------------------------------------
   security-services:
     runs-on: ubuntu-latest
@@ -89,15 +89,15 @@ jobs:
       armor-status: ${{ steps.armor.outputs.status }}
       scc-status: ${{ steps.scc.outputs.status }}
     steps:
-      - name: تهيئة Cloud Armor
+      - name: Cloud Armor
         id: armor
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تهيئة Security Command Center
+      - name: SCC
         id: scc
         run: echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 5. الشبكات المتقدمة
+  # 5. Networking Services
   # -----------------------------------------------------------------
   networking-services:
     runs-on: ubuntu-latest
@@ -106,15 +106,15 @@ jobs:
       cdn-status: ${{ steps.cdn.outputs.status }}
       lb-status: ${{ steps.lb.outputs.status }}
     steps:
-      - name: تهيئة Cloud CDN
+      - name: Cloud CDN
         id: cdn
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تهيئة Load Balancing
+      - name: Load Balancer
         id: lb
         run: echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 6. العمليات
+  # 6. Operations Services
   # -----------------------------------------------------------------
   operations-services:
     runs-on: ubuntu-latest
@@ -123,15 +123,15 @@ jobs:
       logging-status: ${{ steps.logging.outputs.status }}
       monitoring-status: ${{ steps.monitoring.outputs.status }}
     steps:
-      - name: تهيئة Logging
+      - name: Logging
         id: logging
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تهيئة Monitoring
+      - name: Monitoring
         id: monitoring
         run: echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 7. خوادم MCP 8000
+  # 7. MCP Servers & Protocols
   # -----------------------------------------------------------------
   mcp-servers:
     runs-on: ubuntu-latest
@@ -142,35 +142,35 @@ jobs:
       cert-status: ${{ steps.certificates.outputs.status }}
       internet-status: ${{ steps.quantum-internet.outputs.status }}
     steps:
-      - name: تشغيل خوادم MCP 8000
+      - name: MCP 8000
         id: mcp-activate
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تشغيل البروتوكولات الذكية
+      - name: Smart Protocols
         id: protocol-setup
         run: echo "version=${{ env.PROTOCOL_VERSION }}" >> $GITHUB_OUTPUT
-      - name: تشغيل الشهادات الذكية
+      - name: Smart Certs
         id: certificates
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تشغيل الإنترنت الكمي
+      - name: Quantum Internet
         id: quantum-internet
         run: echo "status=enabled" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 8. البنية التحتية العالمية
+  # 8. Global Infrastructure (Cables & Satellites)
   # -----------------------------------------------------------------
   global-infrastructure:
     runs-on: ubuntu-latest
     needs: [infrastructure-setup, mcp-servers]
     steps:
-      - name: تشغيل الكابلات البحرية
-        run: echo "🌊 Submarine Cables Active"
-      - name: تشغيل الكابلات الأرضية
-        run: echo "🏔️ Terrestrial Cables Active"
-      - name: تشغيل الأقمار الصناعية
-        run: echo "🛰️ Satellites Active"
+      - name: Submarine Cables
+        run: echo "Active"
+      - name: Terrestrial Cables
+        run: echo "Active"
+      - name: Satellites
+        run: echo "Active"
 
   # -----------------------------------------------------------------
-  # 9. الذكاء الفائق
+  # 9. Mirage AI Core
   # -----------------------------------------------------------------
   mirage-core:
     runs-on: ubuntu-latest
@@ -179,52 +179,52 @@ jobs:
       status: ${{ steps.ai-orchestrator.outputs.status }}
       ghost-session: ${{ steps.ghost-setup.outputs.session }}
     steps:
-      - name: تشغيل الذكاء الفائق
+      - name: AI Orchestrator
         id: ai-orchestrator
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تشغيل الوكلاء المتخصصين
+      - name: Agents
         run: |
-          echo "🔹 وكيل الأمن والفلترة"
-          echo "🔹 وكيل الدفع والاشتراكات"
-          echo "🔹 وكيل المحادثة المباشرة"
-          echo "🔹 وكيل تحويل الفيديو والترجمة"
-      - name: تشغيل وضع الشبح
+          echo "Security Agent"
+          echo "Payment Agent"
+          echo "Chat Agent"
+          echo "Media Agent"
+      - name: Ghost Mode
         id: ghost-setup
         run: echo "session=ghost-$(date +%s)" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 10. جدولة جوجل كلاود
+  # 10. Cloud Scheduler
   # -----------------------------------------------------------------
   cloud-scheduler:
     runs-on: ubuntu-latest
     needs: [infrastructure-setup, ai-services, data-services, security-services, networking-services, operations-services, mcp-servers, global-infrastructure, mirage-core]
     steps:
-      - name: تشغيل الجدولة
-        run: echo "☁️ Scheduler Active"
-      - name: تشغيل التشفير الكمي
-        run: echo "🔐 Quantum Encryption Active"
-      - name: تشغيل التشويش الذكي
-        run: echo "📡 Smart Jamming Active"
+      - name: Scheduler
+        run: echo "Active"
+      - name: Quantum Encryption
+        run: echo "Active"
+      - name: Smart Jamming
+        run: echo "Active"
 
   # -----------------------------------------------------------------
-  # 11. النشر إلى Firebase
+  # 11. Firebase Deploy
   # -----------------------------------------------------------------
   firebase-deploy:
     runs-on: ubuntu-latest
     needs: [infrastructure-setup, ai-services, data-services, security-services, networking-services, operations-services, mcp-servers, global-infrastructure, mirage-core, cloud-scheduler]
     steps:
-      - name: تحميل الكود
+      - name: Checkout
         uses: actions/checkout@v4
-      - name: تجهيز Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      - name: تثبيت الحزم
+      - name: Install
         run: npm ci
-      - name: بناء المشروع
+      - name: Build
         run: npm run build
-      - name: النشر إلى Firebase
+      - name: Deploy
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -235,39 +235,37 @@ jobs:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
 
   # -----------------------------------------------------------------
-  # 12. المزامنة الكمية
+  # 12. Quantum Sync
   # -----------------------------------------------------------------
   quantum-sync:
     runs-on: ubuntu-latest
     needs: firebase-deploy
     steps:
-      - name: مزامنة قواعد البيانات
-        run: echo "🗄️ Databases Synced"
-      - name: تجديد الشهادات الذكية
-        run: echo "🔐 Certificates Renewed"
-      - name: تنظيف السجلات المشفرة
-        run: echo "🧹 Logs Cleaned"
+      - name: Sync DB
+        run: echo "Done"
+      - name: Renew Certs
+        run: echo "Done"
+      - name: Clean Logs
+        run: echo "Done"
 
   # -----------------------------------------------------------------
-  # 13. التحقق النهائي
+  # 13. Final Check
   # -----------------------------------------------------------------
   final-verification:
     runs-on: ubuntu-latest
     needs: [infrastructure-setup, ai-services, data-services, security-services, networking-services, operations-services, mcp-servers, global-infrastructure, mirage-core, cloud-scheduler, firebase-deploy, quantum-sync]
     steps:
-      - name: إعلان الجاهزية
+      - name: Verify All
         run: |
-          echo "🎉🎉🎉 النظام جاهز 100% 🎉🎉🎉"
-          echo "======================================="
-          echo "✅ البنية الأساسية: ${{ needs.infrastructure-setup.outputs.status }}"
+          echo "✅ All systems ready!"
+          echo "✅ Infrastructure: ${{ needs.infrastructure-setup.outputs.status }}"
           echo "✅ Vertex AI: ${{ needs.ai-services.outputs.vertex-status }}"
           echo "✅ BigQuery: ${{ needs.data-services.outputs.bigquery-status }}"
           echo "✅ Cloud Armor: ${{ needs.security-services.outputs.armor-status }}"
           echo "✅ Cloud CDN: ${{ needs.networking-services.outputs.cdn-status }}"
           echo "✅ Logging: ${{ needs.operations-services.outputs.logging-status }}"
-          echo "✅ MCP 8000: ${{ needs.mcp-servers.outputs.mcp-status }}"
-          echo "✅ الإنترنت الكمي: ${{ needs.mcp-servers.outputs.internet-status }}"
-          echo "✅ الذكاء الفائق: ${{ needs.mirage-core.outputs.status }}"
-          echo "✅ Firebase: منشور بنجاح"
-          echo "======================================="
-          echo "🚀 النظام يعمل 24/7 ولا ينهار! 🚀"
+          echo "✅ MCP: ${{ needs.mcp-servers.outputs.mcp-status }}"
+          echo "✅ Quantum Internet: ${{ needs.mcp-servers.outputs.internet-status }}"
+          echo "✅ AI Core: ${{ needs.mirage-core.outputs.status }}"
+          echo "✅ Firebase Deployed"
+          echo "🚀 System 100% ready!"
