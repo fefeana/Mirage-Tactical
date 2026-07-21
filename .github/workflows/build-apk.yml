@@ -1,22 +1,20 @@
 # ===================================================================
-# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي المُحدّث ⚡
+# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي 🎬
 # ===================================================================
-
 name: 🎬 Cinematic Video Generator
 
 on:
   workflow_dispatch:
 
 jobs:
-  generate-cinematic-video:
-    name: 🎥 Generate Cinematic Promo Video
+  generate-video:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -28,7 +26,7 @@ jobs:
       - name: 🎬 Generate video
         run: python video_generator.py
 
-      - name: 📤 Upload video
+      - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: cinematic-promo-video
