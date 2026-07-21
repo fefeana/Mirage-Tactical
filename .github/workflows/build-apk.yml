@@ -1,9 +1,35 @@
-# -----------------------------------------------------------------
-# 📤 رفع الفيديو السينمائي (مع سياسة الاحتفاظ)
-# -----------------------------------------------------------------
-- name: 📤 Upload cinematic video
-  uses: actions/upload-artifact@v4
-  with:
-    name: cinematic-promo-video
-    path: mirage_cinematic.mp4
-    retention-days: 90   # ✅ الاحتفاظ بالفيديو لمدة 90 يوماً
+# ===================================================================
+# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي المُبسط ⚡
+# ===================================================================
+
+name: 🎬 Generate Cinematic Video
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install pillow moviepy numpy
+
+      - name: 🎬 Generate video
+        run: python video_generator.py
+
+      - name: 📤 Upload video
+        uses: actions/upload-artifact@v4
+        with:
+          name: cinematic-promo-video
+          path: mirage_cinematic.mp4
+          retention-days: 90
