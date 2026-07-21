@@ -1,18 +1,19 @@
 # ===================================================================
-# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي (مسافات مضبوطة) ⚡
+# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي المُحدّث ⚡
 # ===================================================================
 
-name: 🎬 Cinematic Video Workflow
+name: 🎬 Cinematic Video Generator
 
 on:
   workflow_dispatch:
 
 jobs:
-  generate:
+  generate-cinematic-video:
+    name: 🎥 Generate Cinematic Promo Video
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout
+      - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
       - name: 🐍 Setup Python
