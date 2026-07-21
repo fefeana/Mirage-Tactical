@@ -1,33 +1,107 @@
-name: 📱 Build APK
+#!/usr/bin/env python3
+# ===================================================================
+# ⚡ ميراج-تكتيكال - مولد الفيديو الإعلاني (إصدار Python المستقل) ⚡
+# ===================================================================
 
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+import os
+import sys
+import subprocess
+import importlib
+import numpy as np
+from PIL import Image, ImageDraw
+from moviepy.editor import ImageClip, concatenate_videoclips, vfx
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# ===================================================================
+# 📦 التثبيت الذاتي للمكتبات
+# ===================================================================
 
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+REQUIRED = ["pillow", "moviepy", "numpy"]
+for pkg in REQUIRED:
+    try:
+        importlib.import_module(pkg.replace("-", "_"))
+    except ImportError:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", pkg])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", pkg])
 
-      - name: 🐍 Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+# ===================================================================
+# 🎨 المشاهد
+# ===================================================================
 
-      - name: 📦 Install dependencies
-        run: |
-          sudo apt update
-          pip install pillow moviepy numpy requests
+def scene_intro():
+    img = Image.new("RGB", (1920, 1080), (5, 5, 20))
+    draw = ImageDraw.Draw(img)
+    for r in range(100, 500, 30):
+        draw.ellipse((960 - r, 540 - r//2, 960 + r, 540 + r//2),
+                     outline=(255, 215, 0, max(0, 100 - r//5)), width=3)
+    draw.text((780, 350), "🏯", fill=(255, 215, 0), font_size=200)
+    draw.text((660, 600), "ميراج-تكتيكال", fill=(255, 215, 0), font_size=90)
+    draw.text((670, 720), "الدرع الرقمي الجديد", fill=(180, 180, 200), font_size=50)
+    return img
 
-      - name: 🎬 Generate promo video
-        run: python create_full_promo.py
+def scene_threat():
+    img = Image.new("RGB", (1920, 1080), (10, 0, 0))
+    draw = ImageDraw.Draw(img)
+    for i in range(0, 1920, 40):
+        draw.line((i, 0, i + np.random.randint(-100, 100), 1080), fill=(200, 0, 0, 80), width=2)
+        draw.line((0, i, 1920, i + np.random.randint(-100, 100)), fill=(200, 0, 0, 80), width=2)
+    draw.text((200, 300), "⚠️ تهديد إلكتروني", fill=(255, 50, 50), font_size=80)
+    draw.text((200, 450), "هجوم احتيال", fill=(255, 200, 200), font_size=60)
+    draw.text((200, 580), "اكتشاف محاولة اختراق", fill=(200, 100, 100), font_size=40)
+    return img
 
-      - name: 📤 Upload video
-        uses: actions/upload-artifact@v4
-        with:
-          name: promo-video
-          path: mirage_promo.mp4
+def scene_ai():
+    img = Image.new("RGB", (1920, 1080), (0, 10, 30))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((150, 150, 1770, 930), outline=(0, 200, 255), width=4)
+    draw.text((250, 220), "🧠 الذكاء الفائق", fill=(0, 200, 255), font_size=60)
+    draw.text((250, 330), "تحليل التهديد...", fill=(100, 200, 255), font_size=45)
+    draw.text((250, 440), "✅ كشف الاحتيال", fill=(0, 255, 100), font_size=70)
+    draw.text((250, 560), "🛡️ بدء الإجراءات الوقائية", fill=(0, 200, 255), font_size=45)
+    return img
+
+def scene_enterprise():
+    img = Image.new("RGB", (1920, 1080), (10, 0, 30))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((100, 100, 1820, 980), outline=(255, 215, 0), width=6)
+    draw.text((200, 200), "🏛️ نظام المؤسسات", fill=(255, 215, 0), font_size=60)
+    draw.text((200, 320), "🔐 FIDO2: مفعّل", fill=(0, 255, 200), font_size=55)
+    draw.text((200, 440), "⏳ TOTP: جاهز", fill=(0, 255, 200), font_size=55)
+    draw.text((200, 560), "🛡️ Zero Trust: مُفعّل", fill=(0, 255, 200), font_size=55)
+    draw.ellipse((1500, 650, 1780, 930), outline=(0, 255, 200), width=8)
+    draw.text((1600, 750), "✓", fill=(0, 255, 200), font_size=130)
+    return img
+
+def scene_cta():
+    img = Image.new("RGB", (1920, 1080), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    for r in range(50, 700, 50):
+        draw.ellipse((960 - r, 540 - r//2, 960 + r, 540 + r//2),
+                     outline=(255, 215, 0, max(0, 80 - r//10)), width=2)
+    draw.text((560, 300), "🚀 حمّل ميراج-تكتيكال الآن", fill=(255, 215, 0), font_size=85)
+    draw.text((620, 500), "وكن أنت الساموراي القادم", fill=(200, 200, 200), font_size=60)
+    draw.text((880, 750), "⚡", fill=(255, 215, 0), font_size=150)
+    return img
+
+# ===================================================================
+# 🎬 توليد الفيديو
+# ===================================================================
+
+def generate_video():
+    print("🎬 جارٍ إنشاء الفيديو الإعلاني...")
+    scenes = [scene_intro(), scene_threat(), scene_ai(), scene_enterprise(), scene_cta()]
+    clips = []
+    for i, frame in enumerate(scenes):
+        clip = ImageClip(np.array(frame)).set_duration(3)
+        if i == 0:
+            clip = clip.fx(vfx.fadein, 0.7)
+        elif i == len(scenes) - 1:
+            clip = clip.fx(vfx.fadeout, 0.7)
+        else:
+            clip = clip.fx(vfx.fadein, 0.3).fx(vfx.fadeout, 0.3)
+        clips.append(clip)
+    final = concatenate_videoclips(clips)
+    final.write_videofile("mirage_promo.mp4", fps=24, codec="libx264", audio_codec="aac")
+    print("✅ تم إنشاء الفيديو: mirage_promo.mp4")
+
+if __name__ == "__main__":
+    generate_video()
