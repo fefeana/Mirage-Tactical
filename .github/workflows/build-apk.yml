@@ -1,53 +1,42 @@
-# ===================================================================
-# ⚡ ميراج-تكتيكال - مولد الفيديو الإعلاني السينمائي ⚡
-# ===================================================================
-
+from moviepy.editor import *
 import numpy as np
-from PIL import Image, ImageDraw
-from moviepy.editor import ImageClip, concatenate_videoclips, vfx
 
-# مشاهد الفيديو
-def scene1():
-    img = Image.new("RGB", (1920, 1080), (0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    draw.text((600, 400), "🚀 ميراج-تكتيكال", fill=(255, 215, 0), size=100)
-    draw.text((550, 550), "الدرع الرقمي الجديد", fill=(200, 200, 200), size=60)
-    return img
+# ============================================================
+# 🔥 مشهد 1: الافتتاحية الصاعقة
+# ============================================================
+clip1 = ColorClip(size=(1920, 1080), color=(5, 5, 20), duration=3)
+txt1 = TextClip("⚡ ميراج-تكتيكال", fontsize=120, color='gold', font='Arial', stroke_color='black', stroke_width=4)
+txt1 = txt1.set_position('center').set_duration(3)
+scene1 = CompositeVideoClip([clip1, txt1]).fx(vfx.fadein, 0.5)
 
-def scene2():
-    img = Image.new("RGB", (1920, 1080), (10, 0, 0))
-    draw = ImageDraw.Draw(img)
-    draw.text((300, 400), "⚠️ تهديد إلكتروني", fill=(255, 50, 50), size=90)
-    draw.text((300, 550), "نحن نحميك", fill=(255, 200, 200), size=70)
-    return img
+# ============================================================
+# 🛡️ مشهد 2: الدرع الرقمي
+# ============================================================
+clip2 = ColorClip(size=(1920, 1080), color=(10, 10, 40), duration=3)
+txt2 = TextClip("🛡️ حماية لا تنتهي", fontsize=100, color='white', font='Arial', stroke_color='blue', stroke_width=3)
+txt2 = txt2.set_position('center').set_duration(3)
+scene2 = CompositeVideoClip([clip2, txt2]).fx(vfx.fadein, 0.5)
 
-def scene3():
-    img = Image.new("RGB", (1920, 1080), (0, 20, 50))
-    draw = ImageDraw.Draw(img)
-    draw.text((400, 400), "🧠 ذكاء اصطناعي خارق", fill=(0, 200, 255), size=80)
-    draw.text((450, 550), "قرارات فورية", fill=(200, 200, 200), size=60)
-    return img
+# ============================================================
+# 🚀 مشهد 3: الدعوة
+# ============================================================
+clip3 = ColorClip(size=(1920, 1080), color=(0, 0, 0), duration=3)
+txt3 = TextClip("🚀 حمّل الآن وكن ساموراي", fontsize=90, color='gold', font='Arial', stroke_color='red', stroke_width=3)
+txt3 = txt3.set_position('center').set_duration(3)
+scene3 = CompositeVideoClip([clip3, txt3]).fx(vfx.fadein, 0.5)
 
-def scene4():
-    img = Image.new("RGB", (1920, 1080), (0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    draw.text((400, 400), "🚀 حمّل الآن", fill=(255, 215, 0), size=100)
-    draw.text((500, 550), "وكن ساموراي", fill=(200, 200, 200), size=60)
-    return img
+# ============================================================
+# 🎬 دمج المشاهد
+# ============================================================
+final = concatenate_videoclips([scene1, scene2, scene3])
 
-# توليد الفيديو
-scenes = [scene1(), scene2(), scene3(), scene4()]
-clips = []
-for i, s in enumerate(scenes):
-    clip = ImageClip(np.array(s)).set_duration(3)
-    if i == 0:
-        clip = clip.fx(vfx.fadein, 0.5)
-    elif i == len(scenes)-1:
-        clip = clip.fx(vfx.fadeout, 0.5)
-    clips.append(clip)
+# ============================================================
+# 💾 حفظ الفيديو بجودة عالية
+# ============================================================
+final.write_videofile("mirage_promo_pro.mp4", fps=24, codec="libx264", audio_codec="aac", bitrate="8000k")
 
-final = concatenate_videoclips(clips)
-final.write_videofile("mirage_promo.mp4", fps=24)
-print("✅ فيديو إعلاني جاهز: mirage_promo.mp4")
+print("🎉 الفيديو الإعلاني الاحترافي جاهز: mirage_promo_pro.mp4")
+- name: 🎬 Generate video
+  run: python video_generator.py 
 
-
+  
