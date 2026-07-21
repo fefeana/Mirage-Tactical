@@ -1,35 +1,51 @@
 # ===================================================================
-# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي 🎬
+# ⚡ ميراج-تكتيكال - مولد الفيديو الإعلاني السينمائي ⚡
 # ===================================================================
-name: 🎬 Cinematic Video Generator
 
-on:
-  workflow_dispatch:
+import numpy as np
+from PIL import Image, ImageDraw
+from moviepy.editor import ImageClip, concatenate_videoclips, vfx
 
-jobs:
-  generate-video:
-    runs-on: ubuntu-latest
+# مشاهد الفيديو
+def scene1():
+    img = Image.new("RGB", (1920, 1080), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.text((600, 400), "🚀 ميراج-تكتيكال", fill=(255, 215, 0), size=100)
+    draw.text((550, 550), "الدرع الرقمي الجديد", fill=(200, 200, 200), size=60)
+    return img
 
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+def scene2():
+    img = Image.new("RGB", (1920, 1080), (10, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.text((300, 400), "⚠️ تهديد إلكتروني", fill=(255, 50, 50), size=90)
+    draw.text((300, 550), "نحن نحميك", fill=(255, 200, 200), size=70)
+    return img
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+def scene3():
+    img = Image.new("RGB", (1920, 1080), (0, 20, 50))
+    draw = ImageDraw.Draw(img)
+    draw.text((400, 400), "🧠 ذكاء اصطناعي خارق", fill=(0, 200, 255), size=80)
+    draw.text((450, 550), "قرارات فورية", fill=(200, 200, 200), size=60)
+    return img
 
-      - name: 📦 Install dependencies
-        run: |
-          pip install pillow moviepy numpy
+def scene4():
+    img = Image.new("RGB", (1920, 1080), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.text((400, 400), "🚀 حمّل الآن", fill=(255, 215, 0), size=100)
+    draw.text((500, 550), "وكن ساموراي", fill=(200, 200, 200), size=60)
+    return img
 
-      - name: 🎬 Generate video
-        run: python video_generator.py
+# توليد الفيديو
+scenes = [scene1(), scene2(), scene3(), scene4()]
+clips = []
+for i, s in enumerate(scenes):
+    clip = ImageClip(np.array(s)).set_duration(3)
+    if i == 0:
+        clip = clip.fx(vfx.fadein, 0.5)
+    elif i == len(scenes)-1:
+        clip = clip.fx(vfx.fadeout, 0.5)
+    clips.append(clip)
 
-      - name: 📤 Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: cinematic-promo-video
-          path: mirage_cinematic.mp4
-          retention-days: 90
-
+final = concatenate_videoclips(clips)
+final.write_videofile("mirage_promo.mp4", fps=24)
+print("✅ فيديو إعلاني جاهز: mirage_promo.mp4")
