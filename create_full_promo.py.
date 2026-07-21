@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+# ===================================================================
+# ⚡ ميراج-تكتيكال - صانع الفيديو الإعلاني (ذاتي التثبيت) ⚡
+# ===================================================================
+
+import subprocess
+import sys
+import importlib
+import os
+
+# ===================================================================
+# 📦 1. دالة تثبيت المكتبات المفقودة وتحديثها تلقائياً
+# ===================================================================
+
+REQUIRED_PACKAGES = [
+    "pillow",
+    "moviepy",
+    "numpy",
+    "requests"
+]
+
+def install_and_update_packages(packages):
+    """يتحقق من وجود المكتبات، ويُثبتها إذا لم تكن موجودة، ثم يُحدّثها"""
+    for package in packages:
+        try:
+            importlib.import_module(package.replace("-", "_"))
+            print(f"✅ {package} موجود بالفعل")
+        except ImportError:
+            print(f"📦 {package} غير موجود، جارٍ التثبيت...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        
+        # تحديث الحزمة إلى أحدث إصدار
+        print(f"🔄 جارٍ تحديث {package}...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package])
+
+# تشغيل التثبيت والتحديث
+install_and_update_packages(REQUIRED_PACKAGES)
+
+# ===================================================================
+# 🎬 2. بقية الكود (إنشاء الفيديو)
+# ===================================================================
+
+import numpy as np
+from PIL import Image, ImageDraw
+from moviepy.editor import (
+    ImageClip, concatenate_videoclips, vfx
+)
+
+def create_scene1():
+    img = Image.new("RGB", (1920, 1080), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.text((300, 400), "في عالم مليء بالخداع...", fill=(200, 200, 200), font_size=70)
+    draw.text((300, 520), "هناك من يراقب.", fill=(255, 215, 0), font_size=90)
+    return img
+
+def create_scene2():
+    img = Image.new("RGB", (1920, 1080), (10, 10, 40))
+    draw = ImageDraw.Draw(img)
+    for i in range(0, 600, 20):
+        draw.ellipse((1920//2 - i, 1080//2 - i//2, 1920//2 + i, 1080//2 + i//2),
+                     outline=(255, 215, 0, 100 - i//6), width=3)
+    draw.text((1920//2 - 200, 300), "🏯 ميراج-تكتيكال", fill=(255, 215, 0), font_size=100)
+    draw.text((1920//2 - 250, 500), "الدرع الرقمي الجديد", fill=(200, 200, 200), font_size=60)
+    return img
+
+def create_scene3():
+    img = Image.new("RGB", (1920, 1080), (0, 20, 50))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((200, 200, 1720, 880), outline=(255, 215, 0), width=3)
+    draw.text((300, 300), "🧠 تحليل التهديد...", fill=(255, 215, 0), font_size=50)
+    draw.text((300, 420), "✅ تم كشف الاحتيال", fill=(0, 255, 0), font_size=70)
+    draw.text((300, 540), "🛡️ النظام آمن", fill=(255, 215, 0), font_size=50)
+    return img
+
+def create_scene4():
+    img = Image.new("RGB", (1920, 1080), (20, 0, 40))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((100, 100, 1820, 980), outline=(100, 150, 255), width=5)
+    draw.text((200, 200), "🏛️ نظام المؤسسات", fill=(100, 150, 255), font_size=55)
+    draw.text((200, 320), "✅ TOTP: 482937", fill=(0, 255, 0), font_size=65)
+    draw.text((200, 440), "🔐 FIDO2: مفعّل", fill=(255, 215, 0), font_size=55)
+    draw.text((200, 560), "🛡️ Zero Trust: PASSED", fill=(0, 255, 0), font_size=55)
+    draw.ellipse((1500, 700, 1750, 950), outline=(0, 255, 0), width=12)
+    draw.text((1600, 800), "✓", fill=(0, 255, 0), font_size=120)
+    return img
+
+def create_scene5():
+    img = Image.new("RGB", (1920, 1080), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.text((1920//2 - 350, 350), "🚀 حمّل ميراج-تكتيكال الآن", fill=(255, 215, 0), font_size=80)
+    draw.text((1920//2 - 300, 550), "وكن أنت الساموراي القادم", fill=(200, 200, 200), font_size=60)
+    draw.text((1920//2 - 80, 750), "🏯", fill=(255, 215, 0), font_size=120)
+    return img
+
+def create_video_from_frames(frames, output="mirage_promo.mp4", fps=24):
+    clips = []
+    for i, frame in enumerate(frames):
+        frame_np = np.array(frame)
+        clip = ImageClip(frame_np).set_duration(3)
+        if i % 2 == 0:
+            clip = clip.fx(vfx.fadein, 0.5).fx(vfx.fadeout, 0.5)
+        clips.append(clip)
+    final = concatenate_videoclips(clips)
+    final.write_videofile(output, fps=fps, codec="libx264", audio_codec="aac")
+    return output
+
+if __name__ == "__main__":
+    print("🎬 ميراج-تكتيكال - صانع الفيديو الإعلاني (نسخة ذاتية التثبيت)")
+    print("=" * 60)
+    scenes = [
+        create_scene1(),
+        create_scene2(),
+        create_scene3(),
+        create_scene4(),
+        create_scene5()
+    ]
+    video_file = create_video_from_frames(scenes)
+    print(f"✅ تم إنشاء الفيديو: {video_file}")
