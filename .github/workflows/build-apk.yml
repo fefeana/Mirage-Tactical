@@ -1,4 +1,4 @@
-name: ⚡ البارق الحقيقي - OODA APK Builder
+name: 📱 Build APK
 
 on:
   push:
@@ -6,79 +6,28 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-apk:
-    name: 📱 BUILD APK (مستقر)
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🌀 سحب الكود
-        uses: actions/checkout@v6
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-      - name: ☕ إعداد Java
-        uses: actions/setup-java@v4
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
         with:
-          distribution: zulu
-          java-version: '17'
+          python-version: '3.10'
 
-      - name: 🦋 إعداد Flutter
-        uses: subosito/flutter-action@v2
+      - name: 📦 Install dependencies
+        run: |
+          sudo apt update
+          pip install pillow moviepy numpy requests
+
+      - name: 🎬 Generate promo video
+        run: python create_full_promo.py
+
+      - name: 📤 Upload video
+        uses: actions/upload-artifact@v4
         with:
-          flutter-version: '3.19.0'
-          cache: true
-
-      - name: 🗡️ تشغيل سيف الخلق
-        run: |
-          echo "🔍 البحث عن سيف الخلق..."
-          if [ -f "ai_studio_code (5).sh" ]; then
-            echo "✅ تم العثور على السكربت"
-            chmod +x "ai_studio_code (5).sh"
-            bash "ai_studio_code (5).sh"
-          else
-            echo "⚠️ السكربت غير موجود، إنشاء ملفات بديلة..."
-            mkdir -p lib/core/ai lib/core/env lib/providers lib/screens
-            cat > lib/main.dart << 'EOF'
-            import 'package:flutter/material.dart';
-            void main() => runApp(MyApp());
-            class MyApp extends StatelessWidget {
-              @override
-              Widget build(BuildContext context) {
-                return MaterialApp(
-                  home: Scaffold(
-                    body: Center(
-                      child: Text('Mirage Tactical'),
-                    ),
-                  ),
-                );
-              }
-            }
-            EOF
-          fi
-
-      - name: 📂 التحقق من الملفات
-        run: |
-          echo "📄 محتويات مجلد lib:"
-          ls -la lib/ || echo "⚠️ مجلد lib غير موجود!"
-          echo "📄 محتويات pubspec.yaml:"
-          head -10 pubspec.yaml || echo "⚠️ pubspec.yaml غير موجود!"
-
-      - name: 📦 تثبيت المكتبات
-        run: |
-          flutter clean
-          flutter pub get
-
-      - name: 🏗️ بناء APK
-        run: flutter build apk --release --split-per-abi
-
-  - name: 📤 رفع APK
-  uses: actions/upload-artifact@v6
-  with:
-   
-    name: mirage-apk-final
-    path: build/app/outputs/flutter-apk/*.apk
-   
-    
-    
-    
-    
-    
-    retention-days: 30
+          name: promo-video
+          path: mirage_promo.mp4
