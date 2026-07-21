@@ -4,6 +4,7 @@
 name: 🎬 Cinematic Video Generator
 
 on:
+
   workflow_dispatch:
 
 jobs:
@@ -49,3 +50,6 @@ jobs:
           name: cinematic-promo-video
           path: mirage_promo_pro.mp4
           retention-days: 90
+
+
+
