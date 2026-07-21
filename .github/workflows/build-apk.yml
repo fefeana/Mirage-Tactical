@@ -49,3 +49,5 @@ for i, s in enumerate(scenes):
 final = concatenate_videoclips(clips)
 final.write_videofile("mirage_promo.mp4", fps=24)
 print("✅ فيديو إعلاني جاهز: mirage_promo.mp4")
+
+
