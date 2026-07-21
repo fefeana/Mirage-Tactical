@@ -1,5 +1,5 @@
 # ===================================================================
-# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي النهائي 🎬
+# ⚡ ميراج-تكتيكال - سير عمل البناء والرفع النهائي 🎬
 # ===================================================================
 name: 🎬 Cinematic Video Generator
 
@@ -7,37 +7,45 @@ on:
   workflow_dispatch:
 
 jobs:
-  generate-video:
+  build-and-upload:
+    name: 🚀 Build and Upload Cinematic Video
     runs-on: ubuntu-latest
 
     steps:
+      # ----------------------------------------------
+      # 1. تحميل الكود من المستودع
+      # ----------------------------------------------
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Setup Python
+      # ----------------------------------------------
+      # 2. إعداد بيئة Python
+      # ----------------------------------------------
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
+      # ----------------------------------------------
+      # 3. تثبيت المكتبات المطلوبة
+      # ----------------------------------------------
       - name: 📦 Install dependencies
         run: |
+          pip install --upgrade pip
           pip install pillow moviepy numpy
 
+      # ----------------------------------------------
+      # 4. توليد الفيديو باستخدام السكربت
+      # ----------------------------------------------
       - name: 🎬 Generate video
-        run: python video_generator.py   # ✅ هنا الـ run الصحيحة
+        run: python video_generator.py
 
-      - name: 📤 Upload Artifact
+      # ----------------------------------------------
+      # 5. رفع الفيديو الناتج كقطعة أثرية
+      # ----------------------------------------------
+      - name: 📤 Upload video artifact
         uses: actions/upload-artifact@v4
         with:
           name: cinematic-promo-video
           path: mirage_promo_pro.mp4
-          retention-days: 90 
-
-
-
-
-
-          
-
-
-
+          retention-days: 90
