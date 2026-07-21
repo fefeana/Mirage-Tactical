@@ -1,85 +1,39 @@
 # ===================================================================
-# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي المُحسّن 🎬
+# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي النهائي 🎬
 # ===================================================================
 name: 🎬 Cinematic Video Generator
 
 on:
   workflow_dispatch:
-    inputs:
-      video_name:
-        description: '🎥 اسم الفيديو الناتج'
-        required: false
-        default: 'mirage_promo_pro'
-      retention_days:
-        description: '📁 عدد أيام الاحتفاظ بالفيديو'
-        required: false
-        default: 90
 
 jobs:
   generate-video:
     runs-on: ubuntu-latest
 
     steps:
-      # ----------------------------------------------------------
-      # 1. تحميل الكود
-      # ----------------------------------------------------------
-      - name: 📥 Checkout repository
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      # ----------------------------------------------------------
-      # 2. إعداد Python
-      # ----------------------------------------------------------
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip'
 
-      # ----------------------------------------------------------
-      # 3. تثبيت المكتبات
-      # ----------------------------------------------------------
       - name: 📦 Install dependencies
         run: |
-          echo "📦 جارٍ تثبيت المكتبات المطلوبة..."
-          pip install --upgrade pip
           pip install pillow moviepy numpy
-          echo "✅ تم تثبيت جميع المكتبات بنجاح!"
 
-      # ----------------------------------------------------------
-      # 4. توليد الفيديو
-      # ----------------------------------------------------------
-      - name: 🎬 Generate cinematic video
-        run: |
-          echo "🎬 جارٍ توليد الفيديو السينمائي..."
-          echo "📌 اسم الفيديو: ${{ github.event.inputs.video_name }}.mp4"
-          python video_generator.py
-          echo "✅ تم توليد الفيديو بنجاح!"
-
-      # ----------------------------------------------------------
-      # 5. رفع الفيديو كقطعة أثرية
-      # ----------------------------------------------------------
-      - name: 📤 Upload video artifact
+      - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.inputs.video_name }}-promo-video
-          path: ${{ github.event.inputs.video_name }}.mp4
-          retention-days: ${{ github.event.inputs.retention_days }}
+          name: cinematic-promo-video
+          path: mirage_promo_pro.mp4
+          retention-days: 90
 
-      # ----------------------------------------------------------
-      # 6. (اختياري) إشعار بالنجاح
-      # ----------------------------------------------------------
-      - name: ✅ Success notification
-        if: success()
-        run: |
-          echo "🎉 تم إنشاء الفيديو بنجاح!"
-          echo "📁 يمكنك تحميله من قسم Artifacts في هذا التشغيل."
-          echo "📌 حجم الفيديو المتوقع: ~10-20 MB"
+      - name: 🎬 Generate video
+        run: python video_generator.py # 👈 الـ run ب آخ ر خطوة زي ما طلبت
 
-      # ----------------------------------------------------------
-      # 7. (اختياري) إشعار بالفشل
-      # ----------------------------------------------------------
-      - name: ❌ Failure notification
-        if: failure()
-        run: |
-          echo "❌ فشل إنشاء الفيديو!"
-          echo "🔍 راجع السجلات (Logs) لمعرفة سبب الفشل."   
+
+
+
+        
