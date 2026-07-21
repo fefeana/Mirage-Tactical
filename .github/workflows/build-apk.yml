@@ -1,27 +1,30 @@
 #!/usr/bin/env python3
 # ===================================================================
-# ⚡ ميراج-تكتيكال - مولد الفيديو الإعلاني (النسخة الذهبية) ⚡
+# ⚡ ميراج-تكتيكال - مولد الفيديو الإعلاني (النسخة السينمائية) ⚡
 # ===================================================================
 
 """
 مولد فيديو احترافي لتطبيق ميراج-تكتيكال.
-يعمل محلياً أو عبر GitHub Actions مع تثبيت ذاتي للمكتبات.
+يستخدم تقنيات سينمائية لإنتاج فيديو إعلاني يليق بالعلامة التجارية.
 """
 
 import sys
 import subprocess
 import importlib
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Callable
 from pathlib import Path
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
-from moviepy.editor import ImageClip, concatenate_videoclips, vfx, CompositeVideoClip, TextClip
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+from moviepy.editor import (
+    ImageClip, concatenate_videoclips, CompositeVideoClip,
+    TextClip, ColorClip, vfx, VideoFileClip, AudioFileClip
+)
 
 # ===================================================================
-# 📦 إدارة الحزم (Packages)
+# 📦 مدير الحزم الذكي (Smart Package Manager)
 # ===================================================================
 
-class PackageManager:
+class SmartPackageManager:
     """مدير الحزم الذكي: يتحقق، يثبت، ويحدث المكتبات تلقائياً."""
     
     REQUIRED = {
@@ -31,7 +34,7 @@ class PackageManager:
     }
     
     @classmethod
-    def ensure(cls) -> None:
+    def ensure(cls, upgrade: bool = True) -> None:
         """يتحقق من وجود المكتبات ويقوم بتثبيتها أو تحديثها."""
         print("📦 جارٍ التحقق من المكتبات المطلوبة...")
         for package, import_name in cls.REQUIRED.items():
@@ -42,196 +45,272 @@ class PackageManager:
                 print(f"   📥 {package} غير موجود، جارٍ التثبيت...")
                 subprocess.check_call([sys.executable, "-m", "pip", "install", package])
             
-            print(f"   🔄 تحديث {package}...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package])
+            if upgrade:
+                print(f"   🔄 تحديث {package}...")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package])
         print("✅ جميع المكتبات جاهزة!")
 
 # ===================================================================
-# 🎨 المشاهد (Scenes)
+# 🎨 دوال إنشاء المشاهد السينمائية
 # ===================================================================
 
-class Scene:
-    """فئة تمثل مشهداً واحداً في الفيديو."""
-    
-    def __init__(self, name: str, creator, duration: float = 3.0, transition: str = "fade"):
-        self.name = name
-        self.creator = creator
-        self.duration = duration
-        self.transition = transition
-    
-    def create_frame(self) -> Image.Image:
-        """تُنشئ إطار المشهد."""
-        return self.creator()
-    
-    def __repr__(self) -> str:
-        return f"Scene(name='{self.name}', duration={self.duration}s)"
-
-class SceneBuilder:
-    """باني المشاهد: يحتوي على دوال إنشاء جميع المشاهد."""
+class CinematicScenes:
+    """مشاهد سينمائية احترافية لتطبيق ميراج-تكتيكال."""
     
     @staticmethod
-    def intro() -> Image.Image:
-        """المشهد الافتتاحي: شعار ميراج مع تأثير توهج."""
-        img = Image.new("RGB", (1920, 1080), (8, 8, 25))
+    def intro_glitch() -> Image.Image:
+        """مشهد افتتاحي بتأثير تقطيع (Glitch) سينمائي."""
+        size = (1920, 1080)
+        img = Image.new("RGB", size, (5, 5, 15))
         draw = ImageDraw.Draw(img)
         
-        # توهج دائري
-        for r in range(100, 500, 30):
-            alpha = max(0, 100 - r // 5)
-            draw.ellipse(
-                (960 - r, 540 - r//2, 960 + r, 540 + r//2),
-                outline=(255, 215, 0, alpha),
-                width=3
-            )
-        
-        # نصوص الشعار
-        draw.text((780, 340), "🏯", fill=(255, 215, 0), size=200)
-        draw.text((660, 590), "ميراج-تكتيكال", fill=(255, 215, 0), size=90)
-        draw.text((670, 710), "الدرع الرقمي الجديد", fill=(180, 180, 210), size=50)
-        
-        # نجوم خلفية
-        for _ in range(120):
-            x = np.random.randint(0, 1920)
-            y = np.random.randint(0, 1080)
-            draw.ellipse((x, y, x+2, y+2), fill=(255, 255, 255, 60))
-        
-        return img
-    
-    @staticmethod
-    def threat() -> Image.Image:
-        """مشهد التهديد: هجمات إلكترونية بلمسة حمراء."""
-        img = Image.new("RGB", (1920, 1080), (12, 0, 0))
-        draw = ImageDraw.Draw(img)
-        
-        # خطوط بيانات متقاطعة
-        for i in range(0, 1920, 40):
-            offset = np.random.randint(-100, 100)
-            draw.line((i, 0, i + offset, 1080), fill=(200, 0, 0, 80), width=2)
-            draw.line((0, i, 1920, i + offset), fill=(200, 0, 0, 80), width=2)
-        
-        # نصوص التحذير
-        draw.text((200, 300), "⚠️ تهديد إلكتروني", fill=(255, 50, 50), size=80)
-        draw.text((200, 450), "هجوم احتيال", fill=(255, 200, 200), size=60)
-        draw.text((200, 580), "اكتشاف محاولة اختراق", fill=(200, 100, 100), size=40)
-        
-        # نقاط حمراء وامضة
-        for _ in range(25):
-            x = np.random.randint(100, 1820)
-            y = np.random.randint(100, 980)
-            draw.ellipse((x, y, x+10, y+10), fill=(255, 0, 0, 100))
-        
-        return img
-    
-    @staticmethod
-    def ai_analysis() -> Image.Image:
-        """مشهد الذكاء الاصطناعي: واجهة تحليل فورية."""
-        img = Image.new("RGB", (1920, 1080), (0, 12, 35))
-        draw = ImageDraw.Draw(img)
-        
-        # إطار تحليل
-        draw.rectangle((150, 150, 1770, 930), outline=(0, 200, 255), width=4)
-        draw.text((250, 220), "🧠 الذكاء الفائق", fill=(0, 200, 255), size=60)
-        draw.text((250, 340), "تحليل التهديد...", fill=(100, 200, 255), size=45)
-        draw.text((250, 460), "✅ كشف الاحتيال", fill=(0, 255, 100), size=70)
-        draw.text((250, 580), "🛡️ بدء الإجراءات الوقائية", fill=(0, 200, 255), size=45)
-        
-        # تدفق بيانات
-        for i in range(0, 1920, 30):
-            for j in range(0, 1080, 40):
-                if np.random.random() > 0.85:
-                    draw.text((i, j), "01", fill=(0, 255, 100, 50), size=14)
-        
-        return img
-    
-    @staticmethod
-    def enterprise() -> Image.Image:
-        """مشهد المؤسسات: الأمان المؤسسي المتكامل."""
-        img = Image.new("RGB", (1920, 1080), (12, 0, 35))
-        draw = ImageDraw.Draw(img)
-        
-        # إطار أمان ذهبي
-        draw.rectangle((100, 100, 1820, 980), outline=(255, 215, 0), width=6)
-        draw.text((200, 200), "🏛️ نظام المؤسسات", fill=(255, 215, 0), size=60)
-        draw.text((200, 330), "🔐 FIDO2: مفعّل", fill=(0, 255, 200), size=55)
-        draw.text((200, 460), "⏳ TOTP: جاهز", fill=(0, 255, 200), size=55)
-        draw.text((200, 590), "🛡️ Zero Trust: مُفعّل", fill=(0, 255, 200), size=55)
-        
-        # درع الأمان
-        draw.ellipse((1500, 650, 1780, 930), outline=(0, 255, 200), width=10)
-        draw.text((1600, 760), "✓", fill=(0, 255, 200), size=130)
-        
-        return img
-    
-    @staticmethod
-    def call_to_action() -> Image.Image:
-        """مشهد الدعوة: تحميل التطبيق."""
-        img = Image.new("RGB", (1920, 1080), (0, 0, 0))
-        draw = ImageDraw.Draw(img)
-        
-        # دوائر انتصار
-        for r in range(50, 700, 50):
-            alpha = max(0, 80 - r // 10)
+        # تأثير توهج دائري مع لمسة ذهبية
+        for r in range(50, 450, 20):
+            alpha = max(0, 120 - r // 4)
             draw.ellipse(
                 (960 - r, 540 - r//2, 960 + r, 540 + r//2),
                 outline=(255, 215, 0, alpha),
                 width=2
             )
         
-        draw.text((560, 300), "🚀 حمّل ميراج-تكتيكال الآن", fill=(255, 215, 0), size=85)
-        draw.text((620, 500), "وكن أنت الساموراي القادم", fill=(200, 200, 200), size=60)
-        draw.text((880, 750), "⚡", fill=(255, 215, 0), size=150)
+        # خطوط تقطيع (Glitch) عشوائية
+        for _ in range(30):
+            x = np.random.randint(0, 1920)
+            y = np.random.randint(0, 1080)
+            w = np.random.randint(50, 300)
+            h = np.random.randint(2, 8)
+            draw.rectangle((x, y, x+w, y+h), fill=(0, 255, 255, 30))
+        
+        # نصوص الشعار
+        draw.text((780, 320), "🏯", fill=(255, 215, 0), size=200)
+        draw.text((660, 570), "ميراج-تكتيكال", fill=(255, 215, 0), size=90)
+        draw.text((670, 690), "الدرع الرقمي الجديد", fill=(180, 180, 210), size=50)
+        
+        # نجوم خلفية
+        for _ in range(150):
+            x = np.random.randint(0, 1920)
+            y = np.random.randint(0, 1080)
+            brightness = np.random.randint(100, 255)
+            draw.ellipse((x, y, x+2, y+2), fill=(brightness, brightness, brightness, 80))
+        
+        # تأثير ضبابي خفيف (محاكاة)
+        img = img.filter(ImageFilter.GaussianBlur(radius=0.5))
+        return img
+    
+    @staticmethod
+    def threat_matrix() -> Image.Image:
+        """مشهد التهديد على غرار فيلم The Matrix."""
+        size = (1920, 1080)
+        img = Image.new("RGB", size, (8, 0, 0))
+        draw = ImageDraw.Draw(img)
+        
+        # تأثير سقوط البيانات (Matrix Style)
+        for x in range(0, 1920, 30):
+            for y in range(0, 1080, 20):
+                if np.random.random() > 0.92:
+                    char = np.random.choice(["0", "1", "!", "@", "#", "$", "%", "&"])
+                    green = np.random.randint(50, 200)
+                    draw.text((x, y), char, fill=(0, green, 0, 80), size=12)
+        
+        # خطوط بيانات حمراء
+        for i in range(0, 1920, 50):
+            offset = np.random.randint(-150, 150)
+            draw.line((i, 0, i + offset, 1080), fill=(200, 0, 0, 60), width=2)
+        
+        # نصوص تحذيرية
+        draw.text((200, 280), "⚠️ تهديد إلكتروني", fill=(255, 50, 50), size=90)
+        draw.text((200, 430), "هجوم احتيال", fill=(255, 200, 200), size=65)
+        draw.text((200, 560), "اكتشاف محاولة اختراق", fill=(200, 100, 100), size=45)
+        draw.text((200, 680), "⚠️ تحذير: تدخل خارجي", fill=(255, 100, 100), size=40)
+        
+        return img
+    
+    @staticmethod
+    def ai_cyber_vision() -> Image.Image:
+        """مشهد الذكاء الاصطناعي برؤية سايبر."""
+        size = (1920, 1080)
+        img = Image.new("RGB", size, (0, 8, 30))
+        draw = ImageDraw.Draw(img)
+        
+        # إطار تكنولوجي
+        draw.rectangle((100, 100, 1820, 980), outline=(0, 200, 255), width=4)
+        
+        # زوايا إطار متوهجة
+        corners = [(100, 100), (1820, 100), (100, 980), (1820, 980)]
+        for cx, cy in corners:
+            for i in range(0, 80, 10):
+                alpha = max(0, 100 - i)
+                draw.ellipse((cx - i, cy - i, cx + i, cy + i), outline=(0, 200, 255, alpha), width=1)
+        
+        # نصوص الواجهة
+        draw.text((230, 200), "🧠 الذكاء الفائق", fill=(0, 200, 255), size=60)
+        draw.text((230, 320), "تحليل التهديد في الوقت الفعلي...", fill=(100, 200, 255), size=45)
+        draw.text((230, 450), "✅ كشف الاحتيال", fill=(0, 255, 100), size=70)
+        draw.text((230, 570), "🛡️ بدء الإجراءات الوقائية", fill=(0, 200, 255), size=45)
+        draw.text((230, 690), "⚡ سرعة البرق", fill=(255, 215, 0), size=40)
+        
+        # تأثير تدفق بيانات (Digital Rain)
+        for x in range(100, 1820, 25):
+            for y in range(120, 960, 20):
+                if np.random.random() > 0.88:
+                    draw.text((x, y), "01", fill=(0, 255, 100, 40), size=12)
+        
+        return img
+    
+    @staticmethod
+    def enterprise_fortress() -> Image.Image:
+        """مشهد المؤسسات: قلعة أمنية رقمية."""
+        size = (1920, 1080)
+        img = Image.new("RGB", size, (10, 0, 25))
+        draw = ImageDraw.Draw(img)
+        
+        # إطار حماية ذهبي متين
+        draw.rectangle((60, 60, 1860, 1020), outline=(255, 215, 0), width=8)
+        
+        # درع مركزي
+        draw.ellipse((1450, 580, 1780, 910), outline=(0, 255, 200), width=12)
+        draw.text((1560, 700), "✓", fill=(0, 255, 200), size=140)
+        
+        # نصوص المؤسسات
+        draw.text((180, 180), "🏛️ نظام المؤسسات", fill=(255, 215, 0), size=65)
+        draw.text((180, 310), "🔐 FIDO2: مفعّل", fill=(0, 255, 200), size=55)
+        draw.text((180, 440), "⏳ TOTP: جاهز", fill=(0, 255, 200), size=55)
+        draw.text((180, 570), "🛡️ Zero Trust: مُفعّل", fill=(0, 255, 200), size=55)
+        draw.text((180, 700), "🔒 تشفير عسكري AES-256", fill=(0, 255, 200), size=45)
+        
+        # خطوط دفاعية
+        for i in range(0, 1920, 60):
+            draw.line((i, 1050, i, 1020), fill=(255, 215, 0, 50), width=2)
+        
+        return img
+    
+    @staticmethod
+    def quantum_speed() -> Image.Image:
+        """مشهد سرعة البرق: سرعة المعالجة الفائقة."""
+        size = (1920, 1080)
+        img = Image.new("RGB", size, (0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        
+        # تأثير سرعة البرق (خطوط ضوئية)
+        for _ in range(80):
+            x1 = np.random.randint(0, 1920)
+            y1 = np.random.randint(0, 1080)
+            x2 = x1 + np.random.randint(-400, 400)
+            y2 = y1 + np.random.randint(-400, 400)
+            draw.line((x1, y1, x2, y2), fill=(0, 200, 255, 60), width=3)
+        
+        # نص السرعة
+        draw.text((560, 250), "⚡ سرعة البرق", fill=(0, 200, 255), size=100)
+        draw.text((620, 400), "معالجة في أجزاء من الثانية", fill=(200, 200, 200), size=55)
+        draw.text((700, 530), "⏱️ < 50ms", fill=(255, 215, 0), size=80)
+        
+        # نقاط ضوئية متحركة (محاكاة)
+        for _ in range(100):
+            x = np.random.randint(0, 1920)
+            y = np.random.randint(0, 1080)
+            draw.ellipse((x, y, x+4, y+4), fill=(0, 200, 255, 80))
+        
+        return img
+    
+    @staticmethod
+    def call_to_arms() -> Image.Image:
+        """مشهد الدعوة: استعد للانضمام إلى ميراج."""
+        size = (1920, 1080)
+        img = Image.new("RGB", size, (5, 5, 20))
+        draw = ImageDraw.Draw(img)
+        
+        # دوائر تموجية
+        for r in range(50, 750, 40):
+            alpha = max(0, 100 - r // 8)
+            draw.ellipse(
+                (960 - r, 540 - r//2, 960 + r, 540 + r//2),
+                outline=(255, 215, 0, alpha),
+                width=2
+            )
+        
+        # نصوص الدعوة
+        draw.text((480, 250), "🚀 انضم إلى ميراج-تكتيكال الآن", fill=(255, 215, 0), size=85)
+        draw.text((600, 450), "وكن أنت الساموراي القادم", fill=(200, 200, 200), size=60)
+        draw.text((750, 630), "⚔️", fill=(255, 215, 0), size=120)
+        draw.text((760, 800), "حمّل التطبيق", fill=(180, 180, 200), size=40)
+        
+        # نجوم خلفية
+        for _ in range(100):
+            x = np.random.randint(0, 1920)
+            y = np.random.randint(0, 1080)
+            draw.ellipse((x, y, x+2, y+2), fill=(255, 255, 255, 80))
         
         return img
 
 # ===================================================================
-# 🎬 محرك الفيديو (Video Engine)
+# 🎬 محرك الفيديو السينمائي
 # ===================================================================
 
-class VideoEngine:
-    """محرك توليد الفيديو: يحول المشاهد إلى فيديو احترافي."""
+class CinematicVideoEngine:
+    """محرك فيديو سينمائي: ينتج فيديوهات احترافية مع انتقالات وتأثيرات."""
     
-    def __init__(self, fps: int = 24, output: str = "mirage_promo.mp4"):
+    def __init__(self, fps: int = 24, output: str = "mirage_cinematic.mp4"):
         self.fps = fps
         self.output = output
-        self.scenes: List[Scene] = []
+        self.scenes: List[Dict[str, Any]] = []
     
-    def add_scene(self, scene: Scene) -> None:
-        """يضيف مشهداً إلى قائمة المشاهد."""
-        self.scenes.append(scene)
+    def add_scene(self, name: str, creator: Callable, duration: float = 3.0, 
+                  transition: str = "fade", effects: List[str] = None) -> None:
+        """يضيف مشهداً جديداً مع إعداداته."""
+        self.scenes.append({
+            "name": name,
+            "creator": creator,
+            "duration": duration,
+            "transition": transition,
+            "effects": effects or []
+        })
     
-    def add_scenes(self, scenes: List[Scene]) -> None:
-        """يضيف قائمة مشاهد دفعة واحدة."""
-        self.scenes.extend(scenes)
+    def _apply_effects(self, clip, effects: List[str]) -> ImageClip:
+        """يطبق تأثيرات إضافية على المقطع."""
+        for effect in effects:
+            if effect == "glitch":
+                # محاكاة تأثير glitch
+                clip = clip.fx(vfx.colorx, 0.9)
+            elif effect == "vintage":
+                clip = clip.fx(vfx.colorx, 0.85)
+            elif effect == "cyber":
+                clip = clip.fx(vfx.colorx, 1.1)
+        return clip
     
     def render(self) -> str:
-        """يُحوّل جميع المشاهد إلى فيديو واحد."""
-        print(f"🎬 جارٍ إنشاء الفيديو ({len(self.scenes)} مشاهد)...")
+        """يُحوّل جميع المشاهد إلى فيديو سينمائي واحد."""
+        print(f"🎬 جارٍ إنشاء الفيديو السينمائي ({len(self.scenes)} مشاهد)...")
         clips = []
         
         for i, scene in enumerate(self.scenes):
-            print(f"   - معالجة المشهد: {scene.name} (مدة {scene.duration} ثانية)")
-            frame = np.array(scene.create_frame())
-            clip = ImageClip(frame).set_duration(scene.duration)
+            print(f"   - معالجة المشهد: {scene['name']} (مدة {scene['duration']} ثانية)")
+            frame = np.array(scene['creator']())
+            clip = ImageClip(frame).set_duration(scene['duration'])
             
-            # إضافة تأثيرات انتقالية حسب نوع المشهد
+            # تطبيق تأثيرات إضافية
+            if scene.get('effects'):
+                clip = self._apply_effects(clip, scene['effects'])
+            
+            # تأثيرات انتقالية حسب نوع المشهد
             if i == 0:
-                clip = clip.fx(vfx.fadein, 0.7)
+                clip = clip.fx(vfx.fadein, 0.8)
             elif i == len(self.scenes) - 1:
-                clip = clip.fx(vfx.fadeout, 0.7)
+                clip = clip.fx(vfx.fadeout, 0.8)
             else:
-                clip = clip.fx(vfx.fadein, 0.3).fx(vfx.fadeout, 0.3)
+                clip = clip.fx(vfx.fadein, 0.4).fx(vfx.fadeout, 0.4)
             
             clips.append(clip)
         
-        print("💾 جارٍ حفظ الفيديو...")
+        print("💾 جارٍ حفظ الفيديو السينمائي...")
         final = concatenate_videoclips(clips)
         final.write_videofile(
             self.output,
             fps=self.fps,
             codec="libx264",
             audio_codec="aac",
-            bitrate="6000k",
-            threads=4
+            bitrate="8000k",
+            threads=4,
+            preset="slow"
         )
         print(f"✅ تم إنشاء الفيديو: {self.output}")
         return self.output
@@ -241,33 +320,37 @@ class VideoEngine:
 # ===================================================================
 
 def main():
-    """تشغيل المولد الرئيسي."""
-    print("=" * 65)
-    print("⚡ ميراج-تكتيكال - مولد الفيديو الإعلاني (النسخة الذهبية)")
-    print("=" * 65)
+    """تشغيل المولد السينمائي الرئيسي."""
+    print("=" * 70)
+    print("🎬 ميراج-تكتيكال - مولد الفيديو السينمائي (النسخة النهائية)")
+    print("=" * 70)
     
     # 1. التحقق من المكتبات
-    PackageManager.ensure()
+    SmartPackageManager.ensure()
     
-    # 2. بناء المشاهد
-    builder = SceneBuilder()
+    # 2. إنشاء محرك الفيديو
+    engine = CinematicVideoEngine(fps=24, output="mirage_cinematic.mp4")
+    
+    # 3. إضافة المشاهد السينمائية
     scenes = [
-        Scene("الافتتاحية", builder.intro, duration=3.5),
-        Scene("التهديد", builder.threat, duration=3.0),
-        Scene("الذكاء الاصطناعي", builder.ai_analysis, duration=3.5),
-        Scene("المؤسسات", builder.enterprise, duration=3.5),
-        Scene("الدعوة", builder.call_to_action, duration=3.0),
+        ("افتتاحية متوهجة", CinematicScenes.intro_glitch, 3.5, ["glitch"]),
+        ("تهديد إلكتروني", CinematicScenes.threat_matrix, 3.0, ["cyber"]),
+        ("رؤية سايبر", CinematicScenes.ai_cyber_vision, 3.5, ["cyber"]),
+        ("قلعة أمنية", CinematicScenes.enterprise_fortress, 3.5, ["vintage"]),
+        ("سرعة البرق", CinematicScenes.quantum_speed, 3.0, ["cyber"]),
+        ("دعوة للانضمام", CinematicScenes.call_to_arms, 3.5, []),
     ]
     
-    # 3. تشغيل محرك الفيديو
-    engine = VideoEngine(fps=24, output="mirage_promo.mp4")
-    engine.add_scenes(scenes)
+    for name, creator, duration, effects in scenes:
+        engine.add_scene(name, creator, duration, effects=effects)
+    
+    # 4. تشغيل المحرك
     output = engine.render()
     
-    print("=" * 65)
-    print(f"🎉 تم إنشاء الفيديو بنجاح: {output}")
-    print("📺 شاهد الفيديو واستمتع!")
-    print("=" * 65)
+    print("=" * 70)
+    print(f"🎉 تم إنشاء الفيديو السينمائي بنجاح: {output}")
+    print("📺 شاهد التحفة واستمتع!")
+    print("=" * 70)
     return output
 
 if __name__ == "__main__":
