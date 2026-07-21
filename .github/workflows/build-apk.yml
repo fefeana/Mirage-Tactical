@@ -51,3 +51,9 @@ jobs:
           name: cinematic-promo-video
           path: mirage_cinematic.mp4
           retention-days: 90   # الاحتفاظ بالفيديو لمدة 90 يوماً
+
+
+
+
+
+
