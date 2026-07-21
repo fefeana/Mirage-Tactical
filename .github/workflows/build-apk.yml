@@ -43,15 +43,11 @@ jobs:
           python video_generator.py
 
       # -----------------------------------------------------------------
-      # 📤 الخطوة 5: رفع الفيديو الناتج كقطعة أثرية (Artifact)
+      # 📤 الخطوة 5: رفع الفيديو الناتج كقطعة أثرية (مع تحسينات)
       # -----------------------------------------------------------------
       - name: 📤 Upload cinematic video
         uses: actions/upload-artifact@v4
         with:
           name: cinematic-promo-video
           path: mirage_cinematic.mp4
-
-
-
-
-
+          retention-days: 90   # الاحتفاظ بالفيديو لمدة 90 يوماً
