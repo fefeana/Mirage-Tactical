@@ -23,16 +23,12 @@ jobs:
         run: |
           pip install pillow moviepy numpy
 
+      - name: 🎬 Generate video
+        run: python video_generator.py
+
       - name: 📤 Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: cinematic-promo-video
           path: mirage_promo_pro.mp4
           retention-days: 90
-
-      - name: 🎬 Generate video
-        run: python video_generator.py   # 👈 الـ run بآخر خطوة زي ما طلبت
-
-
-
-
