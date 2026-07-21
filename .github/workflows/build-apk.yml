@@ -1,45 +1,41 @@
-from moviepy.editor import *
-import numpy as np
+# ===================================================================
+# ⚡ ميراج-تكتيكال - سير عمل الفيديو السينمائي 🎬
+# ===================================================================
+name: 🎬 Cinematic Video Generator
 
-# ============================================================
-# 🔥 مشهد 1: الافتتاحية الصاعقة
-# ============================================================
-clip1 = ColorClip(size=(1920, 1080), color=(5, 5, 20), duration=3)
-txt1 = TextClip("⚡ ميراج-تكتيكال", fontsize=120, color='gold', font='Arial', stroke_color='black', stroke_width=4)
-txt1 = txt1.set_position('center').set_duration(3)
-scene1 = CompositeVideoClip([clip1, txt1]).fx(vfx.fadein, 0.5)
+on:
+  workflow_dispatch:
 
-# ============================================================
-# 🛡️ مشهد 2: الدرع الرقمي
-# ============================================================
-clip2 = ColorClip(size=(1920, 1080), color=(10, 10, 40), duration=3)
-txt2 = TextClip("🛡️ حماية لا تنتهي", fontsize=100, color='white', font='Arial', stroke_color='blue', stroke_width=3)
-txt2 = txt2.set_position('center').set_duration(3)
-scene2 = CompositeVideoClip([clip2, txt2]).fx(vfx.fadein, 0.5)
+jobs:
+  generate-video:
+    runs-on: ubuntu-latest
 
-# ============================================================
-# 🚀 مشهد 3: الدعوة
-# ============================================================
-clip3 = ColorClip(size=(1920, 1080), color=(0, 0, 0), duration=3)
-txt3 = TextClip("🚀 حمّل الآن وكن ساموراي", fontsize=90, color='gold', font='Arial', stroke_color='red', stroke_width=3)
-txt3 = txt3.set_position('center').set_duration(3)
-scene3 = CompositeVideoClip([clip3, txt3]).fx(vfx.fadein, 0.5)
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-# ============================================================
-# 🎬 دمج المشاهد
-# ============================================================
-final = concatenate_videoclips([scene1, scene2, scene3])
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-# ============================================================
-# 💾 حفظ الفيديو بجودة عالية
-# ============================================================
-final.write_videofile("mirage_promo_pro.mp4", fps=24, codec="libx264", audio_codec="aac", bitrate="8000k")
+      - name: 📦 Install dependencies
+        run: |
+          pip install pillow moviepy numpy
 
-print("🎉 الفيديو الإعلاني الاحترافي جاهز: mirage_promo_pro.mp4")
-- name: 🎬 Generate video
-  run: python video_generator.py 
+      - name: 🎬 Generate video
+        run: python video_generator.py
 
+      - name: 📤 Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+        
+      - name: cinematic-promo-video
+     
+        run: 
+           python video_generator.py  
   
-
-
+       path: mirage_promo_pro.mp4
+           
+       retention-days: 90
 
