@@ -1,0 +1,28 @@
+from moviepy.editor import *
+import numpy as np
+
+# مشهد 1
+clip1 = ColorClip(size=(1920, 1080), color=(5, 5, 20), duration=3)
+txt1 = TextClip("⚡ ميراج-تكتيكال", fontsize=120, color='gold', font='Arial', stroke_color='black', stroke_width=4)
+txt1 = txt1.set_position('center').set_duration(3)
+scene1 = CompositeVideoClip([clip1, txt1]).fx(vfx.fadein, 0.5)
+
+# مشهد 2
+clip2 = ColorClip(size=(1920, 1080), color=(10, 10, 40), duration=3)
+txt2 = TextClip("🛡️ حماية لا تنتهي", fontsize=100, color='white', font='Arial', stroke_color='blue', stroke_width=3)
+txt2 = txt2.set_position('center').set_duration(3)
+scene2 = CompositeVideoClip([clip2, txt2]).fx(vfx.fadein, 0.5)
+
+# مشهد 3
+clip3 = ColorClip(size=(1920, 1080), color=(0, 0, 0), duration=3)
+txt3 = TextClip("🚀 حمّل الآن وكن ساموراي", fontsize=90, color='gold', font='Arial', stroke_color='red', stroke_width=3)
+txt3 = txt3.set_position('center').set_duration(3)
+scene3 = CompositeVideoClip([clip3, txt3]).fx(vfx.fadein, 0.5)
+
+# دمج المشاهد
+final = concatenate_videoclips([scene1, scene2, scene3])
+
+# حفظ الفيديو
+final.write_videofile("mirage_promo_pro.mp4", fps=24, codec="libx264", audio_codec="aac", bitrate="8000k")
+
+print("🎉 الفيديو الإعلاني الاحترافي جاهز: mirage_promo_pro.mp4")
