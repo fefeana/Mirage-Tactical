@@ -1,4 +1,4 @@
-from moviepy.editor import *
+from moviepy import *
 import numpy as np
 
 # مشهد 1
