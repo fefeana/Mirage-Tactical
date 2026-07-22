@@ -9,7 +9,6 @@ on:
 jobs:
   generate-video:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
