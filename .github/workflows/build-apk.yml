@@ -36,4 +36,4 @@ jobs:
         with:
           name: mirage-promo-video
           path: mirage_promo_pro.mp4
-          retention-days: 90
+          retention-days: 90  
