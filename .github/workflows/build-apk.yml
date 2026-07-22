@@ -1,6 +1,3 @@
-# ===================================================================
-# ⚡ ميراج - سير العمل لتوليد الفيديو (فرع تجريبي) 🎬
-# ===================================================================
 name: 🎬 Mirage Promo Video Generator
 
 on:
@@ -29,7 +26,7 @@ jobs:
 
       - name: 📦 Install Python dependencies
         run: |
-          pip install pillow moviepy numpy
+          pip install pillow moviepy numpy gTTS
 
       - name: 🎬 Generate Promo Video
         run: python video_generator.py
@@ -39,4 +36,4 @@ jobs:
         with:
           name: mirage-promo-video
           path: mirage_promo_pro.mp4
-          retention-days: 90 
+          retention-days: 90
