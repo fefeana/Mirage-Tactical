@@ -24,17 +24,4 @@ jobs:
 
       - name: Run Video Generator
         run: |
-          python mirage_video_builder.py 
-
-
-
-
-
-
-
-
-
-
-
-
-          
+          python mirage_video_builder.py
