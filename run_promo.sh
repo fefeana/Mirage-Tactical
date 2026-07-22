@@ -9,3 +9,6 @@ pip install \
   pillow moviepy numpy gTTS
 
 python3 video_generator.py
+
+
+
