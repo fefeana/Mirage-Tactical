@@ -2,28 +2,19 @@ name: Mirage Promo Video Generator
 
 on:
   push:
-    branches:
-      - promo-video-v2
+    branches: [promo-video-v2]
   workflow_dispatch:
 
 jobs:
   generate-video:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Run Build Script
+      - name: Build Video
         run: bash run_promo.sh
 
-      - name: Upload Promo Video Artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: mirage-promo-video
           path: mirage_promo_pro.mp4
