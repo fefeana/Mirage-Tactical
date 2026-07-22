@@ -3,12 +3,13 @@ name: Mirage Promo Video Generator
 on:
   push:
     branches:
-         - promo-video-v2
+      - promo-video-v2
   workflow_dispatch:
 
 jobs:
   generate-video:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
