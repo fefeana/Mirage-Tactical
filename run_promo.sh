@@ -2,9 +2,9 @@
 set -e
 
 START_TIME=$(date "+%Y-%m-%d %H:%M:%S")
-echo "=================================================="
+echo "=============================="
 echo "⏳ Start Time: $START_TIME"
-echo "=================================================="
+echo "=============================="
 
 echo "=== 1. Updating System & Installing FFmpeg ==="
 sudo apt-get update
@@ -17,7 +17,6 @@ echo "=== 3. Executing Promo Video Generator ==="
 python3 video_generator.py
 
 END_TIME=$(date "+%Y-%m-%d %H:%M:%S")
-echo "=================================================="
+echo "=============================="
 echo "✅ Finished Successfully at: $END_TIME"
-echo "=================================================="
-
+echo "=============================="
