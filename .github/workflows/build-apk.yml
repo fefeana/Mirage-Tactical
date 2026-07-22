@@ -1,101 +1,42 @@
-import os
-import time
-from datetime import datetime
-from gTTS import gTTS
-from moviepy.editor import VideoFileClip, AudioFileClip
+# ===================================================================
+# ⚡ ميراج - سير العمل لتوليد الفيديو (فرع تجريبي) 🎬
+# ===================================================================
+name: 🎬 Mirage Promo Video Generator
 
-# ==========================================
-# 0. إعدادات سياسة الاحتفاظ بالملفات (Retention Policy)
-# ==========================================
-RETENTION_DAYS = 90  # احتفاظ بالملفات لمدة 90 يوماً
+on:
+  push:
+    branches:
+      - promo-video-v2
+  workflow_dispatch:
 
-def cleanup_old_exports(folder_path=".", days=RETENTION_DAYS):
-    """
-    فحص وحذف ملفات الفيديو المصدرة القديمة التي تجاوزت 90 يوماً تلقائياً
-    """
-    now = time.time()
-    cutoff_time = now - (days * 86400)  # 86400 ثانية = يوم واحد
-    
-    print(f"🧹 جاري فحص بيئة العمل لتنفيذ سياسة الاحتفاظ ({days} يوماً)...")
-    
-    for filename in os.listdir(folder_path):
-        if filename.startswith("mirage_promo_pro_") and filename.endswith(".mp4"):
-            file_path = os.path.join(folder_path, filename)
-            if os.path.getmtime(file_path) < cutoff_time:
-                try:
-                    os.remove(file_path)
-                    print(f"🗑️ تم حذف الملف القديم تلقائياً: {filename}")
-                except Exception as e:
-                    print(f"⚠️ متعذر حذف الملف {filename}: {e}")
+jobs:
+  generate-video:
+    runs-on: ubuntu-latest
 
-# ==========================================
-# 1. النص الصوتي التكتيكي لمشروع Mirage
-# ==========================================
-mirage_poem = """
-في عالم الرقميات والتشفير...
-يبقى ميراج حصنك المنيع وصوتك التكتيكي...
-حماية، قوة، وأمان لا ينتهي.
-"""
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
 
-# ==========================================
-# 2. تنفيذ التوليد والدمج
-# ==========================================
-def main():
-    # 1. تنظيف الملفات القديمة تلقائياً
-    cleanup_old_exports()
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    # 2. إعداد المسارات وأسماء الملفات
-    audio_filename = "mirage_voice.mp3"
-    video_path = "mirage_promo_raw.mp4"
-    
-    # تسمية الفيديو النهائي بتاريخ اليوم لسهولة التعقب في Repository
-    today_date = datetime.now().strftime("%Y%m%d")
-    output_path = f"mirage_promo_pro_{today_date}.mp4"
+      - name: 🎬 Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
 
-    # 3. توليد التعليق الصوتي
-    print("\n🎙️ جاري توليد الصوت والتأليف التكتيكي لميراج...")
-    tts = gTTS(text=mirage_poem, lang='ar', slow=False)
-    tts.save(audio_filename)
+      - name: 📦 Install Python dependencies
+        run: |
+          pip install pillow moviepy numpy
 
-    print("🎬 جاري دمج الصوت المولد مع الفيديو الأصلي...")
+      - name: 🎬 Generate Promo Video
+        run: python video_generator.py
 
-    try:
-        # تحميل المقاطع
-        video_clip = VideoFileClip(video_path)
-        audio_clip = AudioFileClip(audio_filename)
-
-        # الاحتفاظ بكامل مدة الفيديو الأصلي
-        video_duration = video_clip.duration
-        
-        # قص الصوت فقط إذا كان أطول من الفيديو لمنع الشاشات السوداء
-        if audio_clip.duration > video_duration:
-            audio_clip = audio_clip.subclip(0, video_duration)
-
-        # دمج الصوت مع الفيديو
-        final_clip = video_clip.set_audio(audio_clip)
-
-        # تصدير الفيديو النهائي
-        final_clip.write_videofile(
-            output_path,
-            fps=24,
-            codec="libx264",
-            audio_codec="aac"
-        )
-
-        # تنظيف الذاكرة وإغلاق الملفات
-        video_clip.close()
-        audio_clip.close()
-        final_clip.close()
-        
-        # حذف ملف الصوت المؤقت
-        if os.path.exists(audio_filename):
-            os.remove(audio_filename)
-
-        print(f"\n✅ تم تصدير الفيديو النهائي بنجاح!")
-        print(f"📁 اسم الملف الناتج: {output_path} 🚀✨")
-
-    except Exception as e:
-        print(f"\n❌ حدث خطأ أثناء معالجة الفيديو: {e}")
-
-if __name__ == "__main__":
-    main()
+      - name: 📤 Upload Promo Video Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mirage-promo-video
+          path: mirage_promo_pro.mp4
+          retention-days: 90 
