@@ -1,9 +1,13 @@
 # ===================================================================
-# ⚡ ميراج-تكتيكال - سير العمل النهائي لتوليد الفيديو الإعلاني 🎬
+# ⚡ ميراج-تكتيكال - سير العمل النهائي لتوليد الفيديو (تشغيل أوتوماتيكي) 🎬
 # ===================================================================
 name: 🎬 Mirage Promo Video Generator
 
 on:
+  push:
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 jobs:
@@ -19,26 +23,21 @@ jobs:
         with:
           python-version: '3.10'
 
-      # تثبيت FFmpeg الأساسي لمعالجة وتصدير الفيديو عبر MoviePy
       - name: 🎬 Install System Dependencies (FFmpeg)
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      # تثبيت حزم بايثون المعتمدة للمشروع
       - name: 📦 Install Python dependencies
         run: |
           pip install pillow moviepy numpy
 
-      # تشغيل سكربت توليد الفيديو الإعلاني لـ Mirage
       - name: 🎬 Generate Mirage Promo Video
         run: python video_generator.py
 
-      # رفع الفيديو كملف مخرج (Artifact) للحفظ والتحميل
       - name: 📤 Upload Promo Video Artifact
         uses: actions/upload-artifact@v4
         with:
           name: mirage-promo-video
           path: mirage_promo_pro.mp4
           retention-days: 90
-
