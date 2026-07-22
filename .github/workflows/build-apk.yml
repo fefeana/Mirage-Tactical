@@ -19,6 +19,12 @@ jobs:
         with:
           python-version: '3.10'
 
+      # 🛠️ الخطوة الناقصة: تثبيت FFmpeg لنظام التشغيل لتشغيل MoviePy
+      - name: 🎬 Install System Dependencies (FFmpeg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
       - name: 📦 Install dependencies
         run: |
           pip install pillow moviepy numpy
@@ -32,4 +38,3 @@ jobs:
           name: cinematic-promo-video
           path: mirage_promo_pro.mp4
           retention-days: 90
-
