@@ -19,7 +19,6 @@ jobs:
         with:
           python-version: '3.10'
 
-      # 🛠️ الخطوة الناقصة: تثبيت FFmpeg لنظام التشغيل لتشغيل MoviePy
       - name: 🎬 Install System Dependencies (FFmpeg)
         run: |
           sudo apt-get update
