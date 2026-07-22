@@ -1,22 +1,28 @@
-name: Mirage Promo Video Generator
+name: 🎬 Mirage Video Processing Workflow
 
 on:
   push:
-    branches:
-      - promo-video-v2
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
-  generate-video:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-      - name: Build Video
-        run: bash run_promo.sh
-
-      - uses: actions/upload-artifact@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          name: mirage-promo-video
-          path: mirage_promo_pro.mp4
-          retention-days: 90
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install gTTS moviepy
+
+      - name: Run Mirage Video Generator
+        run: |
+          python mirage_video_builder.py
