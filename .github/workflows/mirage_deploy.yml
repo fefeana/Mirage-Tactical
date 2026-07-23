@@ -1,5 +1,5 @@
 # ===================================================================
-# ⚡ ميراج OODA - سير العمل الأساسي للنشر (نسخة 64ca5d4) 🏗️
+# ⚡ ميراج OODA - النشر النهائي (متكامل) 🏗️
 # ===================================================================
 name: Mirage OODA Pipeline
 
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 # ===================================================================
-# 🌍 المتغيرات البيئية الأساسية
+# 🌍 المتغيرات البيئية
 # ===================================================================
 env:
   NODE_VERSION: '22'
@@ -32,7 +32,7 @@ env:
   GCP_DATAFLOW_JOB: 'quantum-streaming'
 
 # ===================================================================
-# 🖥️ المهام الأساسية
+# 🖥️ المهام
 # ===================================================================
 jobs:
 
@@ -46,6 +46,9 @@ jobs:
       network-status: ${{ steps.network.outputs.status }}
       compute-status: ${{ steps.compute.outputs.status }}
     steps:
+      - name: تعيين مشروع جوجل كلاود
+        run: gcloud config set project ${{ env.GOOGLE_CLOUD_PROJECT }}
+
       - name: تفعيل خدمات جوجل كلاود
         id: init
         run: |
@@ -58,8 +61,10 @@ jobs:
             container.googleapis.com cloudcdn.googleapis.com \
             loadbalancing.googleapis.com cloudarmor.googleapis.com \
             securitycenter.googleapis.com logging.googleapis.com \
-            monitoring.googleapis.com
+            monitoring.googleapis.com \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }}
           echo "status=active" >> $GITHUB_OUTPUT
+
       - name: تهيئة الشبكات
         id: network
         run: |
@@ -72,6 +77,7 @@ jobs:
             --network=${{ env.GCP_NETWORK }} \
             --region=${{ env.GCP_REGION }} --range=10.0.0.0/24
           echo "status=active" >> $GITHUB_OUTPUT
+
       - name: تهيئة الحوسبة
         id: compute
         run: |
@@ -94,15 +100,25 @@ jobs:
       vertex-status: ${{ steps.vertex.outputs.status }}
       automl-status: ${{ steps.automl.outputs.status }}
     steps:
+      - name: تعيين مشروع جوجل كلاود
+        run: gcloud config set project ${{ env.GOOGLE_CLOUD_PROJECT }}
+
       - name: تهيئة Vertex AI
         id: vertex
         run: |
-          gcloud ai endpoints create --region=${{ env.GCP_REGION }} --display-name="mirage-ai-endpoint"
+          gcloud ai endpoints create \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --region=${{ env.GCP_REGION }} \
+            --display-name="mirage-ai-endpoint"
           echo "status=active" >> $GITHUB_OUTPUT
+
       - name: تهيئة AutoML
         id: automl
         run: |
-          gcloud automl datasets create --region=${{ env.GCP_REGION }} --display-name="mirage-dataset"
+          gcloud automl datasets create \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --region=${{ env.GCP_REGION }} \
+            --display-name="mirage-dataset"
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
@@ -115,15 +131,23 @@ jobs:
       bigquery-status: ${{ steps.bigquery.outputs.status }}
       dataflow-status: ${{ steps.dataflow.outputs.status }}
     steps:
+      - name: تعيين مشروع جوجل كلاود
+        run: gcloud config set project ${{ env.GOOGLE_CLOUD_PROJECT }}
+
       - name: تهيئة BigQuery
         id: bigquery
         run: |
-          bq mk --dataset ${{ env.GOOGLE_CLOUD_PROJECT }}:${{ env.GCP_BIGQUERY_DATASET }}
+          bq mk --dataset \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            ${{ env.GOOGLE_CLOUD_PROJECT }}:${{ env.GCP_BIGQUERY_DATASET }}
           echo "status=active" >> $GITHUB_OUTPUT
+
       - name: تهيئة Dataflow
         id: dataflow
         run: |
-          gcloud dataflow jobs run ${{ env.GCP_DATAFLOW_JOB }} --region=${{ env.GCP_REGION }}
+          gcloud dataflow jobs run ${{ env.GCP_DATAFLOW_JOB }} \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --region=${{ env.GCP_REGION }}
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
@@ -136,15 +160,22 @@ jobs:
       armor-status: ${{ steps.armor.outputs.status }}
       scc-status: ${{ steps.scc.outputs.status }}
     steps:
+      - name: تعيين مشروع جوجل كلاود
+        run: gcloud config set project ${{ env.GOOGLE_CLOUD_PROJECT }}
+
       - name: تهيئة Cloud Armor
         id: armor
         run: |
-          gcloud compute security-policies create mirage-armor --description="Quantum Security"
+          gcloud compute security-policies create mirage-armor \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --description="Quantum Security"
           echo "status=active" >> $GITHUB_OUTPUT
+
       - name: تهيئة Security Command Center
         id: scc
         run: |
-          gcloud scc settings enable
+          gcloud scc settings enable \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }}
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
@@ -157,15 +188,25 @@ jobs:
       cdn-status: ${{ steps.cdn.outputs.status }}
       lb-status: ${{ steps.lb.outputs.status }}
     steps:
+      - name: تعيين مشروع جوجل كلاود
+        run: gcloud config set project ${{ env.GOOGLE_CLOUD_PROJECT }}
+
       - name: تهيئة Cloud CDN
         id: cdn
         run: |
-          gcloud compute backend-buckets create mirage-cdn --enable-cdn
+          gcloud compute backend-buckets create mirage-cdn \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --enable-cdn
           echo "status=active" >> $GITHUB_OUTPUT
+
       - name: تهيئة Load Balancing
         id: lb
         run: |
-          gcloud compute backend-services create mirage-lb --protocol=HTTP2
+          gcloud compute backend-services create mirage-lb \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --load-balancing-scheme=EXTERNAL \
+            --protocol=HTTP2 \
+            --enable-cdn
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
@@ -178,15 +219,23 @@ jobs:
       logging-status: ${{ steps.logging.outputs.status }}
       monitoring-status: ${{ steps.monitoring.outputs.status }}
     steps:
+      - name: تعيين مشروع جوجل كلاود
+        run: gcloud config set project ${{ env.GOOGLE_CLOUD_PROJECT }}
+
       - name: تهيئة Logging
         id: logging
         run: |
-          gcloud logging sinks create mirage-logs bigquery.googleapis.com/projects/${{ env.GOOGLE_CLOUD_PROJECT }}/datasets/${{ env.GCP_BIGQUERY_DATASET }}
+          gcloud logging sinks create mirage-logs \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            bigquery.googleapis.com/projects/${{ env.GOOGLE_CLOUD_PROJECT }}/datasets/${{ env.GCP_BIGQUERY_DATASET }}
           echo "status=active" >> $GITHUB_OUTPUT
+
       - name: تهيئة Monitoring
         id: monitoring
         run: |
-          gcloud monitoring policies create --display-name="Mirage Monitoring"
+          gcloud monitoring policies create \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --display-name="Mirage Monitoring"
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
@@ -251,9 +300,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: [google-cloud-ai, google-cloud-data, google-cloud-security, google-cloud-networking, google-cloud-operations, mcp-infrastructure, global-infrastructure, mirage-ai-core]
     steps:
-      - run: echo "☁️ Scheduler Active"
-      - run: echo "🔐 Quantum Encryption Active"
-      - run: echo "📡 Smart Jamming Active"
+      - name: تعيين مشروع جوجل كلاود
+        run: gcloud config set project ${{ env.GOOGLE_CLOUD_PROJECT }}
+
+      - name: تشغيل الجدولة
+        run: |
+          gcloud scheduler jobs create http mirage-scheduler \
+            --project=${{ env.GOOGLE_CLOUD_PROJECT }} \
+            --location=${{ env.GCP_REGION }} \
+            --schedule="*/1 * * * *" \
+            --uri="http://localhost:8000/api/schedule" \
+            --http-method=POST
+
+      - name: تشغيل التشفير الكمي
+        run: echo "🔐 Quantum Encryption Active"
+      - name: تشغيل التشويش الذكي
+        run: echo "📡 Smart Jamming Active"
 
   # -----------------------------------------------------------------
   # 11. النشر إلى Firebase (مع بناء APK و Web)
