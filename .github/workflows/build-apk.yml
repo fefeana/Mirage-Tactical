@@ -1,40 +1,17 @@
-name: Mirage Pipeline
+name: Mirage Video Pipeline
 
 on:
   push:
     branches:
       - promo-video-v2
-  pull_request:
-    branches:
-      - promo-video-v2
+  workflow_dispatch:
 
 jobs:
-  build:
+  video-task:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
+      - name: Checkout Branch
         uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Install Dependencies
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+      - name: Complete
+        run: echo "Promo video branch updated successfully!"
