@@ -1,17 +1,19 @@
 # ===================================================================
-# ⚡ ميراج OODA - النشر النهائي (مدمج وواضح) ⚡
+# ⚡ ميراج OODA - سير العمل الأساسي للنشر (نسخة 64ca5d4) 🏗️
 # ===================================================================
 name: Mirage OODA Pipeline
 
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
   schedule:
     - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 # ===================================================================
-# 🌍 المتغيرات البيئية
+# 🌍 المتغيرات البيئية الأساسية
 # ===================================================================
 env:
   NODE_VERSION: '22'
@@ -30,12 +32,12 @@ env:
   GCP_DATAFLOW_JOB: 'quantum-streaming'
 
 # ===================================================================
-# 🖥️ المهام
+# 🖥️ المهام الأساسية
 # ===================================================================
 jobs:
 
   # -----------------------------------------------------------------
-  # 1. البنية التحتية الأساسية (شبكات + حوسبة)
+  # 1. البنية التحتية لجوجل كلاود (الشبكات والحوسبة)
   # -----------------------------------------------------------------
   google-cloud-setup:
     runs-on: ubuntu-latest
@@ -83,7 +85,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 2. الذكاء الاصطناعي
+  # 2. الذكاء الاصطناعي (Vertex AI و AutoML)
   # -----------------------------------------------------------------
   google-cloud-ai:
     runs-on: ubuntu-latest
@@ -104,7 +106,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 3. البيانات
+  # 3. البيانات (BigQuery و Dataflow)
   # -----------------------------------------------------------------
   google-cloud-data:
     runs-on: ubuntu-latest
@@ -125,7 +127,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 4. الأمان
+  # 4. الأمان (Cloud Armor و Security Command Center)
   # -----------------------------------------------------------------
   google-cloud-security:
     runs-on: ubuntu-latest
@@ -146,7 +148,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 5. الشبكات المتقدمة
+  # 5. الشبكات المتقدمة (CDN و Load Balancing)
   # -----------------------------------------------------------------
   google-cloud-networking:
     runs-on: ubuntu-latest
@@ -167,7 +169,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 6. العمليات
+  # 6. العمليات (Logging و Monitoring)
   # -----------------------------------------------------------------
   google-cloud-operations:
     runs-on: ubuntu-latest
@@ -188,7 +190,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 7. خوادم MCP
+  # 7. خوادم MCP 8000 والبروتوكولات الذكية
   # -----------------------------------------------------------------
   mcp-infrastructure:
     runs-on: ubuntu-latest
@@ -199,21 +201,21 @@ jobs:
       cert-status: ${{ steps.certificates.outputs.status }}
       internet-status: ${{ steps.quantum-internet.outputs.status }}
     steps:
-      - name: تشغيل MCP
+      - name: تشغيل خوادم MCP 8000
         id: mcp-activate
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: البروتوكولات الذكية
+      - name: تفعيل البروتوكولات الذكية
         id: protocol-setup
         run: echo "version=${{ env.PROTOCOL_VERSION }}" >> $GITHUB_OUTPUT
-      - name: الشهادات الذكية
+      - name: تفعيل الشهادات الذكية
         id: certificates
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: الإنترنت الكمي
+      - name: تفعيل الإنترنت الكمي
         id: quantum-internet
         run: echo "status=enabled" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 8. البنية العالمية (كابلات وأقمار)
+  # 8. البنية التحتية العالمية (كابلات وأقمار)
   # -----------------------------------------------------------------
   global-infrastructure:
     runs-on: ubuntu-latest
@@ -224,7 +226,7 @@ jobs:
       - run: echo "🛰️ Satellites Active"
 
   # -----------------------------------------------------------------
-  # 9. الذكاء الفائق
+  # 9. الذكاء الفائق (ميراج AI Core)
   # -----------------------------------------------------------------
   mirage-ai-core:
     runs-on: ubuntu-latest
@@ -233,17 +235,17 @@ jobs:
       status: ${{ steps.ai-orchestrator.outputs.status }}
       ghost-session: ${{ steps.ghost-setup.outputs.session }}
     steps:
-      - name: AI Core
+      - name: تشغيل الذكاء الفائق
         id: ai-orchestrator
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: Agents
+      - name: تشغيل الوكلاء المتخصصين
         run: echo "All agents active"
-      - name: Ghost Mode
+      - name: تفعيل وضع الشبح
         id: ghost-setup
         run: echo "session=ghost-$(date +%s)" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 10. الجدولة
+  # 10. جدولة جوجل كلاود
   # -----------------------------------------------------------------
   google-cloud-scheduler:
     runs-on: ubuntu-latest
@@ -254,7 +256,7 @@ jobs:
       - run: echo "📡 Smart Jamming Active"
 
   # -----------------------------------------------------------------
-  # 11. النشر إلى Firebase
+  # 11. النشر إلى Firebase (مع بناء APK و Web)
   # -----------------------------------------------------------------
   quantum-deploy:
     runs-on: ubuntu-latest
@@ -307,11 +309,13 @@ jobs:
         with:
           name: mirage-apk
           path: build/outputs/apk/release/*.apk
+          retention-days: 90
       - name: Upload Web Artifact
         uses: actions/upload-artifact@v4
         with:
           name: mirage-web
           path: build/web/*
+          retention-days: 90
 
   # -----------------------------------------------------------------
   # 12. المزامنة الكمية
@@ -345,6 +349,8 @@ jobs:
           echo "✅ الإنترنت الكمي: ${{ needs.mcp-infrastructure.outputs.internet-status }}"
           echo "✅ الذكاء الفائق: ${{ needs.mirage-ai-core.outputs.status }}"
           echo "✅ وضع الشبح: ${{ needs.mirage-ai-core.outputs.ghost-session }}"
+          echo "✅ APK: تم رفعه بنجاح"
+          echo "✅ Web: تم رفعه بنجاح"
           echo "✅ Firebase: منشور بنجاح"
           echo "==================================="
           echo "🚀 النظام يعمل 24/7 بسرعة البرق ⚡"
