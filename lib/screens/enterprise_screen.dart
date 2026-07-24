@@ -36,6 +36,21 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
     _loadToken();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _sectorController.dispose();
+    _ipController.dispose();
+    _userIdController.dispose();
+    _totpController.dispose();
+    _clientIdController.dispose();
+    super.dispose();
+  }
+
+  // -----------------------------------------------------------------
+  // 🔑 إدارة JWT Token
+  // -----------------------------------------------------------------
+
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -49,6 +64,10 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
     setState(() => _jwtToken = token);
   }
 
+  // -----------------------------------------------------------------
+  // 🏛️ تسجيل مؤسسة جديدة
+  // -----------------------------------------------------------------
+
   Future<void> _registerEnterprise() async {
     if (_nameController.text.isEmpty ||
         _sectorController.text.isEmpty ||
@@ -57,7 +76,7 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
       return;
     }
 
-    if (_jwtToken == null) {
+    if (_jwtToken == null || _jwtToken!.isEmpty) {
       setState(() => _result = '⚠️ الرجاء إدخال JWT Token صالح');
       return;
     }
@@ -83,12 +102,16 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
     }
   }
 
+  // -----------------------------------------------------------------
+  // 🔐 TOTP - توليد وتحقق
+  // -----------------------------------------------------------------
+
   Future<void> _generateTOTP() async {
     if (_clientIdController.text.isEmpty || _userIdController.text.isEmpty) {
       setState(() => _result = '⚠️ الرجاء إدخال client_id و user_id');
       return;
     }
-    if (_jwtToken == null) {
+    if (_jwtToken == null || _jwtToken!.isEmpty) {
       setState(() => _result = '⚠️ الرجاء إدخال JWT Token صالح');
       return;
     }
@@ -119,7 +142,7 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
       setState(() => _result = '⚠️ الرجاء ملء جميع الحقول');
       return;
     }
-    if (_jwtToken == null) {
+    if (_jwtToken == null || _jwtToken!.isEmpty) {
       setState(() => _result = '⚠️ الرجاء إدخال JWT Token صالح');
       return;
     }
@@ -144,12 +167,16 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
     }
   }
 
+  // -----------------------------------------------------------------
+  // 📊 مراقبة المؤسسة
+  // -----------------------------------------------------------------
+
   Future<void> _monitorEnterprise() async {
     if (_clientIdController.text.isEmpty) {
       setState(() => _result = '⚠️ الرجاء إدخال client_id');
       return;
     }
-    if (_jwtToken == null) {
+    if (_jwtToken == null || _jwtToken!.isEmpty) {
       setState(() => _result = '⚠️ الرجاء إدخال JWT Token صالح');
       return;
     }
@@ -175,6 +202,10 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
     }
   }
 
+  // -----------------------------------------------------------------
+  // 🏗️ واجهة المستخدم
+  // -----------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,8 +220,12 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
         actions: [
           IconButton(
             icon: Icon(
-              _jwtToken != null ? Icons.check_circle : Icons.cancel,
-              color: _jwtToken != null ? Colors.green : Colors.red,
+              _jwtToken != null && _jwtToken!.isNotEmpty
+                  ? Icons.check_circle
+                  : Icons.cancel,
+              color: _jwtToken != null && _jwtToken!.isNotEmpty
+                  ? Colors.green
+                  : Colors.red,
             ),
             onPressed: _loadToken,
           ),
@@ -202,7 +237,9 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // JWT Token
+              // -----------------------------------------------------------------
+              // 🔑 JWT Token
+              // -----------------------------------------------------------------
               const Text(
                 '🔑 JWT Token',
                 style: TextStyle(
@@ -247,7 +284,9 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
               ),
               const SizedBox(height: 24),
 
-              // تسجيل مؤسسة
+              // -----------------------------------------------------------------
+              // 📝 تسجيل مؤسسة
+              // -----------------------------------------------------------------
               const Text(
                 '📝 تسجيل مؤسسة',
                 style: TextStyle(
@@ -308,7 +347,9 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
               ),
               const SizedBox(height: 24),
 
-              // TOTP + التحقق + المراقبة
+              // -----------------------------------------------------------------
+              // 🔐 TOTP والمصادقة
+              // -----------------------------------------------------------------
               const Text(
                 '🔐 TOTP والمصادقة',
                 style: TextStyle(
@@ -393,6 +434,9 @@ class _EnterpriseScreenState extends State<EnterpriseScreen> {
               ),
               const SizedBox(height: 24),
 
+              // -----------------------------------------------------------------
+              // 📝 عرض النتيجة
+              // -----------------------------------------------------------------
               if (_result.isNotEmpty) ...[
                 const Divider(color: Colors.grey),
                 const Text(
