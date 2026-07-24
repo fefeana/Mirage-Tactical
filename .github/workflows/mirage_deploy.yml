@@ -1,5 +1,5 @@
 # ===================================================================
-# ⚡ ميراج OODA - النشر النهائي (متكامل - Flutter Edition) 🏗️
+# ⚡ ميراج OODA - النشر النهائي (Flutter Edition) 🏗️
 # ===================================================================
 name: Mirage OODA Pipeline
 
@@ -37,7 +37,7 @@ env:
 jobs:
 
   # -----------------------------------------------------------------
-  # 1. البنية التحتية لجوجل كلاود (الشبكات والحوسبة)
+  # 1. البنية التحتية لجوجل كلاود
   # -----------------------------------------------------------------
   google-cloud-setup:
     runs-on: ubuntu-latest
@@ -91,7 +91,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 2. الذكاء الاصطناعي (Vertex AI و AutoML)
+  # 2. الذكاء الاصطناعي
   # -----------------------------------------------------------------
   google-cloud-ai:
     runs-on: ubuntu-latest
@@ -122,7 +122,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 3. البيانات (BigQuery و Dataflow)
+  # 3. البيانات
   # -----------------------------------------------------------------
   google-cloud-data:
     runs-on: ubuntu-latest
@@ -151,7 +151,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 4. الأمان (Cloud Armor و Security Command Center)
+  # 4. الأمان
   # -----------------------------------------------------------------
   google-cloud-security:
     runs-on: ubuntu-latest
@@ -179,7 +179,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 5. الشبكات المتقدمة (CDN و Load Balancing)
+  # 5. الشبكات المتقدمة
   # -----------------------------------------------------------------
   google-cloud-networking:
     runs-on: ubuntu-latest
@@ -210,7 +210,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 6. العمليات (Logging و Monitoring)
+  # 6. العمليات
   # -----------------------------------------------------------------
   google-cloud-operations:
     runs-on: ubuntu-latest
@@ -239,7 +239,7 @@ jobs:
           echo "status=active" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 7. خوادم MCP 8000 والبروتوكولات الذكية
+  # 7. MCP 8000
   # -----------------------------------------------------------------
   mcp-infrastructure:
     runs-on: ubuntu-latest
@@ -250,21 +250,21 @@ jobs:
       cert-status: ${{ steps.certificates.outputs.status }}
       internet-status: ${{ steps.quantum-internet.outputs.status }}
     steps:
-      - name: تشغيل خوادم MCP 8000
+      - name: تشغيل MCP
         id: mcp-activate
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تفعيل البروتوكولات الذكية
+      - name: البروتوكولات الذكية
         id: protocol-setup
         run: echo "version=${{ env.PROTOCOL_VERSION }}" >> $GITHUB_OUTPUT
-      - name: تفعيل الشهادات الذكية
+      - name: الشهادات الذكية
         id: certificates
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تفعيل الإنترنت الكمي
+      - name: الإنترنت الكمي
         id: quantum-internet
         run: echo "status=enabled" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 8. البنية التحتية العالمية (كابلات وأقمار)
+  # 8. البنية العالمية
   # -----------------------------------------------------------------
   global-infrastructure:
     runs-on: ubuntu-latest
@@ -275,7 +275,7 @@ jobs:
       - run: echo "🛰️ Satellites Active"
 
   # -----------------------------------------------------------------
-  # 9. الذكاء الفائق (ميراج AI Core)
+  # 9. الذكاء الفائق
   # -----------------------------------------------------------------
   mirage-ai-core:
     runs-on: ubuntu-latest
@@ -284,17 +284,17 @@ jobs:
       status: ${{ steps.ai-orchestrator.outputs.status }}
       ghost-session: ${{ steps.ghost-setup.outputs.session }}
     steps:
-      - name: تشغيل الذكاء الفائق
+      - name: AI Core
         id: ai-orchestrator
         run: echo "status=active" >> $GITHUB_OUTPUT
-      - name: تشغيل الوكلاء المتخصصين
+      - name: Agents
         run: echo "All agents active"
-      - name: تفعيل وضع الشبح
+      - name: Ghost Mode
         id: ghost-setup
         run: echo "session=ghost-$(date +%s)" >> $GITHUB_OUTPUT
 
   # -----------------------------------------------------------------
-  # 10. جدولة جوجل كلاود
+  # 10. الجدولة
   # -----------------------------------------------------------------
   google-cloud-scheduler:
     runs-on: ubuntu-latest
@@ -312,13 +312,13 @@ jobs:
             --uri="http://localhost:8000/api/schedule" \
             --http-method=POST
 
-      - name: تشغيل التشفير الكمي
+      - name: التشفير الكمي
         run: echo "🔐 Quantum Encryption Active"
-      - name: تشغيل التشويش الذكي
+      - name: التشويش الذكي
         run: echo "📡 Smart Jamming Active"
 
   # -----------------------------------------------------------------
-  # 11. النشر إلى Firebase (مع بناء APK و Web)
+  # 11. النشر إلى Firebase
   # -----------------------------------------------------------------
   quantum-deploy:
     runs-on: ubuntu-latest
@@ -339,17 +339,17 @@ jobs:
           java-version: '17'
       - name: Install Dependencies
         run: flutter pub get
-      - name: Build Flutter APK
+      - name: Build APK
         run: flutter build apk --release
-      - name: Build Flutter Web
+      - name: Build Web
         run: flutter build web --release
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: mirage-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 90
-      - name: Upload Web Artifact
+      - name: Upload Web
         uses: actions/upload-artifact@v4
         with:
           name: mirage-web
@@ -357,7 +357,7 @@ jobs:
           retention-days: 90
 
   # -----------------------------------------------------------------
-  # 12. المزامنة الكمية
+  # 12. المزامنة
   # -----------------------------------------------------------------
   quantum-sync:
     runs-on: ubuntu-latest
