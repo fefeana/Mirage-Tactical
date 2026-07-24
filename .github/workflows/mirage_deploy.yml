@@ -357,7 +357,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mirage-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk   # ✅ المسار الصحيح لـ Flutter
           retention-days: 90
       - name: Upload Web
         uses: actions/upload-artifact@v4
