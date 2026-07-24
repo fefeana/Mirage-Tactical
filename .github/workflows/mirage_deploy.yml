@@ -318,7 +318,7 @@ jobs:
         run: echo "📡 Smart Jamming Active"
 
   # -----------------------------------------------------------------
-  # 11. النشر إلى Firebase
+  # 11. النشر إلى Firebase (مع APK و Web)
   # -----------------------------------------------------------------
   quantum-deploy:
     runs-on: ubuntu-latest
@@ -337,12 +337,22 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
+      - name: Clean
+        run: flutter clean
       - name: Install Dependencies
         run: flutter pub get
       - name: Build APK
         run: flutter build apk --release
       - name: Build Web
         run: flutter build web --release
+      - name: Verify APK
+        run: |
+          if [ -f "build/app/outputs/flutter-apk/app-release.apk" ]; then
+            echo "✅ APK built successfully!"
+          else
+            echo "❌ APK not found! Build failed."
+            exit 1
+          fi
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
