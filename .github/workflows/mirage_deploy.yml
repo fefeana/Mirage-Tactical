@@ -1,5 +1,5 @@
 # ===================================================================
-# ⚡ ميراج OODA - النشر النهائي (متكامل) 🏗️
+# ⚡ ميراج OODA - النشر النهائي (متكامل - Flutter Edition) 🏗️
 # ===================================================================
 name: Mirage OODA Pipeline
 
@@ -327,56 +327,33 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          flutter-version: '3.24.0'
+          channel: 'stable'
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
       - name: Install Dependencies
-        run: npm ci
-      - name: Build Project
-        run: |
-          for i in {1..3}; do
-            echo "🔨 Build attempt $i..."
-            if npm run build; then
-              echo "✅ Build succeeded!"
-              break
-            fi
-            if [ $i -eq 3 ]; then
-              echo "❌ Build failed!"
-              exit 1
-            fi
-            echo "⏳ Retrying in 5s..."
-            sleep 5
-          done
-      - name: Deploy to Firebase
-        run: |
-          for i in {1..3}; do
-            echo "🚀 Deploy attempt $i..."
-            if firebase deploy --only hosting --project ${{ env.GOOGLE_CLOUD_PROJECT }} --token ${{ secrets.FIREBASE_TOKEN }}; then
-              echo "✅ Deploy succeeded!"
-              break
-            fi
-            if [ $i -eq 3 ]; then
-              echo "❌ Deploy failed!"
-              exit 1
-            fi
-            echo "⏳ Retrying in 5s..."
-            sleep 5
-          done
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: flutter pub get
+      - name: Build Flutter APK
+        run: flutter build apk --release
+      - name: Build Flutter Web
+        run: flutter build web --release
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: mirage-apk
-          path: build/outputs/apk/release/*.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 90
       - name: Upload Web Artifact
         uses: actions/upload-artifact@v4
         with:
           name: mirage-web
-          path: build/web/*
+          path: build/web
           retention-days: 90
 
   # -----------------------------------------------------------------
