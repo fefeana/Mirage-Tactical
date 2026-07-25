@@ -22,24 +22,13 @@ dependencies:
   
   # 🔐 التشفير والأمان (للمفاتيح المؤقتة)
   crypto: ^3.0.3
-  pointycastle: ^3.7.3  # لدعم التشفير المتقدم
+  pointycastle: ^3.7.3
   
-  # 📊 إدارة الحالة (للربط بين الواجهات)
+  # 📊 إدارة الحالة
   provider: ^6.1.1
   
   # 🧭 التنقل بين الشاشات
   go_router: ^14.2.0
-  
-  # 🔔 الإشعارات المحلية (لتنبيهات الاتصال)
-  flutter_local_notifications: ^17.2.1
-  
-  # 🌍 دعم اللغة والترجمة
-  flutter_localizations:
-    sdk: flutter
-  intl: ^0.19.0
-
-  # ⚡ تحسين الأداء (لعمليات الخلفية)
-  workmanager: ^0.5.1
   
   # 📡 الاتصال بالشبكة (لكشف حالة النت)
   connectivity_plus: ^6.0.3
@@ -47,49 +36,32 @@ dependencies:
   # 🗺️ تحديد الموقع (لاختيار أقرب خادم MCP)
   geolocator: ^13.0.1
   
+  # ⚡ تحسين الأداء (لعمليات الخلفية)
+  workmanager: ^0.5.1
+  
   # 🎨 أيقونات وأشكال
   flutter_svg: ^2.0.10
   lottie: ^3.1.2
 
-  # 🧪 تحليلات (لفهم سلوك المستخدم)
-  firebase_analytics: ^11.3.3
-  firebase_core: ^3.5.0
+  # 🔔 الإشعارات المحلية
+  flutter_local_notifications: ^17.2.1
+
+  # 🌍 دعم اللغة
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  
-  # 🛠️ أدوات التطوير
   flutter_lints: ^4.0.0
   build_runner: ^2.4.11
-  grpc_web: ^0.3.0
-  
-  # 📦 توليد الكود من proto
-  protoc_plugin: ^21.1.2
 
 flutter:
   uses-material-design: true
-
-  # 📁 الموارد (الصور، الخطوط، الأيقونات)
   assets:
     - assets/icons/
     - assets/images/
     - assets/fonts/
     - assets/animations/
     - assets/configs/secure_routes.json
-
-  # 🔤 الخطوط المخصصة (يمكنك إضافة خطك المفضل)
-  fonts:
-    - family: Samurai
-      fonts:
-        - asset: assets/fonts/Samurai.ttf
-          weight: 700
-    - family: MirageIcons
-      fonts:
-        - asset: assets/fonts/MirageIcons.ttf
-
-flutter_intl:
-  enabled: true
-  arb_dir: lib/l10n
-  template_arb_file: lib/l10n/app_en.arb
-  output_localization_file: app_localizations.dart
