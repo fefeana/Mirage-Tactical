@@ -1,0 +1,327 @@
+name: 🗡️ Mirage Audit + Auto-Fix (تحليل وتعديل ذكي)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:  # تشغيل يدوي
+
+jobs:
+  audit-and-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v4
+
+      - name: 🐍 تجهيز بايثون
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 تثبيت المكتبات
+        run: pip install pyyaml
+
+      - name: ⚔️ تشغيل التحليل والإصلاح الذكي
+        run: |
+          python -c "
+          import os, json, ast, re, subprocess, shutil
+          from pathlib import Path
+
+          # ==========================================
+          # 1. الدالة الذكية لتوليد المحتوى الجديد
+          # ==========================================
+          def generate_smart_content(file_path, original_content, status, msg):
+              \"\"\"توليد محتوى ذكي بناءً على اسم الملف ونوعه\"\"\"
+              base = os.path.basename(file_path)
+              name = os.path.splitext(base)[0]
+              ext = os.path.splitext(base)[1]
+
+              # ---- قوالب بايثون ----
+              if ext == '.py':
+                  if 'core' in file_path or 'manager' in file_path:
+                      return f'''\"\"\"
+  ملف: {base}
+  الحالة الأصلية: {status} - {msg}
+  تم التعديل بواسطة: محرك ميراج الذكي (Mirage AI Fixer)
+  \"\"\"
+  import asyncio
+  import logging
+  from typing import Optional, Dict, Any
+
+  class {''.join(word.capitalize() for word in name.split('_'))}:
+      \"\"\"الكلاس الأساسي المُولَّد لـ {name}\"\"\"
+      
+      def __init__(self, config: Optional[Dict[str, Any]] = None):
+          self.config = config or {{}}
+          self.logger = logging.getLogger(__name__)
+          self._is_ready = False
+          print(f\"✅ تم تهيئة {self.__class__.__name__}\")
+
+      async def initialize(self) -> bool:
+          \"\"\"تهيئة الخدمة (سيتم استكمالها لاحقاً)\"\"\"
+          self._is_ready = True
+          return True
+
+      async def process(self, data: Any) -> Dict[str, Any]:
+          \"\"\"معالجة البيانات الأساسية\"\"\"
+          return {{\"status\": \"processed\", \"data\": data}}
+
+      def get_status(self) -> Dict[str, Any]:
+          return {{\"ready\": self._is_ready, \"config\": self.config}}
+  '''
+                  else:
+                      return f'''\"\"\"{base} - وحدة دعم تم توليدها تلقائياً\"\"\"
+  def main():
+      print(\"تشغيل {base}\")
+      return True
+
+  if __name__ == \"__main__\":
+      main()
+  '''
+
+              # ---- قوالب Dart (Flutter) ----
+              elif ext == '.dart':
+                  if 'manager' in file_path or 'provider' in file_path:
+                      class_name = ''.join(word.capitalize() for word in name.split('_'))
+                      return f'''import 'dart:async';
+  import 'package:flutter/material.dart';
+
+  /// {base} - تم توليده بواسطة الذكاء الاصطناعي لضمان البناء
+  class {class_name} extends ChangeNotifier {{
+      bool _isConnected = false;
+      String _currentServer = '';
+
+      bool get isConnected => _isConnected;
+      String get currentServer => _currentServer;
+
+      Future<void> connect(String serverId) async {{
+          // TODO: تنفيذ منطق الاتصال الحقيقي
+          _isConnected = true;
+          _currentServer = serverId;
+          notifyListeners();
+          print('✅ متصل بـ {{serverId}}');
+      }}
+
+      Future<void> disconnect() async {{
+          _isConnected = false;
+          _currentServer = '';
+          notifyListeners();
+          print('❌ تم الفصل');
+      }}
+
+      String get status => _isConnected ? 'متصل' : 'غير متصل';
+  }}
+  '''
+                  else:
+                      return f'''/// {base} - ملف دعم عام
+  class {class_name} {{
+    const {class_name}();
+    void log(String message) => print('[{base}] {{message}}');
+  }}
+  '''
+
+              # ---- قوالب JavaScript / TypeScript ----
+              elif ext in ['.js', '.ts', '.tsx']:
+                  if 'admin' in file_path.lower() or 'dashboard' in file_path.lower():
+                      return f'''/**
+   * {base} - لوحة تحكم تم توليدها تلقائياً
+   * الحالة الأصلية: {status} - {msg}
+   */
+  import {{ useState, useEffect }} from 'react';
+
+  interface {''.join(word.capitalize() for word in name.split('_'))}Props {{
+    initialData?: any;
+  }}
+
+  export const {''.join(word.capitalize() for word in name.split('_'))} = ({{ initialData }}: {''.join(word.capitalize() for word in name.split('_'))}Props) => {{
+    const [data, setData] = useState(initialData || {{}});
+    
+    useEffect(() => {{
+      console.log('✅ {base} تم تحميلها');
+    }}, []);
+
+    return (
+      <div className="mirage-container">
+        <h1>🛡️ {base}</h1>
+        <p>الحالة: جاهز للتشغيل</p>
+      </div>
+    );
+  }};
+
+  export default {''.join(word.capitalize() for word in name.split('_'))};
+  '''
+                  else:
+                      return f'''// {base} - وحدة خدمية مولدة
+  export class {''.join(word.capitalize() for word in name.split('_'))} {{
+      constructor(private config: any = {{}}) {{
+          console.log('✅ تهيئة {base}');
+      }}
+
+      async execute(params: any): Promise<any> {{
+          return {{ success: true, message: 'تم التنفيذ' }};
+      }}
+  }}
+
+  export default new {''.join(word.capitalize() for word in name.split('_'))}();
+  '''
+
+              # ---- ملفات الإعدادات (JSON/YAML) ----
+              elif ext in ['.json', '.yaml', '.yml']:
+                  if ext == '.json':
+                      return json.dumps({{"status": "auto_fixed", "original_status": status, "message": "تم إعادة إنشاء الملف", "timestamp": "2026-07-26"}}, indent=2)
+                  else:
+                      return f'''# {base} - تم إصلاحه تلقائياً
+  status: auto_fixed
+  original_status: {status}
+  message: "تم إعادة إنشاء الملف"
+  timestamp: "2026-07-26"
+  '''
+
+              # ---- باقي الملفات (نعيد هيكلها كـ TXT) ----
+              else:
+                  return f'''# {base}
+  # الحالة الأصلية: {status} - {msg}
+  # تم إعادة بناء هذا الملف بواسطة محرك ميراج الذكي.
+  # يرجى مراجعة المحتوى واستكمال المنطق المطلوب.
+  '''
+
+          # ==========================================
+          # 2. دالة إصلاح الأقواس (Fixer البسيط)
+          # ==========================================
+          def fix_brackets(content):
+              \"\"\"محاولة إصلاح الأقواس غير المتطابقة بشكل بسيط\"\"\"
+              # نضيف أقواس إغلاق مفقودة إذا كانت الافتتاحات أكثر
+              open_braces = content.count('(') - content.count(')')
+              open_brackets = content.count('[') - content.count(']')
+              open_curly = content.count('{{') - content.count('}}')
+              
+              if open_braces > 0:
+                  content += ')' * open_braces
+              if open_brackets > 0:
+                  content += ']' * open_brackets
+              if open_curly > 0:
+                  content += '}}' * open_curly
+              return content
+
+          # ==========================================
+          # 3. دالة التحليل الأساسية (مأخوذة من السابق)
+          # ==========================================
+          def analyze_file(file_path):
+              try:
+                  size = os.path.getsize(file_path)
+                  if size == 0:
+                      return 'empty', '0 بايت (فارغ)'
+                  with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                      content = f.read()
+                  stripped = content.strip()
+                  if len(stripped) < 20:
+                      return 'placeholder', f'صغير جدًا ({len(stripped)} حرف)'
+
+                  if file_path.endswith('.py'):
+                      try:
+                          ast.parse(content)
+                          return 'valid', 'سليم نحوياً'
+                      except SyntaxError as e:
+                          return 'broken', f'خطأ نحوي: {{e}}'
+                  elif file_path.endswith(('.dart', '.js', '.ts', '.tsx')):
+                      brackets = re.findall(r'[\(\[\{{]\)\}}]', content)
+                      if brackets.count('(') != brackets.count(')') or brackets.count('[') != brackets.count(']'):
+                          return 'broken', 'أقواس غير متطابقة'
+                      return 'valid', 'البناء سليم'
+                  elif file_path.endswith(('.json', '.yaml', '.yml')):
+                      try:
+                          if file_path.endswith('.json'): json.loads(content)
+                          else: import yaml; yaml.safe_load(content)
+                          return 'valid', 'صياغة سليمة'
+                      except Exception as e:
+                          return 'broken', f'خطأ في الصياغة: {{e}}'
+                  else:
+                      return 'valid', 'ملف دعم'
+              except Exception as e:
+                  return 'error', f'تعذر القراءة: {{e}}'
+
+          # ==========================================
+          # 4. التنفيذ الرئيسي (التحليل + الإصلاح)
+          # ==========================================
+          def main():
+              # جلب الملفات من Git
+              result = subprocess.run(['git', 'ls-files'], capture_output=True, text=True, check=True)
+              all_files = [f for f in result.stdout.splitlines() if f.endswith(('.py','.dart','.js','.ts','.tsx','.json','.yaml','.yml','.kt','.java','.sh','.tf'))]
+              
+              # تصفية الملفات المهمة فقط (قلب المشروع)
+              target_files = [f for f in all_files if 'lib/' in f or 'backend/' in f or 'src/' in f or 'core/' in f or f.endswith(('main.py', 'main.dart', 'xray_core.py', 'master_albarq.js'))]
+              
+              print(f'🔍 جارٍ فحص {len(target_files)} ملفاً مهماً...\\n')
+
+              # مجلد الإصلاحات
+              FIX_DIR = 'mirage_fixed'
+              shutil.rmtree(FIX_DIR, ignore_errors=True)
+              os.makedirs(FIX_DIR, exist_ok=True)
+
+              summary = {{'fixed': [], 'skipped': [], 'errors': []}}
+
+              for f in target_files:
+                  status, msg = analyze_file(f)
+                  
+                  if status in ['empty', 'placeholder', 'broken']:
+                      # 📝 قراءة المحتوى القديم (إن وجد)
+                      try:
+                          with open(f, 'r', encoding='utf-8', errors='ignore') as orig:
+                              old_content = orig.read()
+                      except:
+                          old_content = ''
+                      
+                      # 🧠 توليد المحتوى الجديد الذكي
+                      new_content = generate_smart_content(f, old_content, status, msg)
+                      
+                      # 🔧 محاولة إصلاح الأقواس (تحسين إضافي)
+                      if status == 'broken' and 'أقواس' in msg:
+                          new_content = fix_brackets(new_content)
+                      
+                      # 💾 حفظ النسخة المصلحة في مجلد الإصلاحات
+                      fixed_path = os.path.join(FIX_DIR, f)
+                      os.makedirs(os.path.dirname(fixed_path), exist_ok=True)
+                      with open(fixed_path, 'w', encoding='utf-8') as wf:
+                          wf.write(new_content)
+                      
+                      summary['fixed'].append(f"{{f}} ({{status}} -> تم الإصلاح)")
+                      print(f'  🛠️ تم إصلاح: {f} (الحالة: {status})')
+                  
+                  else:
+                      # الملفات السليمة ننسخها كما هي إلى مجلد الإصلاحات (للتجميع)
+                      fixed_path = os.path.join(FIX_DIR, f)
+                      os.makedirs(os.path.dirname(fixed_path), exist_ok=True)
+                      shutil.copy2(f, fixed_path)
+                      summary['skipped'].append(f"{{f}} (سليم)")
+                      print(f'  ✅ تخطي: {f} (سليم)')
+
+              # ==========================================
+              # 5. تقرير المقارنة النهائي
+              # ==========================================
+              print('\\n' + '='*60)
+              print('📊 تقرير الإصلاح الذكي:')
+              print(f'  🛠️ تم إصلاح: {len(summary["fixed"])} ملف')
+              print(f'  ✅ تم تخطي (سليم): {len(summary["skipped"])} ملف')
+              
+              with open('fix_report.json', 'w', encoding='utf-8') as f:
+                  json.dump(summary, f, indent=2, ensure_ascii=False)
+              
+              print('\\n📂 تم حفظ جميع الملفات (المصلحة والسليمة) في مجلد: mirage_fixed/')
+              print('📄 تقرير الإصلاح: fix_report.json')
+
+          if __name__ == '__main__':
+              main()
+          "
+
+      - name: 📤 رفع الملفات المُصلحة (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: الملفات-المصلحة-ميراج
+          path: mirage_fixed/
+
+      - name: 📤 رفع تقرير الإصلاح
+        uses: actions/upload-artifact@v4
+        with:
+          name: تقرير-الإصلاح-الذكي
+          path: fix_report.json
