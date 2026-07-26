@@ -1,0 +1,58 @@
+name: 🚀 بناء ونشر ميراج التكتيكي (أندرويد + ويب)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  # ============================================================
+  # بناء أندرويد
+  # ============================================================
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+      - name: بناء APK
+        run: |
+          flutter pub get
+          flutter build apk --release --split-per-abi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mirage-android
+          path: build/app/outputs/flutter-apk/*.apk
+
+  # ============================================================
+  # بناء ويب
+  # ============================================================
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+      - name: بناء ويب
+        run: |
+          flutter pub get
+          flutter build web --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mirage-web
+          path: build/web
+
+  # ============================================================
+  # نشر الخادم (Docker)
+  # ============================================================
+  deploy-server:
+    runs-on: ubuntu-latest
+    needs: [build-android, build-web]
+    steps:
+      - uses: actions/checkout@v4
+      - name: بناء ونشر Docker
+        run: |
+          docker build -t mirage-server ./backend
+          docker tag mirage-server ghcr.io/${{ github.repository }}/mirage-server:latest
