@@ -1,11 +1,35 @@
-// ===================================================================
-// 🚀 نقطة دخول التطبيق
-// ===================================================================
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:universal_platform/universal_platform.dart';
+import 'providers/vpn_provider.dart';
+import 'providers/settings_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/download_screen.dart';
+import 'utils/theme.dart';
+import 'services/analytics_service.dart';
+import 'ai/ai_engine.dart';
 
-void main() {
+/// تحديد المنصة الحالية
+bool get isAndroid => UniversalPlatform.isAndroid;
+bool get isWeb => UniversalPlatform.isWeb;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // تهيئة Firebase
+  await Firebase.initializeApp();
+  
+  // تهيئة Remote Config
+  await FirebaseRemoteConfig.instance.fetchAndActivate();
+  
+  // تهيئة الخدمات
+  await AnalyticsService().initialize();
+  await AIEngine().initialize();
+  
   runApp(const MirageTacticalApp());
 }
 
@@ -14,41 +38,29 @@ class MirageTacticalApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mirage-Tactical',
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        primaryColor: Colors.amber.shade700,
-        scaffoldBackgroundColor: Colors.grey.shade900,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.grey.shade900,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        cardTheme: CardTheme(
-          color: Colors.grey.shade800,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.amber.shade700,
-            foregroundColor: Colors.black87,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-        ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.white70),
-          titleLarge: TextStyle(color: Colors.white),
-        ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => VpnProvider()..init()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()..loadSettings()),
+      ],
+      child: Consumer<SettingsProvider>(
+        builder: (context, settingsProvider, child) {
+          return MaterialApp(
+            title: 'ميراج التكتيكي',
+            theme: AppTheme.getTheme(settingsProvider.darkMode),
+            darkTheme: AppTheme.darkTheme,
+            themeMode: settingsProvider.darkMode ? ThemeMode.dark : ThemeMode.light,
+            debugShowCheckedModeBanner: false,
+            initialRoute: '/',
+            routes: {
+              '/': (context) => const HomeScreen(),
+              '/dashboard': (context) => const DashboardScreen(),
+              '/settings': (context) => const SettingsScreen(),
+              '/downloads': (context) => const DownloadScreen(),
+            },
+          );
+        },
       ),
-      debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
     );
   }
 }
