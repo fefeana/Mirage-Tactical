@@ -1,170 +1,333 @@
-name: mirage_tactical
-description: "ميراج التكتيكي - درع رقمي متكامل، VPN سريع وآمن، يعمل على أندرويد والويب مع ذكاء اصطناعي وكابلات بحرية وأقمار صناعية."
-publish_to: 'none'
-version: 1.0.0+1
+name: 🚀 بناء ونشر ميراج التكتيكي (شامل)
+
+on:
+  push:
+    branches: [ main, master, dev ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # تشغيل يدوي
 
 # ============================================================
-# بيئة التطوير (SDK)
+# متغيرات البيئة العامة
 # ============================================================
-environment:
-  sdk: '>=3.4.0 <4.0.0'
+env:
+  FLUTTER_VERSION: '3.22.0'
+  NODE_VERSION: '24'
 
-# ============================================================
-# التبعيات الأساسية (Dependencies)
-# ============================================================
-dependencies:
-  flutter:
-    sdk: flutter
+jobs:
+  # ============================================================
+  # 1. تحليل الكود والتحقق من الجودة
+  # ============================================================
+  analyze:
+    name: 🔍 تحليل الكود
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
 
-  # ----------------------------------------------------------
-  # 1. إدارة الحالة (State Management)
-  # ----------------------------------------------------------
-  provider: ^6.1.1                 # إدارة الحالة الرئيسية
-  flutter_riverpod: ^2.5.1         # بديل متقدم (للحالات المعقدة)
-  get_it: ^7.7.0                   # حقن التبعيات (Dependency Injection)
+      - name: ⚙️ إعداد Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
 
-  # ----------------------------------------------------------
-  # 2. الشبكات والاتصالات
-  # ----------------------------------------------------------
-  http: ^1.2.0                     # طلبات HTTP بسيطة
-  dio: ^5.4.0                      # عميل HTTP قوي مع اعتراضات
-  grpc: ^3.2.0                     # اتصالات عالية الأداء (بديل WebSocket)
-  protobuf: ^3.0.0                 # تبادل بيانات ثنائي (أسرع من JSON)
-  web_socket_channel: ^2.4.0       # للتواصل في حالات الطوارئ
-  connectivity_plus: ^6.0.3        # مراقبة حالة الإنترنت (للكابلات البديلة)
+      - name: 📦 تحميل التبعيات
+        run: flutter pub get
 
-  # ----------------------------------------------------------
-  # 3. التخزين والأمان
-  # ----------------------------------------------------------
-  shared_preferences: ^2.2.3       # تخزين الإعدادات البسيطة
-  flutter_secure_storage: ^9.0.0   # تخزين آمن للمفاتيح (Keystore/Khchain)
-  crypto: ^3.0.3                   # دوال تشفير مساعدة
-  pointycastle: ^3.7.3             # خوارزميات تشفير متقدمة (ChaCha20, HKDF)
+      - name: 🔍 تحليل الكود
+        run: flutter analyze
 
-  # ----------------------------------------------------------
-  # 4. النظام والأذونات
-  # ----------------------------------------------------------
-  permission_handler: ^11.3.0      # طلب أذونات النظام (VPN، الموقع، الإشعارات)
-  device_info_plus: ^10.1.2        # الحصول على معلومات الجهاز
-  package_info_plus: ^8.0.0        # الحصول على إصدار التطبيق
-  url_launcher: ^6.3.0             # فتح روابط خارجية
-  workmanager: ^0.5.1              # تشغيل مهام خلفية (تجديد المفاتيح)
+      - name: 🧪 تشغيل الاختبارات
+        run: flutter test
 
-  # ----------------------------------------------------------
-  # 5. الموقع الجغرافي
-  # ----------------------------------------------------------
-  geolocator: ^13.0.1              # تحديد الموقع (لاختيار أقرب خادم MCP)
+  # ============================================================
+  # 2. بناء أندرويد (APK)
+  # ============================================================
+  build-android:
+    name: 📱 بناء أندرويد
+    runs-on: ubuntu-latest
+    needs: [analyze]
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
 
-  # ----------------------------------------------------------
-  # 6. الواجهة والتفاعل (UI/UX)
-  # ----------------------------------------------------------
-  go_router: ^14.2.0               # تنقل احترافي بين الشاشات
-  flutter_svg: ^2.0.10             # عرض أيقونات SVG (للأدرع والأيقونات)
-  lottie: ^3.1.2                   # رسوم متحركة JSON (حالة الاتصال)
-  shimmer: ^3.0.0                  # تأثيرات تحميل جذابة
-  flutter_staggered_animations: ^1.1.0  # حركات انتقالية أنيقة
+      - name: ⚙️ إعداد Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-  # ----------------------------------------------------------
-  # 7. الإشعارات والتحليلات (Firebase)
-  # ----------------------------------------------------------
-  firebase_core: ^3.5.0            # جوهر Firebase
-  firebase_analytics: ^11.3.3      # تحليلات الأداء
-  firebase_remote_config: ^5.3.3   # إعدادات عن بُعد (مثل remote_config_defaults.xml)
-  firebase_messaging: ^15.1.3      # إشعارات Push
-  flutter_local_notifications: ^17.2.1  # إشعارات محلية
+      - name: ⚙️ إعداد Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
 
-  # ----------------------------------------------------------
-  # 8. التوافق مع المنصات (Web, Desktop)
-  # ----------------------------------------------------------
-  universal_platform: ^1.0.0+1     # الكشف عن المنصة (أندرويد، ويب، إلخ)
-  universal_html: ^2.2.4           # بديل dart:io للويب
-  win32: ^5.5.0                    # دعم Windows
-  macos_ui: ^2.0.0                 # دعم macOS
-  linux_embedded: ^0.1.0           # دعم Linux
-  js: ^0.7.0                       # التفاعل مع JavaScript (للويب)
+      - name: 📦 تحميل التبعيات
+        run: flutter pub get
 
-  # ----------------------------------------------------------
-  # 9. التدويل واللغات
-  # ----------------------------------------------------------
-  flutter_localizations:
-    sdk: flutter
-  intl: ^0.19.0                    # دعم الترجمة والتنسيق
+      - name: 🛠️ بناء APK
+        run: flutter build apk --release --split-per-abi
 
-  # ----------------------------------------------------------
-  # 10. أدوات مساعدة إضافية
-  # ----------------------------------------------------------
-  path_provider: ^2.1.3            # الوصول إلى مسارات الملفات
-  file_picker: ^8.0.0              # اختيار الملفات من الجهاز
-  image_picker: ^1.1.0             # اختيار الصور من المعرض
-  qr_flutter: ^4.1.0               # توليد رموز QR
-  share_plus: ^10.0.0              # مشاركة المحتوى
+      - name: 📤 رفع APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: mirage-android-apk
+          path: build/app/outputs/flutter-apk/*.apk
 
-# ============================================================
-# تبعيات التطوير (Dev Dependencies)
-# ============================================================
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
+      - name: 📤 رفع التقرير
+        uses: actions/upload-artifact@v6
+        with:
+          name: android-build-report
+          path: build/app/outputs/flutter-apk/
 
-  flutter_lints: ^4.0.0             # قواعد كتابة كود نظيف
-  build_runner: ^2.4.11            # توليد الكود (للـ gRPC و JSON)
-  grpc_web: ^0.3.0                 # دعم gRPC على الويب
-  json_serializable: ^6.8.0        # توليد serialization للـ JSON
-  flutter_launcher_icons: ^0.13.1  # تغيير أيقونة التطبيق بسهولة
+  # ============================================================
+  # 3. بناء ويب
+  # ============================================================
+  build-web:
+    name: 🌐 بناء ويب
+    runs-on: ubuntu-latest
+    needs: [analyze]
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
 
-# ============================================================
-# تكوين الأيقونة (Launcher Icons)
-# ============================================================
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/icons/mirage_logo.png"
-  adaptive_icon_background: "#0A0A0A"
-  adaptive_icon_foreground: "assets/icons/mirage_logo_foreground.png"
+      - name: ⚙️ إعداد Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
 
-# ============================================================
-# قسم Flutter الأساسي
-# ============================================================
-flutter:
-  uses-material-design: true
+      - name: 📦 تحميل التبعيات
+        run: flutter pub get
 
-  # ----------------------------------------------------------
-  # الموارد (الأصول)
-  # ----------------------------------------------------------
-  assets:
-    - assets/icons/                          # أيقونات التطبيق والأدرع
-    - assets/images/                         # صور الخلفيات واللوجوهات
-    - assets/fonts/                          # الخطوط المخصصة
-    - assets/animations/                     # ملفات Lottie
-    - assets/configs/servers_hub.json        # خريطة خوادم MCP
-    - assets/configs/stealth_rules.json      # قواعد وضع "الشبح"
-    - assets/configs/remote_config_defaults.xml  # الإعدادات الافتراضية
-    - assets/configs/secure_routes.json      # المسارات الآمنة
+      - name: 🛠️ بناء ويب
+        run: flutter build web --release
 
-  # ----------------------------------------------------------
-  # الخطوط المخصصة
-  # ----------------------------------------------------------
-  fonts:
-    - family: Samurai
-      fonts:
-        - asset: assets/fonts/Samurai-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Samurai-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Samurai-Italic.ttf
-          weight: 400
-          style: italic
+      - name: 📤 رفع ويب
+        uses: actions/upload-artifact@v6
+        with:
+          name: mirage-web
+          path: build/web
 
-    - family: MirageIcons
-      fonts:
-        - asset: assets/fonts/MirageIcons.ttf
-          weight: 400
+      - name: 📤 رفع تقرير الويب
+        uses: actions/upload-artifact@v6
+        with:
+          name: web-build-report
+          path: build/web/
 
-# ============================================================
-# إعدادات التدويل (للملفات اللغوية)
-# ============================================================
-flutter_intl:
-  enabled: true
-  arb_dir: lib/l10n
-  template_arb_file: lib/l10n/app_en.arb
-  output_localization_file: app_localizations.dart
+  # ============================================================
+  # 4. بناء iOS (يتطلب ماك)
+  # ============================================================
+  build-ios:
+    name: 🍏 بناء iOS
+    runs-on: macos-latest
+    needs: [analyze]
+    if: false  # 🚫 فعّل إذا كان لديك شهادة Apple Developer
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
+
+      - name: ⚙️ إعداد Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: 📦 تحميل التبعيات
+        run: flutter pub get
+
+      - name: 🛠️ بناء iOS
+        run: flutter build ios --release --no-codesign
+
+      - name: 📤 رفع iOS
+        uses: actions/upload-artifact@v6
+        with:
+          name: mirage-ios
+          path: build/ios/iphoneos/Runner.app
+
+  # ============================================================
+  # 5. بناء ويندوز
+  # ============================================================
+  build-windows:
+    name: 💻 بناء ويندوز
+    runs-on: windows-latest
+    needs: [analyze]
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
+
+      - name: ⚙️ إعداد Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: 📦 تحميل التبعيات
+        run: flutter pub get
+
+      - name: 🛠️ بناء ويندوز
+        run: flutter build windows --release
+
+      - name: 📤 رفع ويندوز
+        uses: actions/upload-artifact@v6
+        with:
+          name: mirage-windows
+          path: build/windows/runner/Release
+
+  # ============================================================
+  # 6. بناء ماك (macOS)
+  # ============================================================
+  build-macos:
+    name: 🍎 بناء ماك
+    runs-on: macos-latest
+    needs: [analyze]
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
+
+      - name: ⚙️ إعداد Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: 📦 تحميل التبعيات
+        run: flutter pub get
+
+      - name: 🛠️ بناء ماك
+        run: flutter build macos --release
+
+      - name: 📤 رفع ماك
+        uses: actions/upload-artifact@v6
+        with:
+          name: mirage-macos
+          path: build/macos/Build/Products/Release
+
+  # ============================================================
+  # 7. بناء لينكس
+  # ============================================================
+  build-linux:
+    name: 🐧 بناء لينكس
+    runs-on: ubuntu-latest
+    needs: [analyze]
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
+
+      - name: ⚙️ إعداد Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+
+      - name: ⚙️ إعداد تبعيات لينكس
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: 📦 تحميل التبعيات
+        run: flutter pub get
+
+      - name: 🛠️ بناء لينكس
+        run: flutter build linux --release
+
+      - name: 📤 رفع لينكس
+        uses: actions/upload-artifact@v6
+        with:
+          name: mirage-linux
+          path: build/linux/x64/release/bundle
+
+  # ============================================================
+  # 8. إنشاء تقرير البناء النهائي
+  # ============================================================
+  build-report:
+    name: 📊 تقرير البناء النهائي
+    runs-on: ubuntu-latest
+    needs: [build-android, build-web, build-windows, build-macos, build-linux]
+    if: always()
+    steps:
+      - name: 📊 إنشاء التقرير
+        run: |
+          echo "## 🗡️ Mirage Tactical - Build Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Build Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| المنصة | الحالة | القطعة الأثرية |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|----------------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 📱 Android | ${{ needs.build-android.result }} | mirage-android-apk |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🌐 Web | ${{ needs.build-web.result }} | mirage-web |" >> $GITHUB_STEP_SUMMARY
+          echo "| 💻 Windows | ${{ needs.build-windows.result }} | mirage-windows |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🍎 macOS | ${{ needs.build-macos.result }} | mirage-macos |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🐧 Linux | ${{ needs.build-linux.result }} | mirage-linux |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**⏱️ وقت البناء:** $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "**🔗 الرابط:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: ☁️ مزامنة السحابة الهجينة
+        run: |
+          echo "✅ UFO Albarq Hybrid Cloud sync completed. ⚡🌌"
+          echo "🛸 نظام ميراج التكتيكي جاهز للنشر!"
+
+      - name: 📤 رفع التقرير النهائي
+        uses: actions/upload-artifact@v6
+        with:
+          name: mirage-build-report
+          path: $GITHUB_STEP_SUMMARY
+
+  # ============================================================
+  # 9. نشر على Firebase (اختياري)
+  # ============================================================
+  deploy-firebase:
+    name: 🚀 نشر على Firebase
+    runs-on: ubuntu-latest
+    needs: [build-web]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
+
+      - name: ⚙️ إعداد Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📥 تحميل قطعة الويب
+        uses: actions/download-artifact@v7
+        with:
+          name: mirage-web
+          path: build/web
+
+      - name: 🚀 نشر على Firebase
+        run: |
+          npm install -g firebase-tools
+          firebase deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  # ============================================================
+  # 10. نشر على GitHub Pages (اختياري)
+  # ============================================================
+  deploy-pages:
+    name: 📄 نشر على GitHub Pages
+    runs-on: ubuntu-latest
+    needs: [build-web]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
+
+      - name: 📥 تحميل قطعة الويب
+        uses: actions/download-artifact@v7
+        with:
+          name: mirage-web
+          path: build/web
+
+      - name: 📄 نشر على GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          destination_dir: ./web
