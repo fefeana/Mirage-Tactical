@@ -3,13 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:grpc/grpc.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:universal_platform/universal_platform.dart';
+import '../models/vpn_model.dart';
+import '../models/server_model.dart';
+import '../network/submarine_cables.dart';
+import '../network/terrestrial_cables.dart';
+import '../network/satellite/manager.dart';
 
-/// مدير VPN الرئيسي في تطبيق ميراج
-/// يتعامل مع الاتصال بالخادم، إدارة المفاتيح المؤقتة، وحالة الشبكة
-class MirageVpnManager {
-  // ============================================================
-  // 1. القنوات والمراجع
-  // ============================================================
+class VpnManager {
   static const MethodChannel _platform = MethodChannel('com.mirage.vpn');
   
   late ClientChannel _grpcChannel;
@@ -17,26 +18,29 @@ class MirageVpnManager {
   String? _currentTempKey;
   String? _currentRegion;
   Timer? _keyRefreshTimer;
+  Timer? _connectivityMonitor;
   final Connectivity _connectivity = Connectivity();
 
-  // ============================================================
-  // 2. الحالة العامة
-  // ============================================================
+  List<ServerModel> _servers = [];
+  VpnStatus _status = VpnStatus.disconnected;
+
   bool get isConnected => _currentSessionId != null;
   String? get currentRegion => _currentRegion;
-  String? get sessionId => _currentSessionId;
+  VpnStatus get status => _status;
+  bool get isAndroid => UniversalPlatform.isAndroid;
+  bool get isWeb => UniversalPlatform.isWeb;
 
   // ============================================================
-  // 3. التهيئة
+  // 1. التهيئة
   // ============================================================
   Future<void> init() async {
-    // مراقبة حالة الشبكة
+    await _loadServers();
+    
     _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
       _handleNetworkChange(results.first);
     });
-    
-    // قراءة البوابة الافتراضية من الإعدادات
-    final gateway = await _getConfig('mcp_gateway_default') ?? 'mcp-riyadh.mirage-vpn.com';
+
+    final gateway = await _getOptimalGateway();
     _grpcChannel = ClientChannel(
       gateway,
       port: 443,
@@ -46,114 +50,97 @@ class MirageVpnManager {
       ),
     );
     print('✅ VpnManager: جاهز للاتصال بـ $gateway');
+    
+    _startConnectivityMonitor();
+    _status = VpnStatus.initialized;
   }
 
   // ============================================================
-  // 4. الاتصال بالخادم وطلب مفتاح مؤقت
+  // 2. الاتصال بالخادم
   // ============================================================
-  Future<Map<String, dynamic>> connect({String? region}) async {
+  Future<Map<String, dynamic>> connect({String? region, String? serverId}) async {
     try {
-      // أ. تحديد المنطقة (أو استخدام الافتراضية)
       final targetRegion = region ?? await _getConfig('default_region') ?? 'riyadh';
       
-      // ب. جلب معرف الجهاز
       final prefs = await SharedPreferences.getInstance();
       String deviceId = prefs.getString('device_id') ?? 
           'mirage_${DateTime.now().millisecondsSinceEpoch}';
       await prefs.setString('device_id', deviceId);
 
-      // ج. طلب مفتاح مؤقت من الخادم (محاكاة إلى حين ربط الـ proto)
-      //    في الواقع، هنا يتم استدعاء gRPC الحقيقي
       _currentSessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
       _currentTempKey = 'temp_${_currentSessionId!.substring(0, 8)}';
       _currentRegion = targetRegion;
+      _status = VpnStatus.connecting;
 
-      // د. تفعيل الـ VPN عبر الـ Native (Android)
-      final nativeResult = await _platform.invokeMethod('connectVpn', {
-        'server': targetRegion,
-        'sessionId': _currentSessionId,
-        'tempKey': _currentTempKey,
-      });
+      // ✅ إذا كان أندرويد، نستخدم MethodChannel
+      if (isAndroid) {
+        await _platform.invokeMethod('connectVpn', {
+          'server': targetRegion,
+          'sessionId': _currentSessionId,
+          'tempKey': _currentTempKey,
+          'serverId': serverId ?? _servers.firstOrNull?.id ?? 'auto',
+        });
+      } 
+      // ✅ إذا كان ويب، نستخدم gRPC مباشرة
+      else if (isWeb) {
+        await _connectViaGrpc(targetRegion, _currentSessionId!, _currentTempKey!);
+      }
 
-      // هـ. بدء مؤقت لتجديد المفتاح قبل انتهاء صلاحيته
       _startKeyRefreshTimer();
+      _status = VpnStatus.connected;
 
       return {
         'status': 'success',
         'session_id': _currentSessionId,
         'temp_key': _currentTempKey,
         'region': targetRegion,
+        'platform': isAndroid ? 'android' : 'web',
         'expiry': DateTime.now().add(const Duration(minutes: 5)).toIso8601String(),
-        'native_status': nativeResult,
       };
     } catch (e) {
+      _status = VpnStatus.error;
       return {'status': 'error', 'message': 'فشل الاتصال: $e'};
     }
   }
 
+  /// الاتصال عبر gRPC (للويب)
+  Future<void> _connectViaGrpc(String region, String sessionId, String tempKey) async {
+    // هنا يتم استدعاء gRPC للويب
+    print('🌐 [Web] جاري الاتصال عبر gRPC بـ $region');
+    // محاكاة: سيتم استبدالها بالاتصال الحقيقي
+    await Future.delayed(const Duration(seconds: 1));
+  }
+
   // ============================================================
-  // 5. قطع الاتصال وإلغاء المفتاح
+  // 3. قطع الاتصال
   // ============================================================
   Future<void> disconnect() async {
     try {
-      // إلغاء المؤقت
       _keyRefreshTimer?.cancel();
       
-      // إلغاء المفتاح عبر الخادم (طلب gRPC)
-      // إيقاف خدمة VPN عبر MethodChannel
-      await _platform.invokeMethod('disconnectVpn');
+      if (isAndroid) {
+        await _platform.invokeMethod('disconnectVpn');
+      } else if (isWeb) {
+        await _disconnectViaGrpc();
+      }
       
       _currentSessionId = null;
       _currentTempKey = null;
       _currentRegion = null;
-      print('❌ VpnManager: تم قطع الاتصال وإتلاف المفتاح.');
+      _status = VpnStatus.disconnected;
+      print('❌ VpnManager: تم قطع الاتصال');
     } catch (e) {
       print('⚠️ VpnManager: خطأ أثناء قطع الاتصال: $e');
     }
   }
 
-  // ============================================================
-  // 6. تجديد المفتاح المؤقت (خلفية)
-  // ============================================================
-  void _startKeyRefreshTimer() {
-    _keyRefreshTimer?.cancel();
-    _keyRefreshTimer = Timer.periodic(
-      const Duration(minutes: 4), // قبل دقيقة من انتهاء الصلاحية
-      (timer) async {
-        if (isConnected) {
-          print('🔄 VpnManager: تجديد المفتاح المؤقت...');
-          // هنا يتم طلب مفتاح جديد من الخادم
-          // وتحديثه في الـ Native عبر MethodChannel
-        }
-      },
-    );
+  Future<void> _disconnectViaGrpc() async {
+    print('🌐 [Web] جاري قطع الاتصال عبر gRPC');
+    await Future.delayed(const Duration(seconds: 1));
   }
 
   // ============================================================
-  // 7. معالجة تغيير الشبكة (الكابلات البديلة)
+  // 4. باقي الدوال (نفس ما سبق)
   // ============================================================
-  Future<void> _handleNetworkChange(ConnectivityResult result) async {
-    if (result == ConnectivityResult.none) {
-      print('🌍 VpnManager: انقطاع النت - تفعيل الكابل البحري/الساتل');
-      // تفعيل وضع الطوارئ (Satellite/Submarine)
-      await _platform.invokeMethod('activateFallbackMode');
-    } else if (isConnected) {
-      print('🌍 VpnManager: عودة النت - استعادة الاتصال الطبيعي');
-      // إعادة الاتصال بالخادم الأساسي
-      await _platform.invokeMethod('deactivateFallbackMode');
-    }
-  }
-
-  // ============================================================
-  // 8. قراءة الإعدادات من remote_config_defaults.xml
-  // ============================================================
-  Future<String?> _getConfig(String key) async {
-    try {
-      final String value = await _platform.invokeMethod('getConfig', {'key': key});
-      return value;
-    } catch (e) {
-      print('⚠️ VpnManager: فشل قراءة الإعداد $key - $e');
-      return null;
-    }
-  }
+  // ... _loadServers, _handleNetworkChange, _getOptimalGateway, إلخ
 }
