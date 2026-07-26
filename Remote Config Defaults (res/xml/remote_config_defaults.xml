@@ -1,6 +1,18 @@
-<!-- res/xml/remote_config_defaults.xml -->
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  ===================================================================
+  remote_config_defaults.xml
+  الإعدادات الافتراضية للتكوين عن بُعد (Firebase Remote Config)
+  شامل: الإعدادات الحالية + إعدادات MCP, Redis, المفاتيح المؤقتة,
+  وضع الشبح، والكابلات البديلة.
+  تم إنشاؤه بواسطة: ساموراي ميراج 🗡️
+  ===================================================================
+-->
 <defaults>
+
+    <!-- ========================================================= -->
+    <!-- 1. الإعدادات الحالية (المضافة مسبقاً)                    -->
+    <!-- ========================================================= -->
     <entry>
         <key>living_ui_url</key>
         <value>https://mirage-ui.web.app/latest</value>
@@ -17,4 +29,157 @@
         <key>refresh_interval</key>
         <value>3600</value>
     </entry>
+
+    <!-- ========================================================= -->
+    <!-- 2. بوابات خوادم MCP (المناطق المختلفة)                   -->
+    <!--    يستخدمها vpn_manager.dart لاختيار أقرب بوابة          -->
+    <!-- ========================================================= -->
+    <entry>
+        <key>mcp_gateway_riyadh</key>
+        <value>https://mcp-riyadh.mirage-vpn.com</value>
+    </entry>
+    <entry>
+        <key>mcp_gateway_tokyo</key>
+        <value>https://mcp-tokyo.mirage-vpn.com</value>
+    </entry>
+    <entry>
+        <key>mcp_gateway_london</key>
+        <value>https://mcp-london.mirage-vpn.com</value>
+    </entry>
+    <entry>
+        <key>mcp_gateway_newyork</key>
+        <value>https://mcp-newyork.mirage-vpn.com</value>
+    </entry>
+    <entry>
+        <key>mcp_gateway_dubai</key>
+        <value>https://mcp-dubai.mirage-vpn.com</value>
+    </entry>
+
+    <!-- ========================================================= -->
+    <!-- 3. إعدادات Redis (الذاكرة المركزية المؤقتة)              -->
+    <!--    يتصل بها mcp_key_broker.py و xray_worker.py            -->
+    <!-- ========================================================= -->
+    <entry>
+        <key>redis_host</key>
+        <value>redis-global.mirage-vpn.com</value>
+    </entry>
+    <entry>
+        <key>redis_port</key>
+        <value>6379</value>
+    </entry>
+    <entry>
+        <key>redis_password</key>
+        <!-- ⚠️ في الإنتاج، استخدم Firebase Secrets أو GitHub Secrets -->
+        <value>CHANGE_THIS_IN_PRODUCTION</value>
+    </entry>
+    <entry>
+        <key>redis_use_tls</key>
+        <value>true</value>
+    </entry>
+
+    <!-- ========================================================= -->
+    <!-- 4. سياسة المفاتيح المؤقتة (Ephemeral Keys)               -->
+    <!--    تتطابق مع TTL المحدد في mcp_key_broker.py             -->
+    <!-- ========================================================= -->
+    <entry>
+        <key>temp_key_ttl_seconds</key>
+        <value>300</value> <!-- 5 دقائق -->
+    </entry>
+    <entry>
+        <key>key_rotation_enabled</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>max_session_duration_minutes</key>
+        <value>60</value> <!-- أقصى مدة للجلسة قبل التجديد الإجباري -->
+    </entry>
+
+    <!-- ========================================================= -->
+    <!-- 5. إعدادات التشفير والأمان (Quantum-Resistant)           -->
+    <!--    يجب أن يتطابق مع الخوارزمية في xray_worker.py         -->
+    <!-- ========================================================= -->
+    <entry>
+        <key>cipher_algorithm</key>
+        <value>ChaCha20-Poly1305</value> <!-- أسرع على معماريات ARM -->
+    </entry>
+    <entry>
+        <key>enable_quantum_resistant_hkdf</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>hkdf_salt_rotation_hours</key>
+        <value>24</value> <!-- تجديد ملح التشفير يومياً -->
+    </entry>
+
+    <!-- ========================================================= -->
+    <!-- 6. وضع "الشبح" (Stealth / Phantom Mode)                  -->
+    <!--    لتمويه حركة المرور كـ HTTPS عادي لتجاوز الجدران       -->
+    <!-- ========================================================= -->
+    <entry>
+        <key>stealth_mode_enabled</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>phantom_traffic_obfuscation</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>stealth_fallback_protocol</key>
+        <value>websocket-tls</value> <!-- بديل احتياطي إذا فشل التمويه -->
+    </entry>
+
+    <!-- ========================================================= -->
+    <!-- 7. الكابلات البحرية والأقمار (التوجيه البديل)           -->
+    <!--    يتم تفعيلها تلقائياً عند انقطاع النت الأرضي           -->
+    <!-- ========================================================= -->
+    <entry>
+        <key>fallback_to_submarine_cable</key>
+        <value>true</value>
+    </entry>
+    <entry>
+        <key>satellite_gateway</key>
+        <value>https://sat.mirage-vpn.com</value>
+    </entry>
+    <entry>
+        <key>terrestrial_fallback_timeout_ms</key>
+        <value>2000</value> <!-- 2 ثانية ثم التحويل للكابل البحري -->
+    </entry>
+
+    <!-- ========================================================= -->
+    <!-- 8. خريطة الخوادم (Servers Hub) - نسخة احتياطية           -->
+    <!--    في حال تعذر تحميل servers_hub.json من الخادم          -->
+    <!-- ========================================================= -->
+    <entry>
+        <key>default_region</key>
+        <value>riyadh</value>
+    </entry>
+    <entry>
+        <key>backup_region_1</key>
+        <value>dubai</value>
+    </entry>
+    <entry>
+        <key>backup_region_2</key>
+        <value>london</value>
+    </entry>
+
+    <!-- ========================================================= -->
+    <!-- 9. إعدادات التطبيق العامة                                -->
+    <!-- ========================================================= -->
+    <entry>
+        <key>app_version</key>
+        <value>1.0.0</value>
+    </entry>
+    <entry>
+        <key>enable_analytics</key>
+        <value>false</value> <!-- فعّل بحذر للحفاظ على الخصوصية -->
+    </entry>
+    <entry>
+        <key>vpn_service_auto_restart</key>
+        <value>true</value> <!-- إعادة تشغيل الـ VPN إذا تعطل -->
+    </entry>
+    <entry>
+        <key>max_retry_attempts</key>
+        <value>3</value>
+    </entry>
+
 </defaults>
