@@ -22,6 +22,9 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.mirage.databinding.ActivityBaseBinding
 import kotlinx.coroutines.*
 
+// ✅ استيراد MirageVpnManager (سيكون جاهزاً بعد ربط Flutter)
+// (سيتم استيراده عبر MethodChannel في Flutter، لكننا سنضيف دوالاً له هنا)
+
 class BaseActivity : AppCompatActivity() {
 
     // ======================== متغيرات ========================
@@ -38,27 +41,31 @@ class BaseActivity : AppCompatActivity() {
     // ✅ AlBarqHub Client
     private lateinit var hubClient: AlBarqHubClient
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    
+    // ✅ الإعدادات المخزنة (Map) لقراءة سريعة
+    private val configMap = mutableMapOf<String, String>()
 
     // ======================== دورة الحياة ========================
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // تهيئة DataBinding
         binding = ActivityBaseBinding.inflate(layoutInflater)
         setContentView(binding.root)
         
-        // تهيئة المكونات
         webView = binding.webView
         progressBar = binding.progressBar
         
-        // تهيئة Remote Config
+        // تحميل الإعدادات من remote_config_defaults.xml أولاً
+        loadRemoteConfig()
+        
+        // تهيئة Remote Config (سيتولى دمج الإعدادات مع الـ XML)
         initializeRemoteConfig()
         
         // تهيئة WebView
         setupWebView()
         
-        // ✅ تهيئة AlBarqHub Client
+        // تهيئة AlBarqHub Client
         initializeAlBarqHub()
         
         // تحميل الواجهة
@@ -82,7 +89,117 @@ class BaseActivity : AppCompatActivity() {
         scope.cancel()
     }
 
-    // ======================== 1. تهيئة AlBarqHub ========================
+    // ======================== 1. تحميل الإعدادات من XML ========================
+    
+    private fun loadRemoteConfig() {
+        try {
+            val parser = resources.getXml(R.xml.remote_config_defaults)
+            var eventType = parser.eventType
+            var currentKey: String? = null
+
+            while (eventType != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+                when (eventType) {
+                    org.xmlpull.v1.XmlPullParser.START_TAG -> {
+                        when (parser.name) {
+                            "key" -> currentKey = parser.nextText()
+                            "value" -> {
+                                val value = parser.nextText()
+                                if (currentKey != null) {
+                                    configMap[currentKey!!] = value
+                                    currentKey = null
+                                }
+                            }
+                        }
+                    }
+                }
+                eventType = parser.next()
+            }
+        } catch (e: Exception) {
+            // في حال فشل القراءة، نستخدم القيم الافتراضية في Remote Config
+        }
+    }
+
+    // ======================== 2. تهيئة Remote Config ========================
+    
+    private fun initializeRemoteConfig() {
+        val configSettings = FirebaseRemoteConfigSettings.Builder()
+            .setMinimumFetchIntervalInSeconds(3600)
+            .build()
+        
+        FirebaseRemoteConfig.getInstance().apply {
+            setConfigSettingsAsync(configSettings)
+            setDefaultsAsync(R.xml.remote_config_defaults)
+            fetchAndActivate()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        // دمج الإعدادات مع الخريطة
+                        syncConfigWithMap()
+                    }
+                }
+        }
+    }
+
+    private fun syncConfigWithMap() {
+        val rc = FirebaseRemoteConfig.getInstance()
+        // يمكن إضافة المزيد من المفاتيح حسب الحاجة
+        listOf(
+            "mcp_gateway_riyadh", "mcp_gateway_tokyo", "mcp_gateway_london",
+            "redis_host", "redis_port", "temp_key_ttl_seconds",
+            "stealth_mode_enabled", "fallback_to_submarine_cable"
+        ).forEach { key ->
+            try {
+                val value = rc.getString(key)
+                if (value.isNotEmpty()) {
+                    configMap[key] = value
+                }
+            } catch (_: Exception) { /* تجاهل */ }
+        }
+    }
+
+    // ======================== 3. دالة قراءة الإعدادات (للاستدعاء من Flutter) ========================
+    
+    fun getConfig(key: String): String {
+        return configMap[key] ?: ""
+    }
+
+    // ======================== 4. دوال VPN (سيتم استدعاؤها من WebView أو Flutter) ========================
+    
+    fun connectVpn(server: String, sessionId: String, tempKey: String) {
+        // هنا سيتم استدعاء خدمة VPN الفعلية
+        // مؤقتاً، نعرض رسالة ونمرر الأمر إلى AlBarqHub
+        scope.launch {
+            hubClient.sendCommand("vpn_connected", mapOf(
+                "server" to server,
+                "sessionId" to sessionId,
+                "tempKey" to tempKey
+            ))
+        }
+        Toast.makeText(this, "🔗 جارٍ الاتصال بـ $server", Toast.LENGTH_SHORT).show()
+    }
+
+    fun disconnectVpn() {
+        scope.launch {
+            hubClient.sendCommand("vpn_disconnected", emptyMap())
+        }
+        Toast.makeText(this, "❌ تم قطع الاتصال", Toast.LENGTH_SHORT).show()
+    }
+
+    fun activateFallbackMode() {
+        // تفعيل وضع الكابل البحري/الساتل
+        Toast.makeText(this, "🌊 تفعيل وضع الطوارئ (كابل بحري/ساتل)", Toast.LENGTH_LONG).show()
+        scope.launch {
+            hubClient.sendCommand("fallback_activated", emptyMap())
+        }
+    }
+
+    fun deactivateFallbackMode() {
+        Toast.makeText(this, "🌍 إلغاء وضع الطوارئ", Toast.LENGTH_SHORT).show()
+        scope.launch {
+            hubClient.sendCommand("fallback_deactivated", emptyMap())
+        }
+    }
+
+    // ======================== 5. تهيئة AlBarqHub ========================
     
     private fun initializeAlBarqHub() {
         val userId = getUserId()
@@ -143,7 +260,6 @@ class BaseActivity : AppCompatActivity() {
             
             override fun onHeartbeat(data: Map<String, Any>) {
                 // نبض من السحابة - تأكيد الاتصال
-                // Log.d("AlBarqHub", "💓 Heartbeat received")
             }
             
             override fun onError(error: String) {
@@ -153,30 +269,10 @@ class BaseActivity : AppCompatActivity() {
             }
         })
         
-        // بدء الاتصال
         hubClient.connect()
     }
 
-    // ======================== 2. تهيئة Remote Config ========================
-    
-    private fun initializeRemoteConfig() {
-        val configSettings = FirebaseRemoteConfigSettings.Builder()
-            .setMinimumFetchIntervalInSeconds(3600)
-            .build()
-        
-        FirebaseRemoteConfig.getInstance().apply {
-            setConfigSettingsAsync(configSettings)
-            setDefaultsAsync(R.xml.remote_config_defaults)
-            fetchAndActivate()
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        // تم تحديث الإعدادات
-                    }
-                }
-        }
-    }
-
-    // ======================== 3. تهيئة WebView ========================
+    // ======================== 6. تهيئة WebView ========================
     
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
@@ -219,7 +315,6 @@ class BaseActivity : AppCompatActivity() {
                     isWebViewReady = true
                     progressBar.visibility = android.view.View.GONE
                     
-                    // إعلام السحابة بأن الواجهة جاهزة
                     scope.launch {
                         hubClient.sendCommand("ui_ready", mapOf("url" to url))
                     }
@@ -256,7 +351,7 @@ class BaseActivity : AppCompatActivity() {
         }
     }
 
-    // ======================== 4. تحميل الواجهة ========================
+    // ======================== 7. تحميل الواجهة ========================
     
     private fun loadUI() {
         val uiUrl = FirebaseRemoteConfig.getInstance().getString("living_ui_url")
@@ -294,24 +389,23 @@ class BaseActivity : AppCompatActivity() {
         }
     }
 
-    // ======================== 5. التعامل مع بروتوكول Mirage ========================
+    // ======================== 8. التعامل مع بروتوكول Mirage ========================
     
     private fun handleMirageProtocol(url: String): Boolean {
         return when {
             url.startsWith("mirage://vpn/connect") -> {
-                scope.launch {
-                    hubClient.sendCommand("vpn_connect", emptyMap())
-                }
+                // استخراج المعاملات من الرابط (مثال: mirage://vpn/connect?server=riyadh)
+                val server = extractQueryParam(url, "server") ?: "riyadh"
+                val sessionId = "session_${System.currentTimeMillis()}"
+                val tempKey = "temp_${sessionId.take(8)}"
+                connectVpn(server, sessionId, tempKey)
                 true
             }
             url.startsWith("mirage://vpn/disconnect") -> {
-                scope.launch {
-                    hubClient.sendCommand("vpn_disconnect", emptyMap())
-                }
+                disconnectVpn()
                 true
             }
             url.startsWith("mirage://settings") -> {
-                // فتح الإعدادات من السحابة
                 loadUI("https://mirage-ui.web.app/settings")
                 true
             }
@@ -327,7 +421,19 @@ class BaseActivity : AppCompatActivity() {
         }
     }
 
-    // ======================== 6. إرسال أوامر إلى WebView ========================
+    // ======================== 9. استخراج معاملات الرابط ========================
+    
+    private fun extractQueryParam(url: String, param: String): String? {
+        return try {
+            val query = url.substringAfter("?")
+            val pairs = query.split("&")
+            pairs.firstOrNull { it.startsWith("$param=") }?.substringAfter("=")
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    // ======================== 10. إرسال أوامر إلى WebView ========================
     
     private fun sendCommandToWebView(command: String, data: Map<String, Any>) {
         if (isWebViewReady) {
@@ -339,7 +445,7 @@ class BaseActivity : AppCompatActivity() {
         }
     }
 
-    // ======================== 7. تطبيق الإعدادات من السحابة ========================
+    // ======================== 11. تطبيق الإعدادات من السحابة ========================
     
     private fun applySettings(data: Map<String, Any>) {
         data.forEach { (key, value) ->
@@ -355,14 +461,14 @@ class BaseActivity : AppCompatActivity() {
                     setLocale(value.toString())
                 }
                 "vpn_server" -> {
-                    // إرسال أمر تبديل الخادم إلى VPN Service
-                    Toast.makeText(this, "🔄 تبديل الخادم إلى: $value", Toast.LENGTH_SHORT).show()
+                    // تبديل الخادم عبر VPN Manager
+                    connectVpn(value.toString(), "session_${System.currentTimeMillis()}", "temp_auto")
                 }
             }
         }
     }
 
-    // ======================== 8. تغيير اللغة ========================
+    // ======================== 12. تغيير اللغة ========================
     
     private fun setLocale(languageCode: String) {
         val locale = java.util.Locale(languageCode)
@@ -375,7 +481,7 @@ class BaseActivity : AppCompatActivity() {
         loadUI()
     }
 
-    // ======================== 9. الحصول على معرف المستخدم ========================
+    // ======================== 13. الحصول على معرف المستخدم ========================
     
     private fun getUserId(): String {
         val sharedPref = getSharedPreferences("mirage_prefs", Context.MODE_PRIVATE)
@@ -387,14 +493,13 @@ class BaseActivity : AppCompatActivity() {
         return userId
     }
 
-    // ======================== 10. التحقق من تحديث الواجهة ========================
+    // ======================== 14. التحقق من تحديث الواجهة ========================
     
     private fun shouldRefreshUI(): Boolean {
-        // يمكن التحقق من Remote Config لمعرفة وقت التحديث
         return false
     }
 
-    // ======================== 11. معالجة زر الرجوع ========================
+    // ======================== 15. معالجة زر الرجوع ========================
     
     private fun handleBackPress() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -415,7 +520,7 @@ class BaseActivity : AppCompatActivity() {
         })
     }
 
-    // ======================== 12. عرض الأخطاء ========================
+    // ======================== 16. عرض الأخطاء ========================
     
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
