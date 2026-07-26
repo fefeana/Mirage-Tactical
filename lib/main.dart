@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'providers/vpn_provider.dart';
 import 'providers/settings_provider.dart';
 import 'screens/home_screen.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/download_screen.dart';
 import 'utils/theme.dart';
 
 void main() {
@@ -22,11 +25,18 @@ class MirageTacticalApp extends StatelessWidget {
       child: Consumer<SettingsProvider>(
         builder: (context, settings, child) {
           return MaterialApp(
-            title: 'ميراج التكتيكي',
+            title: '🛡️ ميراج التكتيكي',
             theme: AppTheme.getTheme(settings.darkMode),
             darkTheme: AppTheme.darkTheme,
             themeMode: settings.darkMode ? ThemeMode.dark : ThemeMode.light,
-            home: const HomeScreen(),
+            debugShowCheckedModeBanner: false,
+            initialRoute: '/',
+            routes: {
+              '/': (context) => const HomeScreen(),
+              '/dashboard': (context) => const DashboardScreen(),
+              '/settings': (context) => const SettingsScreen(),
+              '/downloads': (context) => const DownloadScreen(),
+            },
           );
         },
       ),
