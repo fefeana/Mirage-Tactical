@@ -1,285 +1,170 @@
-// ===================================================================
-// 🏠 الشاشة الرئيسية
-// ===================================================================
-
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../models/api_response.dart';
-import '../widgets/status_card.dart';
-import 'citizen_screen.dart';
-import 'enterprise_screen.dart';
-import 'collaborate_screen.dart';
+import 'package:provider/provider.dart';
+import '../providers/vpn_provider.dart';
+import '../providers/settings_provider.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/samurai_armor.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  SystemStatus? _status;
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadStatus();
-  }
-
-  Future<void> _loadStatus() async {
-    try {
-      final status = await ApiService.getSystemStatus();
-      setState(() {
-        _status = status;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final vpnProvider = Provider.of<VpnProvider>(context);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade900,
       appBar: AppBar(
-        title: const Row(
-          children: [
-            Icon(Icons.shield, color: Colors.amber),
-            SizedBox(width: 8),
-            Text(
-              'Mirage-Tactical',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
+        title: const Text('🛡️ ميراج التكتيكي'),
+        actions: [
+          IconButton(
+            icon: Icon(settingsProvider.darkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: settingsProvider.toggleDarkMode,
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              settingsProvider.darkMode ? Colors.blueGrey.shade900 : Colors.blue.shade50,
+              settingsProvider.darkMode ? Colors.black : Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // الشعار والأدرع
+              const SamuraiArmor(armorType: 'legendary', size: 80),
+              const SizedBox(height: 10),
+              const Text(
+                'ميراج التكتيكي',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 5),
+              Text(
+                'VPN سريع وآمن',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: settingsProvider.darkMode ? Colors.white60 : Colors.black54,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // حالة الاتصال
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                decoration: BoxDecoration(
+                  color: (vpnProvider.isConnected ? Colors.green : Colors.red).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: vpnProvider.isConnected ? Colors.green : Colors.red,
+                    width: 2,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      vpnProvider.isConnected ? '✅ متصل' : '⛔ غير متصل',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: vpnProvider.isConnected ? Colors.green : Colors.red,
+                      ),
+                    ),
+                    if (vpnProvider.isConnected) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        'الخادم: ${vpnProvider.currentServer ?? 'غير محدد'}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: settingsProvider.darkMode ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                      Text(
+                        'المنطقة: ${vpnProvider.currentRegion ?? 'غير محدد'}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: settingsProvider.darkMode ? Colors.white60 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // زر الاتصال الرئيسي
+              CustomButton(
+                text: vpnProvider.isConnected ? 'قطع الاتصال' : 'اتصال',
+                onPressed: vpnProvider.toggle,
+                color: vpnProvider.isConnected ? Colors.red : Colors.green,
+                width: 200,
+                height: 60,
+              ),
+
+              const SizedBox(height: 20),
+
+              // أزرار التنقل السريع
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildNavButton(
+                    context,
+                    icon: Icons.dashboard,
+                    label: 'لوحة التحكم',
+                    route: '/dashboard',
+                  ),
+                  const SizedBox(width: 15),
+                  _buildNavButton(
+                    context,
+                    icon: Icons.download,
+                    label: 'التحميلات',
+                    route: '/downloads',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavButton(BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String route,
+  }) {
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, route),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.blue, size: 28),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: Colors.white70),
             ),
           ],
         ),
-        backgroundColor: Colors.grey.shade900,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.amber),
-            onPressed: _loadStatus,
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? _buildError()
-              : _buildBody(),
-    );
-  }
-
-  Widget _buildError() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 64),
-          const SizedBox(height: 16),
-          Text(
-            '⚠️ $_error',
-            style: const TextStyle(color: Colors.white70, fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          CustomButton(
-            label: 'إعادة المحاولة',
-            onPressed: _loadStatus,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // حالة النظام
-          Text(
-            '🛡️ حالة النظام',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: StatusCard(
-                  title: 'المرحلة',
-                  value: _status!.phase.toUpperCase(),
-                  icon: Icons.timeline,
-                  color: _status!.phase == 'enterprise'
-                      ? Colors.purple
-                      : Colors.green,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: StatusCard(
-                  title: 'الحالة',
-                  value: _status!.status,
-                  icon: Icons.check_circle,
-                  color: _status!.status == 'READY' ? Colors.green : Colors.orange,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // الوكلاء
-          const Text(
-            '🤖 الوكلاء المتاحون',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: _status!.agents.map((agent) {
-              return Chip(
-                label: Text(
-                  agent.replaceAll('_', ' ').toUpperCase(),
-                  style: const TextStyle(color: Colors.black87),
-                ),
-                backgroundColor: Colors.amber.shade300,
-                avatar: const Icon(Icons.smart_toy, size: 18),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 24),
-
-          // الميزات
-          const Text(
-            '⚡ الميزات المفعلة',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              ..._status!.citizenFeatures.entries.map((e) {
-                if (e.value) {
-                  return const Chip(
-                    label: Text('👥 عامة الشعب'),
-                    backgroundColor: Colors.green,
-                    labelStyle: TextStyle(color: Colors.white),
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
-              ..._status!.enterpriseFeatures.entries.map((e) {
-                if (e.value) {
-                  return const Chip(
-                    label: Text('🏛️ مؤسسات'),
-                    backgroundColor: Colors.purple,
-                    labelStyle: TextStyle(color: Colors.white),
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
-            ],
-          ),
-          const SizedBox(height: 30),
-
-          // أزرار التنقل
-          Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  label: '👤 عامة الشعب',
-                  color: Colors.green.shade700,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const CitizenScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: CustomButton(
-                  label: '🏛️ مؤسسات',
-                  color: Colors.purple.shade700,
-                  onPressed: () {
-                    if (_status!.phase == 'enterprise') {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const EnterpriseScreen(),
-                        ),
-                      );
-                    } else {
-                      _showPhaseDialog();
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          CustomButton(
-            label: '🤝 تعاون الوكلاء',
-            color: Colors.blue.shade700,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CollaborateScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPhaseDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.grey.shade800,
-        title: const Text(
-          '⚠️ ميزات المؤسسات غير مفعلة',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'لتفعيل ميزات المؤسسات، قم بتعيين متغير البيئة:\n'
-          'MIRAGE_PHASE=enterprise\n\n'
-          'ثم أعد تشغيل السيرفر.',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('حسناً', style: TextStyle(color: Colors.amber)),
-          ),
-        ],
       ),
     );
   }
