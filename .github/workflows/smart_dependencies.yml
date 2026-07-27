@@ -1,11 +1,11 @@
-name: 🧠 Smart Dependencies Manager (CDN + AI + Caching)
+name: 🧠 Smart Dependencies (CDN + APIs + Caching + Lazy Loading + AI)
 
 on:
   workflow_dispatch:  # تشغيل يدوي
   push:
     branches: [ main, master ]
   schedule:
-    - cron: '0 0 * * *'  # كل يوم منتصف الليل (تحديث تلقائي)
+    - cron: '0 */6 * * *'  # كل 6 ساعات (تحديث تلقائي)
 
 jobs:
   smart-dependencies:
@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v5
 
       # ============================================================
-      # 2. إعداد Python (للـ AI Layer)
+      # 2. إعداد Python (للـ AI و APIs)
       # ============================================================
       - name: ⚙️ إعداد Python
         uses: actions/setup-python@v5
@@ -30,26 +30,21 @@ jobs:
           python-version: '3.11'
 
       # ============================================================
-      # 3. تثبيت مكتبات Python (للتحليل والـ AI)
+      # 3. تثبيت أدوات التحليل
       # ============================================================
       - name: 📦 تثبيت أدوات التحليل
         run: |
           pip install requests pyyaml json5
 
       # ============================================================
-      # 4. إنشاء سكربت التحليل الذكي (AI + Caching + CDN)
+      # 4. إنشاء سكربت الذكاء الاصطناعي المتكامل
       # ============================================================
       - name: 🤖 إنشاء سكربت الذكاء الاصطناعي
         run: |
-          cat > smart_deps.py << 'EOF'
+          cat > smart_deps_ai.py << 'EOF'
           #!/usr/bin/env python3
           # ============================================================
-          # 🧠 Smart Dependencies Manager
-          # ============================================================
-          # يعتمد على:
-          # 1. CDN لتحميل المكتبات (تقليل الحجم)
-          # 2. Caching + Lazy Loading (تجنب إعادة التحميل)
-          # 3. AI Layer (تحديد المكتبات المطلوبة فقط وقت الحاجة)
+          # 🧠 Smart Dependencies Manager (AI + CDN + APIs + Caching)
           # ============================================================
 
           import os
@@ -60,6 +55,7 @@ jobs:
           import re
           from pathlib import Path
           from datetime import datetime, timedelta
+          import time
 
           # ============================================================
           # 📦 قاعدة بيانات المكتبات (من CDN)
@@ -69,136 +65,160 @@ jobs:
                   "cdn_url": "https://cdn.jsdelivr.net/npm/provider@6.1.1",
                   "size_mb": 0.2,
                   "category": "state_management",
-                  "required_by": ["main.dart", "home_screen.dart"]
+                  "required_by": ["main.dart", "home_screen.dart"],
+                  "api_required": False
               },
               "flutter_svg": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/flutter_svg@2.0.10",
                   "size_mb": 0.5,
                   "category": "ui",
-                  "required_by": ["samurai_armor.dart"]
+                  "required_by": ["samurai_armor.dart"],
+                  "api_required": False
               },
               "shared_preferences": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/shared_preferences@2.2.3",
                   "size_mb": 0.1,
                   "category": "storage",
-                  "required_by": ["settings_provider.dart"]
+                  "required_by": ["settings_provider.dart"],
+                  "api_required": False
               },
               "http": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/http@1.2.0",
                   "size_mb": 0.3,
                   "category": "network",
-                  "required_by": ["api_service.dart"]
+                  "required_by": ["api_service.dart"],
+                  "api_required": False
               },
               "connectivity_plus": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/connectivity_plus@6.0.3",
                   "size_mb": 0.15,
                   "category": "network",
-                  "required_by": ["vpn_manager.dart"]
+                  "required_by": ["vpn_manager.dart"],
+                  "api_required": False
               },
               "flutter_secure_storage": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/flutter_secure_storage@9.0.0",
                   "size_mb": 0.2,
                   "category": "security",
-                  "required_by": ["certificates.dart"]
+                  "required_by": ["certificates.dart"],
+                  "api_required": False
               },
               "crypto": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/crypto@3.0.3",
                   "size_mb": 0.1,
                   "category": "security",
-                  "required_by": ["quantum_encryption.dart"]
+                  "required_by": ["quantum_encryption.dart"],
+                  "api_required": False
               },
               "pointycastle": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/pointycastle@3.7.3",
                   "size_mb": 0.4,
                   "category": "security",
-                  "required_by": ["quantum_encryption.dart"]
+                  "required_by": ["quantum_encryption.dart"],
+                  "api_required": False
               },
               "go_router": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/go_router@14.2.0",
                   "size_mb": 0.3,
                   "category": "navigation",
-                  "required_by": ["main.dart"]
+                  "required_by": ["main.dart"],
+                  "api_required": False
               },
               "lottie": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/lottie@3.1.2",
                   "size_mb": 0.6,
                   "category": "ui",
-                  "required_by": ["home_screen.dart"]
+                  "required_by": ["home_screen.dart"],
+                  "api_required": False
               },
               "intl": {
                   "cdn_url": "https://cdn.jsdelivr.net/npm/intl@0.19.0",
                   "size_mb": 0.1,
                   "category": "i18n",
-                  "required_by": ["l10n/"]
+                  "required_by": ["l10n/"],
+                  "api_required": False
               }
           }
 
           # ============================================================
-          # 🧠 AI Layer: تحليل الكود واكتشاف المكتبات المستخدمة
+          # 🌐 APIs الخارجية (خدمات سحابية)
+          # ============================================================
+          EXTERNAL_APIS = {
+              "ip_geolocation": {
+                  "url": "https://api.ipapi.co/json/",
+                  "description": "تحديد الموقع الجغرافي",
+                  "cache_ttl": 3600,
+                  "required_by": ["network/"]
+              },
+              "weather": {
+                  "url": "https://api.openweathermap.org/data/2.5/weather",
+                  "description": "حالة الطقس",
+                  "cache_ttl": 1800,
+                  "required_by": ["ui/"]
+              },
+              "currency": {
+                  "url": "https://api.exchangerate-api.com/v4/latest/USD",
+                  "description": "أسعار العملات",
+                  "cache_ttl": 3600,
+                  "required_by": ["finance/"]
+              }
+          }
+
+          # ============================================================
+          # 🧠 AI Layer
           # ============================================================
           class SmartAI:
               def __init__(self):
                   self.cache_dir = Path(".deps_cache")
                   self.cache_dir.mkdir(exist_ok=True)
                   self.used_libraries = []
+                  self.used_apis = []
                   self.analysis_report = {}
 
               def analyze_codebase(self):
-                  """تحليل الكود لاكتشاف المكتبات المستخدمة فعلياً"""
+                  """تحليل الكود واكتشاف المكتبات والخدمات المستخدمة"""
                   print("🧠 [AI] جاري تحليل الكود...")
                   
+                  # 1. تحليل المكتبات المستخدمة
                   for file_path in Path("lib").rglob("*.dart"):
                       with open(file_path, 'r') as f:
                           content = f.read()
-                          
-                          # البحث عن استيرادات المكتبات
                           imports = re.findall(r"import 'package:(\w+)/", content)
                           for imp in imports:
                               if imp in CDN_LIBRARIES and imp not in self.used_libraries:
                                   self.used_libraries.append(imp)
-                                  print(f"   📦 detected: {imp} (from {file_path})")
-                  
-                  return self.used_libraries
+                                  print(f"   📦 detected: {imp} (from {file_path}")
 
-              def predict_needed_libraries(self):
-                  """توقع المكتبات التي قد تحتاجها في المستقبل (AI)"""
-                  print("🧠 [AI] جاري التوقع...")
-                  
-                  # محاكاة الذكاء الاصطناعي: بناءً على المكتبات المستخدمة، اقتراح مكتبات إضافية
-                  suggestions = []
-                  if "provider" in self.used_libraries:
-                      suggestions.append("flutter_riverpod (بديل متقدم)")
-                  if "http" in self.used_libraries:
-                      suggestions.append("dio (بديل أقوى)")
-                  if "shared_preferences" in self.used_libraries:
-                      suggestions.append("hive (تخزين محلي متقدم)")
-                  
-                  if suggestions:
-                      print("💡 [AI] اقتراحات للمكتبات الإضافية:")
-                      for s in suggestions:
-                          print(f"   - {s}")
-                  
-                  return suggestions
+              def analyze_api_usage(self):
+                  """تحليل استخدام الـ APIs"""
+                  print("🌐 [AI] جاري تحليل الـ APIs...")
+                  for file_path in Path("lib").rglob("*.dart"):
+                      with open(file_path, 'r') as f:
+                          content = f.read()
+                          for api_name, api_info in EXTERNAL_APIS.items():
+                              if api_info['url'] in content:
+                                  if api_name not in self.used_apis:
+                                      self.used_apis.append(api_name)
+                                      print(f"   🌐 detected API: {api_name} (from {file_path}")
 
               def load_from_cdn(self, library_name):
-                  """تحميل المكتبة من CDN وتخزينها في Cache"""
+                  """تحميل المكتبة من CDN مع Caching"""
                   print(f"📦 [CDN] جاري تحميل {library_name}...")
                   
                   lib_info = CDN_LIBRARIES.get(library_name)
                   if not lib_info:
-                      print(f"⚠️ المكتبة {library_name} غير موجودة في قاعدة البيانات")
+                      print(f"⚠️ المكتبة {library_name} غير موجودة")
                       return None
                   
                   cache_file = self.cache_dir / f"{library_name}.json"
                   
-                  # التحقق من وجودها في Cache
+                  # التحقق من Cache
                   if cache_file.exists():
                       with open(cache_file, 'r') as f:
                           cached = json.load(f)
-                          # التحقق من صلاحية Cache (24 ساعة)
                           cached_time = datetime.fromisoformat(cached.get("cached_at", "2000-01-01"))
                           if datetime.now() - cached_time < timedelta(hours=24):
-                              print(f"   ✅ {library_name} محمل من Cache")
+                              print(f"   ✅ {library_name} من Cache (CDN)")
                               return cached.get("data")
                   
                   # تحميل من CDN
@@ -206,29 +226,88 @@ jobs:
                       response = requests.get(lib_info["cdn_url"], timeout=10)
                       if response.status_code == 200:
                           data = response.json()
-                          # حفظ في Cache
                           with open(cache_file, 'w') as f:
-                              json.dump({
-                                  "cached_at": datetime.now().isoformat(),
-                                  "data": data
-                              }, f)
-                          print(f"   ✅ {library_name} تم تحميله من CDN")
+                              json.dump({"cached_at": datetime.now().isoformat(), "data": data}, f)
+                          print(f"   ✅ {library_name} من CDN")
                           return data
                       else:
-                          print(f"   ❌ فشل تحميل {library_name} من CDN")
+                          print(f"   ❌ فشل تحميل {library_name}")
                           return None
                   except Exception as e:
-                      print(f"   ❌ خطأ في تحميل {library_name}: {e}")
+                      print(f"   ❌ خطأ: {e}")
                       return None
 
+              def call_api(self, api_name):
+                  """استدعاء API مع Caching"""
+                  print(f"🌐 [API] جاري استدعاء {api_name}...")
+                  
+                  api_info = EXTERNAL_APIS.get(api_name)
+                  if not api_info:
+                      print(f"⚠️ API {api_name} غير موجودة")
+                      return None
+                  
+                  cache_file = self.cache_dir / f"api_{api_name}.json"
+                  
+                  if cache_file.exists():
+                      with open(cache_file, 'r') as f:
+                          cached = json.load(f)
+                          cached_time = datetime.fromisoformat(cached.get("cached_at", "2000-01-01"))
+                          if datetime.now() - cached_time < timedelta(seconds=api_info.get("cache_ttl", 3600)):
+                              print(f"   ✅ {api_name} من Cache")
+                              return cached.get("data")
+                  
+                  try:
+                      response = requests.get(api_info["url"], timeout=10)
+                      if response.status_code == 200:
+                          data = response.json()
+                          with open(cache_file, 'w') as f:
+                              json.dump({"cached_at": datetime.now().isoformat(), "data": data}, f)
+                          print(f"   ✅ {api_name} من API")
+                          return data
+                      else:
+                          print(f"   ❌ فشل استدعاء {api_name}")
+                          return None
+                  except Exception as e:
+                      print(f"   ❌ خطأ: {e}")
+                      return None
+
+              def update_pubspec(self):
+                  """تحديث pubspec.yaml بالمكتبات المستخدمة فقط"""
+                  print("📝 [AI] جاري تحديث pubspec.yaml...")
+                  
+                  with open('pubspec.yaml', 'r') as f:
+                      content = f.read()
+                  
+                  # إنشاء قسم dependencies
+                  deps = ""
+                  for lib in self.used_libraries:
+                      deps += f"  {lib}: ^6.1.1\n"
+                  
+                  # تحديث الملف
+                  new_content = re.sub(
+                      r'dependencies:\n(?:.*\n)*?(?=dev_dependencies:|flutter:|$)',
+                      f'dependencies:\n{deps}',
+                      content
+                  )
+                  
+                  with open('pubspec.yaml', 'w') as f:
+                      f.write(new_content)
+                  
+                  print("✅ تم تحديث pubspec.yaml")
+
               def generate_report(self):
-                  """إنشاء تقرير عن حالة المكتبات"""
+                  """إنشاء تقرير شامل"""
                   print("\n📊 [AI] تقرير التحليل:")
                   print("="*50)
                   print(f"🔍 المكتبات المستخدمة: {len(self.used_libraries)}")
                   for lib in self.used_libraries:
                       info = CDN_LIBRARIES.get(lib, {})
                       print(f"   - {lib} ({info.get('category', 'unknown')})")
+                  
+                  print(f"\n🌐 APIs المستخدمة: {len(self.used_apis)}")
+                  for api in self.used_apis:
+                      info = EXTERNAL_APIS.get(api, {})
+                      print(f"   - {api} ({info.get('description', 'unknown')})")
                   
                   total_size = sum(CDN_LIBRARIES.get(l, {}).get("size_mb", 0) for l in self.used_libraries)
                   print(f"\n📦 الحجم الإجمالي: {total_size:.2f} MB (عبر CDN)")
@@ -242,22 +321,27 @@ jobs:
               
               # 1. تحليل الكود
               ai.analyze_codebase()
+              ai.analyze_api_usage()
               
-              # 2. توقع المكتبات المستقبلية
-              suggestions = ai.predict_needed_libraries()
-              
-              # 3. تحميل المكتبات من CDN
+              # 2. تحميل المكتبات من CDN (Lazy Loading)
               for lib in ai.used_libraries:
                   ai.load_from_cdn(lib)
               
-              # 4. إنشاء التقرير
+              # 3. استدعاء الـ APIs
+              for api in ai.used_apis:
+                  ai.call_api(api)
+              
+              # 4. تحديث pubspec.yaml
+              ai.update_pubspec()
+              
+              # 5. إنشاء التقرير
               ai.generate_report()
               
               # حفظ التقرير
               with open("dependencies_report.json", "w") as f:
                   json.dump({
                       "used_libraries": ai.used_libraries,
-                      "suggestions": suggestions,
+                      "used_apis": ai.used_apis,
                       "timestamp": datetime.now().isoformat()
                   }, f, indent=2)
               
@@ -268,7 +352,7 @@ jobs:
       # 5. تشغيل سكربت الذكاء الاصطناعي
       # ============================================================
       - name: 🤖 تشغيل سكربت الذكاء الاصطناعي
-        run: python3 smart_deps.py
+        run: python3 smart_deps_ai.py
 
       # ============================================================
       # 6. عرض التقرير
@@ -286,41 +370,12 @@ jobs:
           path: dependencies_report.json
 
       # ============================================================
-      # 8. تحديث pubspec.yaml (باستخدام المكتبات الذكية)
-      # ============================================================
-      - name: 🔄 تحديث pubspec.yaml (بالمكتبات الذكية فقط)
-        run: |
-          # قراءة المكتبات المستخدمة من التقرير
-          python3 -c "
-          import json
-          with open('dependencies_report.json', 'r') as f:
-              data = json.load(f)
-          
-          libraries = data.get('used_libraries', [])
-          
-          # توليد pubspec.yaml
-          with open('pubspec.yaml', 'r') as f:
-              content = f.read()
-          
-          # إضافة المكتبات المستخدمة فقط
-          deps_section = ''
-          for lib in libraries:
-              deps_section += f'  {lib}: ^6.1.1  # Auto-detected by AI\n'
-          
-          # تحديث الملف
-          with open('pubspec.yaml', 'w') as f:
-              f.write(content.replace('dependencies:', f'dependencies:\n{deps_section}'))
-          
-          print('✅ تم تحديث pubspec.yaml بالمكتبات الذكية')
-          "
-
-      # ============================================================
-      # 9. دفع التغييرات إلى المستودع
+      # 8. دفع التغييرات إلى المستودع
       # ============================================================
       - name: 📤 دفع التغييرات
         run: |
           git config --global user.name "Mirage AI Bot"
           git config --global user.email "ai@mirage.ai"
-          git add pubspec.yaml pubspec.lock dependencies_report.json
-          git diff --staged --quiet || git commit -m "🧠 تحديث التبعيات الذكية (AI + CDN + Caching) [skip ci]"
+          git add pubspec.yaml pubspec.lock dependencies_report.json .deps_cache/
+          git diff --staged --quiet || git commit -m "🧠 تحديث التبعيات الذكية (AI + CDN + APIs + Caching) [skip ci]"
           git push
