@@ -5,7 +5,7 @@ on:
     branches: [ main, master, dev ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch:  # تشغيل يدوي
+  workflow_dispatch:
 
 # ============================================================
 # متغيرات البيئة العامة
@@ -31,8 +31,14 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
+      - name: 🧹 تنظيف المشروع
+        run: flutter clean
+
       - name: 📦 تحميل التبعيات
         run: flutter pub get
+
+      - name: 🌍 توليد ملفات التدويل
+        run: flutter gen-l10n
 
       - name: 🔍 تحليل الكود
         run: flutter analyze
@@ -63,8 +69,14 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
+      - name: 🧹 تنظيف المشروع
+        run: flutter clean
+
       - name: 📦 تحميل التبعيات
         run: flutter pub get
+
+      - name: 🌍 توليد ملفات التدويل
+        run: flutter gen-l10n
 
       - name: 🛠️ بناء APK
         run: flutter build apk --release --split-per-abi
@@ -98,8 +110,14 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
+      - name: 🧹 تنظيف المشروع
+        run: flutter clean
+
       - name: 📦 تحميل التبعيات
         run: flutter pub get
+
+      - name: 🌍 توليد ملفات التدويل
+        run: flutter gen-l10n
 
       - name: 🛠️ بناء ويب
         run: flutter build web --release
@@ -123,7 +141,7 @@ jobs:
     name: 🍏 بناء iOS
     runs-on: macos-latest
     needs: [analyze]
-    if: false  # 🚫 فعّل إذا كان لديك شهادة Apple Developer
+    if: false
     steps:
       - name: 📥 سحب الكود
         uses: actions/checkout@v5
@@ -134,8 +152,14 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
+      - name: 🧹 تنظيف المشروع
+        run: flutter clean
+
       - name: 📦 تحميل التبعيات
         run: flutter pub get
+
+      - name: 🌍 توليد ملفات التدويل
+        run: flutter gen-l10n
 
       - name: 🛠️ بناء iOS
         run: flutter build ios --release --no-codesign
@@ -163,8 +187,14 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
+      - name: 🧹 تنظيف المشروع
+        run: flutter clean
+
       - name: 📦 تحميل التبعيات
         run: flutter pub get
+
+      - name: 🌍 توليد ملفات التدويل
+        run: flutter gen-l10n
 
       - name: 🛠️ بناء ويندوز
         run: flutter build windows --release
@@ -192,8 +222,14 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
 
+      - name: 🧹 تنظيف المشروع
+        run: flutter clean
+
       - name: 📦 تحميل التبعيات
         run: flutter pub get
+
+      - name: 🌍 توليد ملفات التدويل
+        run: flutter gen-l10n
 
       - name: 🛠️ بناء ماك
         run: flutter build macos --release
@@ -226,8 +262,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
 
+      - name: 🧹 تنظيف المشروع
+        run: flutter clean
+
       - name: 📦 تحميل التبعيات
         run: flutter pub get
+
+      - name: 🌍 توليد ملفات التدويل
+        run: flutter gen-l10n
 
       - name: 🛠️ بناء لينكس
         run: flutter build linux --release
