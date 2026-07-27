@@ -1,0 +1,69 @@
+# ============================================================
+# 📦 Mirage Tactical - Dependencies Management
+# ============================================================
+
+version: 1.0.0
+repositories:
+  - https://pub.dev
+  - https://github.com/fefeana/Mirage-Tactical
+
+packages:
+  provider:
+    version: ^6.1.1
+    source: pub
+    description: "إدارة الحالة"
+  
+  flutter_svg:
+    version: ^2.0.10
+    source: pub
+    description: "عرض SVG"
+  
+  shared_preferences:
+    version: ^2.2.3
+    source: pub
+    description: "تخزين محلي"
+  
+  http:
+    version: ^1.2.0
+    source: pub
+    description: "طلبات HTTP"
+  
+  connectivity_plus:
+    version: ^6.0.3
+    source: pub
+    description: "مراقبة الاتصال"
+  
+  flutter_secure_storage:
+    version: ^9.0.0
+    source: pub
+    description: "تخزين آمن"
+
+  crypto:
+    version: ^3.0.3
+    source: pub
+    description: "تشفير"
+  
+  pointycastle:
+    version: ^3.7.3
+    source: pub
+    description: "تشفير متقدم"
+  
+  go_router:
+    version: ^14.2.0
+    source: pub
+    description: "تنقل"
+  
+  lottie:
+    version: ^3.1.2
+    source: pub
+    description: "رسوم متحركة"
+  
+  flutter_localizations:
+    version: any
+    source: sdk
+    description: "تدويل"
+  
+  intl:
+    version: ^0.19.0
+    source: pub
+    description: "تنسيق التواريخ"
