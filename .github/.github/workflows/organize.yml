@@ -1,0 +1,305 @@
+name: 🗡️ تنظيم وتدقيق المستودع
+
+on:
+  workflow_dispatch:  # تشغيل يدوي
+  schedule:
+    - cron: '0 0 * * 0'  # كل يوم أحد منتصف الليل
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  organize-and-clean:
+    name: 🧹 تنظيف وترتيب المستودع
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      # ============================================================
+      # 1. سحب الكود
+      # ============================================================
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ============================================================
+      # 2. إعداد Python
+      # ============================================================
+      - name: ⚙️ إعداد Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ============================================================
+      # 3. إنشاء سكربت التنظيم (مدمج)
+      # ============================================================
+      - name: 📝 إنشاء سكربت التنظيم
+        run: |
+          cat > organize_and_clean.py << 'EOF'
+          #!/usr/bin/env python3
+          # ============================================================
+          # 🗡️ MIRAGE - المنظم الذكي
+          # ============================================================
+
+          import os
+          import shutil
+          import json
+          import re
+          from pathlib import Path
+          from datetime import datetime
+
+          # ============================================================
+          # 📋 قواعد التنظيم
+          # ============================================================
+          DELETE_FILES = {
+              'metadata.json', 'mirageFinalConfig.js', 
+              'mirage_alpha_test.py', 'mirage_phantom_protocol.py',
+              'zip_project.js', 'ai_studio_code (5).sh',
+              'control-panel.js', 'cosmicApp.js',
+              'temp_log.txt', 'mirage-ai-log.txt',
+              'syncAll.cjs', 'websocket-status.js',
+              'server.ts', 'vite.config.ts',
+              'firebase-applet-config.json', 'firebase-blueprint.json',
+              'firebase-init.js', 'firestore.rules',
+              'gcp_ip_rotator.sh', 'harden_gcp.sh',
+              'AlBarqHubClient.kt', 'MirageSettingsSheet.kt',
+              'SpeedTestManager.kt', 'pubspec.ymal',
+              'mirage_project.tar.gz', 'Mirage-Build-Guide.md'
+          }
+
+          DELETE_DIRS = {
+              'node_modules', '__pycache__', '.dart_tool',
+              'build', 'dist', '.gradle', '.idea',
+              'venv', 'env', '.pytest_cache',
+              'logs', 'tmp', 'backup_old',
+              'exports'
+          }
+
+          FILE_MAPPING = {
+              '.py': 'backend/src/',
+              '.kt': 'app/android/app/src/main/java/com/mirage/',
+              '.dart': 'app/lib/',
+              '.js': 'public/',
+              '.ts': 'public/',
+              '.tsx': 'public/',
+              '.json': 'configs/',
+              '.yaml': 'configs/',
+              '.yml': 'configs/',
+              '.md': 'docs/',
+              '.sh': 'scripts/',
+              '.html': 'public/',
+              '.css': 'public/',
+              '.xml': 'configs/',
+              '.gradle': 'app/android/',
+              '.properties': 'configs/',
+              '.tf': 'infrastructure/'
+          }
+
+          DUPLICATE_KEEP = {
+              'main.py': 'backend/src/main.py',
+              'BaseActivity.kt': 'app/android/app/src/main/java/com/mirage/BaseActivity.kt',
+              'servers_hub.json': 'configs/servers_hub.json',
+              'docker-compose.yml': 'backend/docker-compose.yml',
+              'package.json': 'package.json',
+              'index.html': 'public/index.html',
+              'firebase.ts': 'app/lib/firebase.ts',
+              'core_engine.py': 'backend/src/core/engine.py',
+              'complete_system.py': 'backend/complete_system.py'
+          }
+
+          ROOT_FILES = {
+              'README.md', '.env.example', '.gitignore',
+              'pubspec.yaml', 'package.json', 'vite.config.ts',
+              'tsconfig.json', 'l10n.yaml'
+          }
+
+          # ============================================================
+          # 🧠 المنظم الذكي
+          # ============================================================
+          class SmartOrganizer:
+              def __init__(self):
+                  self.root = Path('.')
+                  self.report = {
+                      "timestamp": datetime.now().isoformat(),
+                      "deleted_files": [],
+                      "deleted_dirs": [],
+                      "moved_files": [],
+                      "renamed_files": [],
+                      "empty_dirs_removed": []
+                  }
+                  self.counter = {"deleted": 0, "moved": 0}
+
+              def delete_unwanted_files(self):
+                  print("\n🗑️ [1/5] حذف الملفات غير المرغوب فيها...")
+                  for file_name in DELETE_FILES:
+                      for file_path in self.root.rglob(file_name):
+                          if file_path.is_file():
+                              file_path.unlink()
+                              self.report["deleted_files"].append(str(file_path))
+                              self.counter["deleted"] += 1
+                              print(f"   🗑️ حذف: {file_path}")
+
+              def delete_unwanted_dirs(self):
+                  print("\n🗑️ [2/5] حذف المجلدات غير المرغوب فيها...")
+                  for dir_name in DELETE_DIRS:
+                      for dir_path in self.root.rglob(dir_name):
+                          if dir_path.is_dir():
+                              shutil.rmtree(dir_path, ignore_errors=True)
+                              self.report["deleted_dirs"].append(str(dir_path))
+                              self.counter["deleted"] += 1
+                              print(f"   🗑️ حذف مجلد: {dir_path}")
+
+              def handle_duplicates(self):
+                  print("\n🔄 [3/5] معالجة الملفات المكررة...")
+                  for file_name, keep_path in DUPLICATE_KEEP.items():
+                      keep_path = Path(keep_path)
+                      for file_path in self.root.rglob(file_name):
+                          if file_path.is_file() and str(file_path) != str(self.root / keep_path):
+                              file_path.unlink()
+                              self.report["deleted_files"].append(str(file_path))
+                              self.counter["deleted"] += 1
+                              print(f"   🗑️ حذف مكرر: {file_path}")
+
+              def move_files(self):
+                  print("\n📂 [4/5] نقل الملفات إلى الهيكل الصحيح...")
+                  for file_path in self.root.rglob('*'):
+                      if file_path.is_file():
+                          if file_path.name in ROOT_FILES:
+                              continue
+                          ext = file_path.suffix.lower()
+                          if ext in FILE_MAPPING:
+                              target_dir = self.root / FILE_MAPPING[ext]
+                              target_path = target_dir / file_path.name
+                              if file_path.parent != target_dir:
+                                  target_dir.mkdir(parents=True, exist_ok=True)
+                                  if target_path.exists():
+                                      base = target_path.stem
+                                      c = 1
+                                      while target_path.exists():
+                                          target_path = target_dir / f"{base}_{c}{target_path.suffix}"
+                                          c += 1
+                                  shutil.move(str(file_path), str(target_path))
+                                  self.report["moved_files"].append({
+                                      "from": str(file_path),
+                                      "to": str(target_path)
+                                  })
+                                  self.counter["moved"] += 1
+                                  print(f"   📂 نقل: {file_path} -> {target_path}")
+
+              def remove_empty_dirs(self):
+                  print("\n🧹 [5/5] حذف المجلدات الفارغة...")
+                  for dir_path in sorted(self.root.rglob('*'), reverse=True):
+                      if dir_path.is_dir() and not any(dir_path.iterdir()):
+                          if dir_path != self.root:
+                              dir_path.rmdir()
+                              self.report["empty_dirs_removed"].append(str(dir_path))
+                              print(f"   🧹 حذف مجلد فارغ: {dir_path}")
+
+              def run(self):
+                  print("""
+          ╔══════════════════════════════════════════════════════════╗
+          ║   🗡️  ميراج - المنظم الذكي                           ║
+          ╚══════════════════════════════════════════════════════════╝
+                  """)
+                  self.delete_unwanted_files()
+                  self.delete_unwanted_dirs()
+                  self.handle_duplicates()
+                  self.move_files()
+                  self.remove_empty_dirs()
+                  
+                  with open("organize_report.json", "w") as f:
+                      json.dump(self.report, f, indent=2)
+                  
+                  print(f"\n✅ تم التنظيم! حذف {self.counter['deleted']} ملف، نقل {self.counter['moved']} ملف")
+
+          if __name__ == "__main__":
+              organizer = SmartOrganizer()
+              organizer.run()
+          EOF
+
+      # ============================================================
+      # 4. تشغيل سكربت التنظيم
+      # ============================================================
+      - name: 🗡️ تشغيل التنظيم
+        run: python3 organize_and_clean.py
+
+      # ============================================================
+      # 5. إنشاء سكربت التدقيق (مدمج)
+      # ============================================================
+      - name: 📝 إنشاء سكربت التدقيق
+        run: |
+          cat > validate_and_report.py << 'EOF'
+          #!/usr/bin/env python3
+          import os, json
+          from pathlib import Path
+          from datetime import datetime
+
+          root = Path('.')
+          report = {
+              "timestamp": datetime.now().isoformat(),
+              "total_files": 0,
+              "total_dirs": 0,
+              "size_mb": 0,
+              "file_types": {},
+              "large_files": [],
+              "empty_dirs": [],
+              "issues": []
+          }
+
+          print("\n🔍 [Mirage] جاري تدقيق الهيكل...")
+
+          for path in root.rglob('*'):
+              if path.is_file():
+                  report["total_files"] += 1
+                  size = path.stat().st_size
+                  report["size_mb"] += size / (1024 * 1024)
+                  ext = path.suffix.lower() or "no_extension"
+                  report["file_types"][ext] = report["file_types"].get(ext, 0) + 1
+                  if size > 10 * 1024 * 1024:
+                      report["large_files"].append({"path": str(path), "size_mb": round(size/(1024*1024), 2)})
+              elif path.is_dir():
+                  report["total_dirs"] += 1
+                  if not any(path.iterdir()):
+                      report["empty_dirs"].append(str(path))
+
+          report["size_mb"] = round(report["size_mb"], 2)
+
+          with open("validation_report.json", "w") as f:
+              json.dump(report, f, indent=2)
+
+          print(f"\n📊 التقرير:")
+          print(f"   📁 الملفات: {report['total_files']}")
+          print(f"   📂 المجلدات: {report['total_dirs']}")
+          print(f"   📦 الحجم: {report['size_mb']} MB")
+          print(f"   📄 أنواع الملفات: {len(report['file_types'])}")
+          EOF
+
+      # ============================================================
+      # 6. تشغيل سكربت التدقيق
+      # ============================================================
+      - name: 🔍 تشغيل التدقيق
+        run: python3 validate_and_report.py
+
+      # ============================================================
+      # 7. رفع التقارير
+      # ============================================================
+      - name: 📤 رفع التقارير
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanup-reports
+          path: |
+            organize_report.json
+            validation_report.json
+
+      # ============================================================
+      # 8. دفع التغييرات إلى المستودع
+      # ============================================================
+      - name: 📤 دفع التغييرات
+        run: |
+          git config --global user.name "Mirage Organizer"
+          git config --global user.email "organizer@mirage.ai"
+          git add .
+          git diff --staged --quiet || git commit -m "🗡️ تنظيم وتدقيق المستودع [skip ci]"
+          git push
