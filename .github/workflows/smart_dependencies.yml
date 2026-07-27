@@ -1,0 +1,326 @@
+name: 🧠 Smart Dependencies Manager (CDN + AI + Caching)
+
+on:
+  workflow_dispatch:  # تشغيل يدوي
+  push:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 0 * * *'  # كل يوم منتصف الليل (تحديث تلقائي)
+
+jobs:
+  smart-dependencies:
+    name: 🧠 إدارة التبعيات الذكية
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      # ============================================================
+      # 1. سحب الكود
+      # ============================================================
+      - name: 📥 سحب الكود
+        uses: actions/checkout@v5
+
+      # ============================================================
+      # 2. إعداد Python (للـ AI Layer)
+      # ============================================================
+      - name: ⚙️ إعداد Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ============================================================
+      # 3. تثبيت مكتبات Python (للتحليل والـ AI)
+      # ============================================================
+      - name: 📦 تثبيت أدوات التحليل
+        run: |
+          pip install requests pyyaml json5
+
+      # ============================================================
+      # 4. إنشاء سكربت التحليل الذكي (AI + Caching + CDN)
+      # ============================================================
+      - name: 🤖 إنشاء سكربت الذكاء الاصطناعي
+        run: |
+          cat > smart_deps.py << 'EOF'
+          #!/usr/bin/env python3
+          # ============================================================
+          # 🧠 Smart Dependencies Manager
+          # ============================================================
+          # يعتمد على:
+          # 1. CDN لتحميل المكتبات (تقليل الحجم)
+          # 2. Caching + Lazy Loading (تجنب إعادة التحميل)
+          # 3. AI Layer (تحديد المكتبات المطلوبة فقط وقت الحاجة)
+          # ============================================================
+
+          import os
+          import json
+          import yaml
+          import requests
+          import hashlib
+          import re
+          from pathlib import Path
+          from datetime import datetime, timedelta
+
+          # ============================================================
+          # 📦 قاعدة بيانات المكتبات (من CDN)
+          # ============================================================
+          CDN_LIBRARIES = {
+              "provider": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/provider@6.1.1",
+                  "size_mb": 0.2,
+                  "category": "state_management",
+                  "required_by": ["main.dart", "home_screen.dart"]
+              },
+              "flutter_svg": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/flutter_svg@2.0.10",
+                  "size_mb": 0.5,
+                  "category": "ui",
+                  "required_by": ["samurai_armor.dart"]
+              },
+              "shared_preferences": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/shared_preferences@2.2.3",
+                  "size_mb": 0.1,
+                  "category": "storage",
+                  "required_by": ["settings_provider.dart"]
+              },
+              "http": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/http@1.2.0",
+                  "size_mb": 0.3,
+                  "category": "network",
+                  "required_by": ["api_service.dart"]
+              },
+              "connectivity_plus": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/connectivity_plus@6.0.3",
+                  "size_mb": 0.15,
+                  "category": "network",
+                  "required_by": ["vpn_manager.dart"]
+              },
+              "flutter_secure_storage": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/flutter_secure_storage@9.0.0",
+                  "size_mb": 0.2,
+                  "category": "security",
+                  "required_by": ["certificates.dart"]
+              },
+              "crypto": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/crypto@3.0.3",
+                  "size_mb": 0.1,
+                  "category": "security",
+                  "required_by": ["quantum_encryption.dart"]
+              },
+              "pointycastle": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/pointycastle@3.7.3",
+                  "size_mb": 0.4,
+                  "category": "security",
+                  "required_by": ["quantum_encryption.dart"]
+              },
+              "go_router": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/go_router@14.2.0",
+                  "size_mb": 0.3,
+                  "category": "navigation",
+                  "required_by": ["main.dart"]
+              },
+              "lottie": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/lottie@3.1.2",
+                  "size_mb": 0.6,
+                  "category": "ui",
+                  "required_by": ["home_screen.dart"]
+              },
+              "intl": {
+                  "cdn_url": "https://cdn.jsdelivr.net/npm/intl@0.19.0",
+                  "size_mb": 0.1,
+                  "category": "i18n",
+                  "required_by": ["l10n/"]
+              }
+          }
+
+          # ============================================================
+          # 🧠 AI Layer: تحليل الكود واكتشاف المكتبات المستخدمة
+          # ============================================================
+          class SmartAI:
+              def __init__(self):
+                  self.cache_dir = Path(".deps_cache")
+                  self.cache_dir.mkdir(exist_ok=True)
+                  self.used_libraries = []
+                  self.analysis_report = {}
+
+              def analyze_codebase(self):
+                  """تحليل الكود لاكتشاف المكتبات المستخدمة فعلياً"""
+                  print("🧠 [AI] جاري تحليل الكود...")
+                  
+                  for file_path in Path("lib").rglob("*.dart"):
+                      with open(file_path, 'r') as f:
+                          content = f.read()
+                          
+                          # البحث عن استيرادات المكتبات
+                          imports = re.findall(r"import 'package:(\w+)/", content)
+                          for imp in imports:
+                              if imp in CDN_LIBRARIES and imp not in self.used_libraries:
+                                  self.used_libraries.append(imp)
+                                  print(f"   📦 detected: {imp} (from {file_path})")
+                  
+                  return self.used_libraries
+
+              def predict_needed_libraries(self):
+                  """توقع المكتبات التي قد تحتاجها في المستقبل (AI)"""
+                  print("🧠 [AI] جاري التوقع...")
+                  
+                  # محاكاة الذكاء الاصطناعي: بناءً على المكتبات المستخدمة، اقتراح مكتبات إضافية
+                  suggestions = []
+                  if "provider" in self.used_libraries:
+                      suggestions.append("flutter_riverpod (بديل متقدم)")
+                  if "http" in self.used_libraries:
+                      suggestions.append("dio (بديل أقوى)")
+                  if "shared_preferences" in self.used_libraries:
+                      suggestions.append("hive (تخزين محلي متقدم)")
+                  
+                  if suggestions:
+                      print("💡 [AI] اقتراحات للمكتبات الإضافية:")
+                      for s in suggestions:
+                          print(f"   - {s}")
+                  
+                  return suggestions
+
+              def load_from_cdn(self, library_name):
+                  """تحميل المكتبة من CDN وتخزينها في Cache"""
+                  print(f"📦 [CDN] جاري تحميل {library_name}...")
+                  
+                  lib_info = CDN_LIBRARIES.get(library_name)
+                  if not lib_info:
+                      print(f"⚠️ المكتبة {library_name} غير موجودة في قاعدة البيانات")
+                      return None
+                  
+                  cache_file = self.cache_dir / f"{library_name}.json"
+                  
+                  # التحقق من وجودها في Cache
+                  if cache_file.exists():
+                      with open(cache_file, 'r') as f:
+                          cached = json.load(f)
+                          # التحقق من صلاحية Cache (24 ساعة)
+                          cached_time = datetime.fromisoformat(cached.get("cached_at", "2000-01-01"))
+                          if datetime.now() - cached_time < timedelta(hours=24):
+                              print(f"   ✅ {library_name} محمل من Cache")
+                              return cached.get("data")
+                  
+                  # تحميل من CDN
+                  try:
+                      response = requests.get(lib_info["cdn_url"], timeout=10)
+                      if response.status_code == 200:
+                          data = response.json()
+                          # حفظ في Cache
+                          with open(cache_file, 'w') as f:
+                              json.dump({
+                                  "cached_at": datetime.now().isoformat(),
+                                  "data": data
+                              }, f)
+                          print(f"   ✅ {library_name} تم تحميله من CDN")
+                          return data
+                      else:
+                          print(f"   ❌ فشل تحميل {library_name} من CDN")
+                          return None
+                  except Exception as e:
+                      print(f"   ❌ خطأ في تحميل {library_name}: {e}")
+                      return None
+
+              def generate_report(self):
+                  """إنشاء تقرير عن حالة المكتبات"""
+                  print("\n📊 [AI] تقرير التحليل:")
+                  print("="*50)
+                  print(f"🔍 المكتبات المستخدمة: {len(self.used_libraries)}")
+                  for lib in self.used_libraries:
+                      info = CDN_LIBRARIES.get(lib, {})
+                      print(f"   - {lib} ({info.get('category', 'unknown')})")
+                  
+                  total_size = sum(CDN_LIBRARIES.get(l, {}).get("size_mb", 0) for l in self.used_libraries)
+                  print(f"\n📦 الحجم الإجمالي: {total_size:.2f} MB (عبر CDN)")
+                  print("="*50)
+
+          # ============================================================
+          # 🚀 التشغيل الرئيسي
+          # ============================================================
+          if __name__ == "__main__":
+              ai = SmartAI()
+              
+              # 1. تحليل الكود
+              ai.analyze_codebase()
+              
+              # 2. توقع المكتبات المستقبلية
+              suggestions = ai.predict_needed_libraries()
+              
+              # 3. تحميل المكتبات من CDN
+              for lib in ai.used_libraries:
+                  ai.load_from_cdn(lib)
+              
+              # 4. إنشاء التقرير
+              ai.generate_report()
+              
+              # حفظ التقرير
+              with open("dependencies_report.json", "w") as f:
+                  json.dump({
+                      "used_libraries": ai.used_libraries,
+                      "suggestions": suggestions,
+                      "timestamp": datetime.now().isoformat()
+                  }, f, indent=2)
+              
+              print("\n✅ [AI] تم الانتهاء من إدارة التبعيات الذكية!")
+          EOF
+
+      # ============================================================
+      # 5. تشغيل سكربت الذكاء الاصطناعي
+      # ============================================================
+      - name: 🤖 تشغيل سكربت الذكاء الاصطناعي
+        run: python3 smart_deps.py
+
+      # ============================================================
+      # 6. عرض التقرير
+      # ============================================================
+      - name: 📊 عرض تقرير التبعيات
+        run: cat dependencies_report.json
+
+      # ============================================================
+      # 7. رفع التقرير
+      # ============================================================
+      - name: 📤 رفع تقرير التبعيات
+        uses: actions/upload-artifact@v6
+        with:
+          name: dependencies-report
+          path: dependencies_report.json
+
+      # ============================================================
+      # 8. تحديث pubspec.yaml (باستخدام المكتبات الذكية)
+      # ============================================================
+      - name: 🔄 تحديث pubspec.yaml (بالمكتبات الذكية فقط)
+        run: |
+          # قراءة المكتبات المستخدمة من التقرير
+          python3 -c "
+          import json
+          with open('dependencies_report.json', 'r') as f:
+              data = json.load(f)
+          
+          libraries = data.get('used_libraries', [])
+          
+          # توليد pubspec.yaml
+          with open('pubspec.yaml', 'r') as f:
+              content = f.read()
+          
+          # إضافة المكتبات المستخدمة فقط
+          deps_section = ''
+          for lib in libraries:
+              deps_section += f'  {lib}: ^6.1.1  # Auto-detected by AI\n'
+          
+          # تحديث الملف
+          with open('pubspec.yaml', 'w') as f:
+              f.write(content.replace('dependencies:', f'dependencies:\n{deps_section}'))
+          
+          print('✅ تم تحديث pubspec.yaml بالمكتبات الذكية')
+          "
+
+      # ============================================================
+      # 9. دفع التغييرات إلى المستودع
+      # ============================================================
+      - name: 📤 دفع التغييرات
+        run: |
+          git config --global user.name "Mirage AI Bot"
+          git config --global user.email "ai@mirage.ai"
+          git add pubspec.yaml pubspec.lock dependencies_report.json
+          git diff --staged --quiet || git commit -m "🧠 تحديث التبعيات الذكية (AI + CDN + Caching) [skip ci]"
+          git push
